@@ -1345,10 +1345,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         </div>
                         <span class="bottom-descriptor-label">Bed Capacity</span>
                     </div>
-                    <div class="input-block-node">
-                        <input type="number" id="roomRate" class="screenshot-input" placeholder="Nightly Rate (LKR)" required>
-                        <span class="bottom-descriptor-label">Nightly Tariff</span>
-                    </div>
+
                     <div class="input-block-node">
                         <select id="roomStatus" class="screenshot-input" required>
                             <option value="" disabled selected>Select Status</option>
@@ -1383,7 +1380,6 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                                 <th>Room</th>
                                 <th>Type</th>
                                 <th>Beds</th>
-                                <th>Rate</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -1417,10 +1413,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     <label>Bed Count</label>
                     <input type="text" id="editRoomBeds" required>
                 </div>
-                <div class="form-group">
-                    <label>Rate (LKR)</label>
-                    <input type="number" id="editRoomRate" required>
-                </div>
+
                 <div class="form-group">
                     <label>Status</label>
                     <select id="editRoomStatus">
@@ -1549,7 +1542,6 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     <td><strong>${r.roomNumber || 'N/A'}</strong></td>
                     <td>${r.roomType || 'N/A'}</td>
                     <td>${r.bedCount || '0'}</td>
-                    <td>LKR ${Number(r.rate || 0).toLocaleString()}</td>
                     <td><span class="status-badge ${(r.status || 'available').toLowerCase()}">${r.status || 'Available'}</span></td>
                     <td>
                         <button class="strip-link-btn edit-strip-btn" onclick="openEditRoomModal('${r.id}')">✏️</button>
@@ -1767,27 +1759,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const roomRate = room ? (room.rate || 0) : 0;
             const roomTotal = roomRate * nights;
             const mealTotal = mealPrice * guestCount * nights;
-            const grandTotal = roomTotal + mealTotal;
 
-            const pbRoom = document.getElementById('pbRoom');
-            const pbMeals = document.getElementById('pbMeals');
-            const pbTotal = document.getElementById('pbTotal');
-            if (pbRoom) pbRoom.textContent = `LKR ${roomRate.toLocaleString()} × ${nights} nights = LKR ${roomTotal.toLocaleString()}`;
-            if (pbMeals) pbMeals.textContent = `LKR ${mealPrice.toLocaleString()} × ${guestCount} guests × ${nights} nights = LKR ${mealTotal.toLocaleString()}`;
-            if (pbTotal) pbTotal.textContent = 'LKR ' + grandTotal.toLocaleString();
 
-            return { roomTotal, mealTotal, grandTotal, nights, roomRate, mealPrice };
-        }
-
-        ['bookingRoom', 'bookingMeals', 'bookingGuestCount', 'bookingCheckIn', 'bookingCheckOut'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', calculatePrice);
-                el.addEventListener('input', calculatePrice);
-            }
-        });
-
-        // --- ADD ROOM ---
         const roomForm = document.getElementById('roomForm');
         if (roomForm) {
             roomForm.addEventListener('submit', async (e) => {
@@ -1803,9 +1776,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 let bedCount = bedSelect.value;
                 if (bedCount === 'Custom' && bedCustom.value.trim()) { bedCount = bedCustom.value.trim(); }
                 else if (bedCount === 'Custom' || !bedCount) { alert('Please select or enter bed count.'); return; }
-                const rate = parseFloat(document.getElementById('roomRate').value);
                 const status = document.getElementById('roomStatus').value;
-                if (!roomNumber || !roomType || !bedCount || isNaN(rate) || !status) {
+                if (!roomNumber || !roomType || !bedCount || !status) {
                     alert('Please fill in all required fields.');
                     return;
                 }
@@ -1814,7 +1786,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 btn.disabled = true;
                 try {
                     await db.collection('rooms').add({
-                        hotelId, roomNumber, roomType, bedCount, rate, status, createdAt: new Date()
+                        hotelId, roomNumber, roomType, bedCount, status, createdAt: new Date()
                     });
                     document.getElementById('roomForm').reset();
                     document.getElementById('roomTypeCustom').style.display = 'none';
@@ -1849,7 +1821,6 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             document.getElementById('editRoomNumber').value = room.roomNumber || '';
             document.getElementById('editRoomType').value = room.roomType || '';
             document.getElementById('editRoomBeds').value = room.bedCount || '';
-            document.getElementById('editRoomRate').value = room.rate || '';
             document.getElementById('editRoomStatus').value = room.status || 'Available';
             document.getElementById('editRoomModal').classList.add('show');
         }
@@ -1865,15 +1836,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const roomNumber = document.getElementById('editRoomNumber').value.trim();
                 const roomType = document.getElementById('editRoomType').value.trim();
                 const bedCount = document.getElementById('editRoomBeds').value.trim();
-                const rate = parseFloat(document.getElementById('editRoomRate').value);
                 const status = document.getElementById('editRoomStatus').value;
-                if (!roomNumber || !roomType || !bedCount || isNaN(rate)) {
+                if (!roomNumber || !roomType || !bedCount) {
                     alert('Please fill in all fields.');
                     return;
                 }
                 try {
                     await db.collection('rooms').doc(id).update({
-                        roomNumber, roomType, bedCount, rate, status
+                        roomNumber, roomType, bedCount, status
                     });
                     alert('✅ Room updated!');
                     closeEditRoomModal();
@@ -1913,10 +1883,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 doc.setFontSize(11);
                 doc.setTextColor(60, 60, 60);
                 doc.text(`Total: ${total} | Occupied: ${occupied} | Available: ${available} | Occupancy Rate: ${rate}%`, margin, 46);
-                const headers = ['#', 'Room', 'Type', 'Beds', 'Rate (LKR)', 'Status'];
+                const headers = ['#', 'Room', 'Type', 'Beds', 'Status'];
                 const rows = rooms.map((r, i) => [
                     i + 1, r.roomNumber || 'N/A', r.roomType || 'N/A', r.bedCount || '0',
-                    Number(r.rate || 0).toLocaleString(), r.status || 'N/A'
+                    r.status || 'N/A'
                 ]);
                 doc.autoTable({
                     startY: 52, head: [headers], body: rows, theme: 'striped',
