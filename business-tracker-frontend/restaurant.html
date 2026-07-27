@@ -36,14 +36,17 @@
                 <div class="form-grid">
                     <div class="field"><label for="orderDate">Date</label><input id="orderDate" type="date" required></div>
                     <div class="field"><label for="orderNumber">Order number</label><input id="orderNumber" type="text" placeholder="Generated if blank"></div>
-                    <div class="field"><label for="customerName">Customer name</label><input id="customerName" type="text"></div>
-                    <div class="field"><label for="roomNumber">Room / table</label><input id="roomNumber" type="text"></div>
+                    <div class="field"><label for="customerName">Customer name</label><input id="customerName" type="text" list="restaurantGuestOptions" placeholder="Guest or customer name" autocomplete="off"></div>
+                    <div class="field"><label for="roomNumber">Room / table</label><input id="roomNumber" type="text" list="restaurantRoomOptions" placeholder="Room number or table" autocomplete="off"></div>
                     <div class="field"><label for="orderCurrency">Paid currency</label><select id="orderCurrency"><option value="LKR">LKR</option><option value="USD">USD</option></select></div>
                     <div class="field"><label for="paymentStatus">Payment</label><select id="paymentStatus"><option value="pending">Pending</option><option value="paid">Confirmed / Paid</option></select></div>
                     <div class="field wide"><label for="orderNotes">Notes</label><input id="orderNotes" type="text"></div>
                 </div>
                 <div class="items-heading"><h3>Items and menu prices</h3><button class="btn secondary" id="addItemBtn" type="button">Add item</button></div>
                 <div id="itemsContainer"></div>
+                <datalist id="restaurantGuestOptions"></datalist>
+                <datalist id="restaurantRoomOptions"></datalist>
+                <datalist id="restaurantItemOptions"></datalist>
                 <div class="form-footer">
                     <div class="order-total">Total: <span id="formTotal">LKR 0</span></div>
                     <div class="form-actions"><button class="btn secondary" id="cancelEditBtn" type="button" hidden>Cancel edit</button><button class="btn" id="submitOrderBtn" type="submit">Save Order</button></div>

@@ -89,6 +89,21 @@ test('Restaurant persistence is hotel-scoped and uses a distinct income source',
     assert.match(read('js/finance-utils.js'), /source:\s*'Restaurant'/);
 });
 
+test('manager Restaurant suggestions are linked to hotel reference data without removing free entry', () => {
+    const html = read('restaurant.html');
+    const js = read('js/restaurant-page.js');
+    assert.match(html, /id="customerName"[^>]+list="restaurantGuestOptions"/);
+    assert.match(html, /id="roomNumber"[^>]+list="restaurantRoomOptions"/);
+    assert.match(html, /id="restaurantGuestOptions"/);
+    assert.match(html, /id="restaurantRoomOptions"/);
+    assert.match(html, /id="restaurantItemOptions"/);
+    assert.match(js, /collection\('rooms'\)\.where\('hotelId', '==', state\.hotelId\)/);
+    assert.match(js, /collection\('bookings'\)\.where\('hotelId', '==', state\.hotelId\)/);
+    assert.match(js, /collection\('packages'\)\.where\('hotelId', '==', state\.hotelId\)/);
+    assert.match(js, /collection\('buffetItems'\)\.where\('hotelId', '==', state\.hotelId\)/);
+    assert.match(js, /list="restaurantItemOptions"/);
+});
+
 test('existing owner pages remain read-only', () => {
     const ownerPages = fs.readdirSync(frontend).filter(file => /^owner-.*\.html$/.test(file));
     const writePattern = /db\.collection\([^\n]+\)\.(?:add|doc\([^)]*\)\.(?:update|delete|set))/;

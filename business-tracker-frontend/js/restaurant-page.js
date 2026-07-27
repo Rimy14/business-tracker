@@ -138,13 +138,98 @@
         }).join('');
     }
 
+    function setSuggestionOptions(id, entries) {
+        const list = byId(id);
+        if (!list) return;
+        const seen = new Set();
+        list.replaceChildren();
+        entries.forEach(entry => {
+            const value = String(entry && entry.value || '').trim();
+            if (!value) return;
+            const key = value.toLocaleLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            const option = document.createElement('option');
+            option.value = value;
+            if (entry.label) option.label = entry.label;
+            list.appendChild(option);
+        });
+    }
+
+    function uniqueSuggestionEntries(entries) {
+        const seen = new Set();
+        return entries.filter(entry => {
+            const value = String(entry && entry.value || '').trim();
+            const key = value.toLocaleLowerCase();
+            if (!value || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }
+
+    async function loadReferenceSuggestions() {
+        if (!canManage()) return;
+        const queries = [
+            db.collection('rooms').where('hotelId', '==', state.hotelId).get(),
+            db.collection('bookings').where('hotelId', '==', state.hotelId).get(),
+            db.collection('packages').where('hotelId', '==', state.hotelId).get(),
+            db.collection('buffetItems').where('hotelId', '==', state.hotelId).get()
+        ];
+        const results = await Promise.allSettled(queries);
+        const docsFor = result => result.status === 'fulfilled'
+            ? result.value.docs.map(doc => doc.data())
+            : [];
+        results.filter(result => result.status === 'rejected').forEach(result => {
+            console.warn('A restaurant reference suggestion source was unavailable:', result.reason?.message || result.reason);
+        });
+
+        const rooms = docsFor(results[0])
+            .filter(room => room.roomNumber)
+            .sort((a, b) => String(a.roomNumber).localeCompare(String(b.roomNumber), undefined, { numeric: true, sensitivity: 'base' }))
+            .map(room => ({
+                value: String(room.roomNumber).trim(),
+                label: [room.roomType, room.status].filter(Boolean).join(' · ')
+            }));
+        setSuggestionOptions('restaurantRoomOptions', uniqueSuggestionEntries(rooms));
+
+        const bookings = docsFor(results[1]);
+        const guests = bookings
+            .filter(booking => booking.guestName && booking.status !== 'cancelled')
+            .sort((a, b) => String(b.checkIn || '').localeCompare(String(a.checkIn || '')))
+            .map(booking => ({
+                value: String(booking.guestName).trim(),
+                label: booking.roomNumber
+                    ? (/^room\b/i.test(String(booking.roomNumber).trim()) ? String(booking.roomNumber).trim() : `Room ${booking.roomNumber}`)
+                    : ''
+            }));
+        setSuggestionOptions('restaurantGuestOptions', uniqueSuggestionEntries(guests));
+
+        const packages = docsFor(results[2])
+            .filter(item => item.name)
+            .map(item => ({
+                value: String(item.name).trim(),
+                label: Number.isFinite(Number(item.price)) ? `Meal package · LKR ${Number(item.price).toLocaleString()}` : 'Meal package'
+            }));
+        const buffetItems = docsFor(results[3]).flatMap(menu => Array.isArray(menu.items) ? menu.items : [])
+            .filter(item => item && item.name)
+            .map(item => ({ value: String(item.name).trim(), label: 'Buffet menu item' }));
+        const previousOrderItems = state.orders.flatMap(order => Array.isArray(order.items) ? order.items : [])
+            .filter(item => item && item.name)
+            .map(item => ({ value: String(item.name).trim(), label: 'Previous restaurant item' }));
+        setSuggestionOptions('restaurantItemOptions', uniqueSuggestionEntries([
+            ...previousOrderItems,
+            ...buffetItems,
+            ...packages
+        ]));
+    }
+
     function addItemRow(item) {
         const container = byId('itemsContainer');
         if (!container) return;
         const row = document.createElement('div');
         row.className = 'item-row';
         row.innerHTML = `
-            <input class="item-name" type="text" placeholder="Item or menu name" value="${escapeHtml(item && item.name)}" required>
+            <input class="item-name" type="text" list="restaurantItemOptions" placeholder="Item or menu name" value="${escapeHtml(item && item.name)}" autocomplete="off" required>
             <input class="item-quantity" type="number" min="1" step="1" value="${Number(item && item.quantity) || 1}" required>
             <input class="item-price" type="number" min="0" step="0.01" placeholder="Unit price" value="${item && Number.isFinite(Number(item.unitPrice)) ? Number(item.unitPrice) : ''}" required>
             <button class="icon-btn remove-item" type="button" aria-label="Remove item">Remove</button>`;
@@ -373,6 +458,7 @@
             if (!canDownload()) byId('downloadReportBtn').hidden = true;
             wireEvents();
             await Promise.all([loadOrders(), loadRate()]);
+            await loadReferenceSuggestions();
         } catch (error) {
             console.error(error);
             alert(error.message);
