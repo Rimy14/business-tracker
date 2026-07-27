@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vance.Hub Operations | Staff Login Accounts</title>
+    <meta name="description" content="Create and manage Firebase login accounts for staff assigned to the current hotel.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --canvas: #dfe5f3;
+            --surface: #ffffff;
+            --surface-soft: #f7f8fb;
+            --navbar: #192231;
+            --sage: #557373;
+            --sage-dark: #3f5858;
+            --gold: #c0b283;
+            --espresso: #272401;
+            --muted: #667085;
+            --border: rgba(85, 115, 115, 0.16);
+            --danger: #b42318;
+            --danger-soft: #fef3f2;
+            --success: #067647;
+            --success-soft: #ecfdf3;
+            --warning: #b54708;
+            --warning-soft: #fffaeb;
+            --sidebar-width: 230px;
+            --font-main: "Plus Jakarta Sans", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+        }
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            padding-left: var(--sidebar-width);
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(192, 178, 131, 0.14),
+                    transparent 30%
+                ),
+                var(--canvas);
+            color: var(--espresso);
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1000;
+            width: var(--sidebar-width);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background: var(--navbar);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 4px 0 24px rgba(25, 34, 49, 0.12);
+        }
+
+        .brand {
+            display: block;
+            padding: 30px 26px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 0;
+        }
+
+        .sidebar nav a {
+            padding: 12px 26px;
+            color: rgba(255, 255, 255, 0.68);
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition:
+                color 0.2s ease,
+                background 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        .sidebar nav a:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar nav a.active {
+            color: #ffffff;
+            border-left-color: var(--gold);
+            background: rgba(192, 178, 131, 0.1);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 20px 22px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .manager-summary {
+            margin-bottom: 14px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.76rem;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .manager-summary strong {
+            display: block;
+            color: #ffffff;
+            font-size: 0.86rem;
+        }
+
+        .logout-button {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 7px;
+            background: var(--sage);
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 700;
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .logout-button:hover {
+            background: var(--sage-dark);
+            transform: translateY(-1px);
+        }
+
+        .page-shell {
+            width: min(1440px, 100%);
+            margin: 0 auto;
+            padding: 42px 5% 80px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            margin-bottom: 8px;
+            color: var(--espresso);
+            font-size: clamp(1.7rem, 3vw, 2.35rem);
+            letter-spacing: -1.2px;
+        }
+
+        .page-header p {
+            max-width: 720px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            line-height: 1.65;
+        }
+
+        .hotel-badge {
+            flex-shrink: 0;
+            max-width: 340px;
+            padding: 13px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--sage);
+            font-size: 0.76rem;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .hotel-badge strong {
+            display: block;
+            color: var(--espresso);
+            font-size: 0.88rem;
+        }
+
+        .page-message {
+            display: none;
+            margin-bottom: 22px;
+            padding: 14px 16px;
+            border-radius: 9px;
+            font-size: 0.86rem;
+            line-height: 1.55;
+        }
+
+        .page-message.show {
+            display: block;
+        }
+
+        .page-message.error {
+            border: 1px solid #fecdca;
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+
+        .page-message.success {
+            border: 1px solid #abefc6;
+            background: var(--success-soft);
+            color: var(--success);
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 0.88fr) minmax(0, 1.35fr);
+            gap: 26px;
+            align-items: start;
+        }
+
+        .panel {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            box-shadow: 0 16px 44px rgba(25, 34, 49, 0.07);
+        }
+
+        .panel-header {
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-soft);
+        }
+
+        .panel-header h2 {
+            margin-bottom: 5px;
+            color: var(--espresso);
+            font-size: 1.12rem;
+        }
+
+        .panel-header p {
+            color: var(--muted);
+            font-size: 0.79rem;
+            line-height: 1.55;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 17px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .field label {
+            color: var(--espresso);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            min-height: 44px;
+            padding: 11px 13px;
+            border: 1px solid rgba(85, 115, 115, 0.24);
+            border-radius: 8px;
+            outline: none;
+            background: #ffffff;
+            color: var(--espresso);
+            font-size: 0.87rem;
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            border-color: var(--sage);
+            box-shadow: 0 0 0 3px rgba(85, 115, 115, 0.12);
+        }
+
+        .field small {
+            color: var(--muted);
+            font-size: 0.7rem;
+            line-height: 1.45;
+        }
+
+        .password-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+        }
+
+        .password-row input {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .secondary-button,
+        .primary-button,
+        .copy-button,
+        .refresh-button {
+            min-height: 44px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition:
+                transform 0.2s ease,
+                background 0.2s ease,
+                border-color 0.2s ease,
+                opacity 0.2s ease;
+        }
+
+        .secondary-button {
+            border: 1px solid var(--sage);
+            background: #ffffff;
+            color: var(--sage);
+        }
+
+        .secondary-button:hover:not(:disabled) {
+            background: rgba(85, 115, 115, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .primary-button {
+            width: 100%;
+            border: 1px solid var(--sage);
+            background: var(--sage);
+            color: #ffffff;
+        }
+
+        .primary-button:hover:not(:disabled) {
+            background: var(--sage-dark);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.58;
+            cursor: not-allowed;
+        }
+
+        .form-actions {
+            margin-top: 21px;
+        }
+
+        .inline-error {
+            display: none;
+            margin-top: 15px;
+            padding: 12px 14px;
+            border: 1px solid #fecdca;
+            border-radius: 8px;
+            background: var(--danger-soft);
+            color: var(--danger);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .inline-error.show {
+            display: block;
+        }
+
+        .credentials-card {
+            margin-top: 20px;
+            padding: 18px;
+            border: 1px solid #abefc6;
+            border-radius: 10px;
+            background: var(--success-soft);
+        }
+
+        .credentials-card h3 {
+            margin-bottom: 5px;
+            color: var(--success);
+            font-size: 0.95rem;
+        }
+
+        .credentials-card > p {
+            margin-bottom: 14px;
+            color: #344054;
+            font-size: 0.76rem;
+            line-height: 1.55;
+        }
+
+        .credential-line {
+            display: grid;
+            grid-template-columns: 85px minmax(0, 1fr);
+            gap: 10px;
+            padding: 9px 0;
+            border-top: 1px solid rgba(6, 118, 71, 0.14);
+            font-size: 0.8rem;
+        }
+
+        .credential-line span {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .credential-line code {
+            overflow-wrap: anywhere;
+            color: var(--espresso);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .copy-button {
+            width: 100%;
+            margin-top: 13px;
+            border: 1px solid var(--success);
+            background: #ffffff;
+            color: var(--success);
+        }
+
+        .copy-button:hover {
+            background: rgba(6, 118, 71, 0.06);
+        }
+
+        .list-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 17px;
+        }
+
+        .account-count {
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .account-count strong {
+            color: var(--espresso);
+        }
+
+        .refresh-button {
+            min-height: 38px;
+            padding: 8px 13px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--sage);
+        }
+
+        .refresh-button:hover:not(:disabled) {
+            border-color: var(--sage);
+            background: rgba(85, 115, 115, 0.06);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .staff-table {
+            width: 100%;
+            min-width: 720px;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+
+        .staff-table th {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--navbar);
+            color: rgba(255, 255, 255, 0.78);
+            text-align: left;
+            font-size: 0.68rem;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+        }
+
+        .staff-table td {
+            padding: 14px;
+            border-bottom: 1px solid rgba(85, 115, 115, 0.1);
+            vertical-align: top;
+            color: #344054;
+        }
+
+        .staff-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .staff-table tbody tr:hover {
+            background: rgba(223, 229, 243, 0.28);
+        }
+
+        .staff-name {
+            color: var(--espresso);
+            font-weight: 700;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: rgba(85, 115, 115, 0.1);
+            color: var(--sage);
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+
+        .username-code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            color: var(--espresso);
+            font-size: 0.75rem;
+        }
+
+        .empty-state,
+        .loading-state {
+            padding: 48px 20px;
+            border: 1px dashed rgba(85, 115, 115, 0.3);
+            border-radius: 10px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 0.84rem;
+            line-height: 1.6;
+        }
+
+        .list-error {
+            padding: 15px;
+            border: 1px solid #fecdca;
+            border-radius: 9px;
+            background: var(--danger-soft);
+            color: var(--danger);
+            font-size: 0.8rem;
+            line-height: 1.55;
+        }
+
+        .security-note {
+            margin-top: 17px;
+            padding: 14px 15px;
+            border: 1px solid #fedf89;
+            border-radius: 9px;
+            background: var(--warning-soft);
+            color: var(--warning);
+            font-size: 0.74rem;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 1100px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 780px) {
+            :root {
+                --sidebar-width: 0px;
+            }
+
+            body {
+                padding-left: 0;
+            }
+
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+            }
+
+            .sidebar nav {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .sidebar nav a {
+                padding: 11px 16px;
+            }
+
+            .sidebar-footer {
+                margin-top: 0;
+            }
+
+            .page-shell {
+                padding: 28px 18px 60px;
+            }
+
+            .page-header {
+                flex-direction: column;
+            }
+
+            .hotel-badge {
+                width: 100%;
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.full-width {
+                grid-column: auto;
+            }
+
+            .password-row {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar nav {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <a class="brand" href="manager-dashboard.html">
+            Vance.<span>Hub</span>
+        </a>
+
+        <nav aria-label="Manager navigation">
+            <a href="manager-dashboard.html">Dashboard</a>
+            <a href="staff.html">Staff HR</a>
+            <a href="staff-accounts.html" class="active" aria-current="page">
+                Staff Accounts
+            </a>
+            <a href="rooms.html">Rooms</a>
+            <a href="meals.html">Packages</a>
+            <a href="income.html">Income</a>
+            <a href="expenses.html">Expenses</a>
+            <a href="suppliers.html">Suppliers</a>
+            <a href="inventory.html">Inventory</a>
+            <a href="maintenance.html">Maintenance</a>
+            <a href="complaints.html">Complaints</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="manager-summary" id="manager-summary">
+                <strong>Manager account</strong>
+                Authenticating…
+            </div>
+
+            <button type="button" class="logout-button" id="logout-button">
+                Log Out
+            </button>
+        </div>
+    </aside>
+
+    <main class="page-shell">
+        <header class="page-header">
+            <div>
+                <h1>Staff Login Accounts</h1>
+                <p>
+                    Create Firebase login accounts for staff members. This page is
+                    separate from the Staff HR and attendance page. Every account
+                    created here is assigned to your hotel automatically.
+                </p>
+            </div>
+
+            <div class="hotel-badge" id="hotel-badge">
+                <strong>Current hotel</strong>
+                Loading…
+            </div>
+        </header>
+
+        <div class="page-message" id="page-message" role="alert" aria-live="polite"></div>
+
+        <section class="layout-grid">
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>Create Staff Login</h2>
+                    <p>
+                        Generate a password, review the credentials, then create
+                        the staff member’s login.
+                    </p>
+                </div>
+
+                <div class="panel-body">
+                    <form id="staff-account-form" novalidate>
+                        <div class="form-grid">
+                            <div class="field full-width">
+                                <label for="staff-name">Name</label>
+                                <input type="text" id="staff-name" maxlength="100" autocomplete="name" required>
+                            </div>
+
+                            <div class="field">
+                                <label for="role-title">Role</label>
+                                <select id="role-title" required>
+                                    <option value="">Select role</option>
+                                    <option value="Chef">Chef</option>
+                                    <option value="Front Desk">Front Desk</option>
+                                    <option value="Housekeeping">Housekeeping</option>
+                                    <option value="Waiter">Waiter</option>
+                                    <option value="Security">Security</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Receptionist">Receptionist</option>
+                                    <option value="Supervisor">Supervisor</option>
+                                    <option value="Accountant">Accountant</option>
+                                    <option value="Manager Assistant">Manager Assistant</option>
+                                    <option value="Custom">Custom</option>
+                                </select>
+                            </div>
+
+                            <div class="field" id="custom-role-field" hidden>
+                                <label for="custom-role-title">Custom Role</label>
+                                <input type="text" id="custom-role-title" maxlength="60" autocomplete="off">
+                            </div>
+
+                            <div class="field">
+                                <label for="staff-email">Email</label>
+                                <input type="email" id="staff-email" maxlength="150" autocomplete="email" required>
+                            </div>
+
+                            <div class="field">
+                                <label for="staff-phone">Phone Number</label>
+                                <input type="tel" id="staff-phone" maxlength="30" autocomplete="tel" required>
+                            </div>
+
+                            <div class="field full-width">
+                                <label for="staff-username">Username</label>
+                                <input
+                                    type="text"
+                                    id="staff-username"
+                                    minlength="3"
+                                    maxlength="40"
+                                    pattern="[a-z0-9._-]{3,40}"
+                                    autocomplete="off"
+                                    spellcheck="false"
+                                    required
+                                >
+                                <small>
+                                    Lowercase letters, numbers, dots, underscores and
+                                    hyphens only. Login uses username@business.local internally.
+                                </small>
+                            </div>
+
+                            <div class="field full-width">
+                                <label for="generated-password">Generated Password</label>
+                                <div class="password-row">
+                                    <input
+                                        type="text"
+                                        id="generated-password"
+                                        readonly
+                                        autocomplete="off"
+                                        aria-describedby="password-help"
+                                        required
+                                    >
+                                    <button
+                                        type="button"
+                                        class="secondary-button"
+                                        id="generate-password-button"
+                                    >
+                                        Generate Password
+                                    </button>
+                                </div>
+                                <small id="password-help">
+                                    The password is shown only during account creation.
+                                    It is not stored as plaintext.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="inline-error" id="form-error" role="alert" aria-live="polite"></div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="primary-button" id="create-account-button">
+                                Create Staff Login
+                            </button>
+                        </div>
+                    </form>
+
+                    <section class="credentials-card" id="credentials-card" aria-live="polite" hidden>
+                        <h3>Staff account created</h3>
+                        <p>
+                            Give these credentials to the staff member securely.
+                            The password cannot be retrieved later.
+                        </p>
+
+                        <div class="credential-line">
+                            <span>Username</span>
+                            <code id="created-username"></code>
+                        </div>
+
+                        <div class="credential-line">
+                            <span>Password</span>
+                            <code id="created-password"></code>
+                        </div>
+
+                        <button type="button" class="copy-button" id="copy-credentials-button">
+                            Copy Credentials
+                        </button>
+                    </section>
+
+                    <div class="security-note">
+                        The backend verifies that the current user is a Manager and
+                        derives the hotel ID from the Manager’s own users/{uid} profile.
+                        This form never sends a browser-selected hotel ID.
+                    </div>
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>Current Hotel Accounts</h2>
+                    <p>
+                        Firebase staff login accounts assigned to the authenticated
+                        Manager’s hotel.
+                    </p>
+                </div>
+
+                <div class="panel-body">
+                    <div class="list-toolbar">
+                        <div class="account-count">
+                            Accounts: <strong id="account-count">0</strong>
+                        </div>
+
+                        <button type="button" class="refresh-button" id="refresh-button">
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div id="staff-list">
+                        <div class="loading-state">Loading staff accounts…</div>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        "use strict";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        if (firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+
+    <script src="js/auth-permissions.js"></script>
+
+    <script>
+        "use strict";
+
+        let currentUserContext = null;
+        let staffAccounts = [];
+        let lastCreatedCredentials = null;
+
+        const localDevelopmentHosts = new Set([
+            "localhost",
+            "127.0.0.1"
+        ]);
+
+        const API_BASE_URL =
+            localDevelopmentHosts.has(window.location.hostname) &&
+            window.location.port === "3000"
+                ? "http://localhost:5050"
+                : "";
+
+        const staffAccountForm = document.getElementById("staff-account-form");
+        const staffNameInput = document.getElementById("staff-name");
+        const roleTitleSelect = document.getElementById("role-title");
+        const customRoleField = document.getElementById("custom-role-field");
+        const customRoleInput = document.getElementById("custom-role-title");
+        const staffEmailInput = document.getElementById("staff-email");
+        const staffPhoneInput = document.getElementById("staff-phone");
+        const staffUsernameInput = document.getElementById("staff-username");
+        const generatedPasswordInput = document.getElementById("generated-password");
+        const generatePasswordButton = document.getElementById("generate-password-button");
+        const createAccountButton = document.getElementById("create-account-button");
+        const formError = document.getElementById("form-error");
+        const pageMessage = document.getElementById("page-message");
+        const credentialsCard = document.getElementById("credentials-card");
+        const createdUsername = document.getElementById("created-username");
+        const createdPassword = document.getElementById("created-password");
+        const copyCredentialsButton = document.getElementById("copy-credentials-button");
+        const staffList = document.getElementById("staff-list");
+        const accountCount = document.getElementById("account-count");
+        const refreshButton = document.getElementById("refresh-button");
+        const hotelBadge = document.getElementById("hotel-badge");
+        const managerSummary = document.getElementById("manager-summary");
+        const logoutButton = document.getElementById("logout-button");
+
+        function setPageMessage(message, type = "error") {
+            pageMessage.textContent = message;
+            pageMessage.className = `page-message show ${type}`;
+        }
+
+        function clearPageMessage() {
+            pageMessage.textContent = "";
+            pageMessage.className = "page-message";
+        }
+
+        function setFormError(message) {
+            formError.textContent = message;
+            formError.classList.add("show");
+        }
+
+        function clearFormError() {
+            formError.textContent = "";
+            formError.classList.remove("show");
+        }
+
+        function normaliseUsername(value) {
+            return String(value || "").trim().toLowerCase();
+        }
+
+        function secureRandomIndex(maximum) {
+            if (!Number.isInteger(maximum) || maximum <= 0) {
+                throw new Error("A positive maximum is required.");
+            }
+
+            const maximumValidByte = Math.floor(256 / maximum) * maximum;
+            const randomByte = new Uint8Array(1);
+
+            do {
+                window.crypto.getRandomValues(randomByte);
+            } while (randomByte[0] >= maximumValidByte);
+
+            return randomByte[0] % maximum;
+        }
+
+        function secureRandomCharacter(characterSet) {
+            return characterSet[secureRandomIndex(characterSet.length)];
+        }
+
+        function shuffleCharacters(characters) {
+            const shuffled = [...characters];
+
+            for (let index = shuffled.length - 1; index > 0; index -= 1) {
+                const swapIndex = secureRandomIndex(index + 1);
+                [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+            }
+
+            return shuffled.join("");
+        }
+
+        function generateSecurePassword(length = 16) {
+            const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const lowercase = "abcdefghijkmnopqrstuvwxyz";
+            const digits = "23456789";
+            const symbols = "!@#$%&*+-=?";
+            const allCharacters = uppercase + lowercase + digits + symbols;
+
+            const characters = [
+                secureRandomCharacter(uppercase),
+                secureRandomCharacter(lowercase),
+                secureRandomCharacter(digits),
+                secureRandomCharacter(symbols)
+            ];
+
+            while (characters.length < length) {
+                characters.push(secureRandomCharacter(allCharacters));
+            }
+
+            return shuffleCharacters(characters);
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return "—";
+            }
+
+            const parsedDate = new Date(value);
+
+            if (Number.isNaN(parsedDate.getTime())) {
+                return "—";
+            }
+
+            return parsedDate.toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+        }
+
+        async function apiRequest(route, options = {}) {
+            const currentUser = auth.currentUser;
+
+            if (!currentUser) {
+                throw new Error("Your login session is unavailable. Please sign in again.");
+            }
+
+            const idToken = await currentUser.getIdToken();
+
+            const response = await fetch(`${API_BASE_URL}${route}`, {
+                ...options,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}`,
+                    ...(options.headers || {})
+                }
+            });
+
+            let payload = null;
+
+            try {
+                payload = await response.json();
+            } catch (error) {
+                payload = null;
+            }
+
+            if (!response.ok) {
+                const requestError = new Error(
+                    payload && payload.error
+                        ? payload.error
+                        : `The server request failed with status ${response.status}.`
+                );
+
+                requestError.code = payload && payload.code
+                    ? payload.code
+                    : "request-failed";
+
+                requestError.status = response.status;
+                throw requestError;
+            }
+
+            return payload || {};
+        }
+
+        function createCell(row, text, className = "") {
+            const cell = document.createElement("td");
+            cell.textContent = text || "—";
+
+            if (className) {
+                cell.className = className;
+            }
+
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function renderStaffAccounts() {
+            accountCount.textContent = String(staffAccounts.length);
+            staffList.textContent = "";
+
+            if (staffAccounts.length === 0) {
+                const emptyState = document.createElement("div");
+                emptyState.className = "empty-state";
+                emptyState.textContent = "No staff login accounts have been created for this hotel yet.";
+                staffList.appendChild(emptyState);
+                return;
+            }
+
+            const tableWrap = document.createElement("div");
+            tableWrap.className = "table-wrap";
+
+            const table = document.createElement("table");
+            table.className = "staff-table";
+
+            const tableHead = document.createElement("thead");
+            const headingRow = document.createElement("tr");
+
+            ["Name", "Role", "Username", "Contact", "Created"].forEach(label => {
+                const heading = document.createElement("th");
+                heading.textContent = label;
+                headingRow.appendChild(heading);
+            });
+
+            tableHead.appendChild(headingRow);
+
+            const tableBody = document.createElement("tbody");
+
+            staffAccounts.forEach(account => {
+                const row = document.createElement("tr");
+
+                createCell(row, account.name || "Unnamed", "staff-name");
+
+                const roleCell = document.createElement("td");
+                const roleBadge = document.createElement("span");
+                roleBadge.className = "role-badge";
+                roleBadge.textContent = account.roleTitle || "Staff";
+                roleCell.appendChild(roleBadge);
+                row.appendChild(roleCell);
+
+                createCell(row, account.username || "—", "username-code");
+
+                const contactCell = document.createElement("td");
+                const emailLine = document.createElement("div");
+                emailLine.textContent = account.email || "—";
+
+                const phoneLine = document.createElement("div");
+                phoneLine.textContent = account.phone || "—";
+                phoneLine.style.marginTop = "4px";
+                phoneLine.style.color = "var(--muted)";
+
+                contactCell.append(emailLine, phoneLine);
+                row.appendChild(contactCell);
+
+                createCell(row, formatDate(account.createdAt));
+                tableBody.appendChild(row);
+            });
+
+            table.append(tableHead, tableBody);
+            tableWrap.appendChild(table);
+            staffList.appendChild(tableWrap);
+        }
+
+        async function loadStaffAccounts() {
+            refreshButton.disabled = true;
+            staffList.innerHTML = '<div class="loading-state">Loading staff accounts…</div>';
+
+            try {
+                const result = await apiRequest("/api/staff", {
+                    method: "GET"
+                });
+
+                staffAccounts = Array.isArray(result.staff) ? result.staff : [];
+                renderStaffAccounts();
+            } catch (error) {
+                console.error("Unable to load staff accounts:", error);
+                accountCount.textContent = "0";
+                staffList.textContent = "";
+
+                const errorBlock = document.createElement("div");
+                errorBlock.className = "list-error";
+                errorBlock.textContent = error.message || "Unable to load staff accounts.";
+                staffList.appendChild(errorBlock);
+            } finally {
+                refreshButton.disabled = false;
+            }
+        }
+
+        function updateCustomRoleVisibility() {
+            const isCustom = roleTitleSelect.value === "Custom";
+            customRoleField.hidden = !isCustom;
+            customRoleInput.required = isCustom;
+
+            if (!isCustom) {
+                customRoleInput.value = "";
+            }
+        }
+
+        function displayCreatedCredentials(username, password) {
+            lastCreatedCredentials = { username, password };
+            createdUsername.textContent = username;
+            createdPassword.textContent = password;
+            credentialsCard.hidden = false;
+        }
+
+        async function copyTextToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return;
+            }
+
+            const temporaryTextarea = document.createElement("textarea");
+            temporaryTextarea.value = text;
+            temporaryTextarea.style.position = "fixed";
+            temporaryTextarea.style.opacity = "0";
+            document.body.appendChild(temporaryTextarea);
+            temporaryTextarea.select();
+
+            const copied = document.execCommand("copy");
+            temporaryTextarea.remove();
+
+            if (!copied) {
+                throw new Error("Clipboard access is unavailable.");
+            }
+        }
+
+        roleTitleSelect.addEventListener("change", updateCustomRoleVisibility);
+
+        staffUsernameInput.addEventListener("input", () => {
+            staffUsernameInput.value = normaliseUsername(staffUsernameInput.value)
+                .replace(/[^a-z0-9._-]/g, "");
+        });
+
+        generatePasswordButton.addEventListener("click", () => {
+            clearFormError();
+
+            try {
+                generatedPasswordInput.value = generateSecurePassword();
+            } catch (error) {
+                console.error("Password generation failed:", error);
+                setFormError("Unable to generate a secure password in this browser.");
+            }
+        });
+
+        staffAccountForm.addEventListener("submit", async event => {
+            event.preventDefault();
+            clearFormError();
+            clearPageMessage();
+
+            const name = staffNameInput.value.trim();
+            const roleTitle = roleTitleSelect.value;
+            const customRoleTitle = customRoleInput.value.trim();
+            const email = staffEmailInput.value.trim().toLowerCase();
+            const phone = staffPhoneInput.value.trim();
+            const username = normaliseUsername(staffUsernameInput.value);
+            const password = generatedPasswordInput.value;
+
+            if (!staffAccountForm.checkValidity()) {
+                staffAccountForm.reportValidity();
+                return;
+            }
+
+            if (!password) {
+                setFormError("Generate a password before creating the staff login.");
+                return;
+            }
+
+            createAccountButton.disabled = true;
+            generatePasswordButton.disabled = true;
+            createAccountButton.textContent = "Creating Account…";
+
+            try {
+                await apiRequest("/api/staff", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        name,
+                        roleTitle,
+                        customRoleTitle,
+                        email,
+                        phone,
+                        username,
+                        password
+                    })
+                });
+
+                displayCreatedCredentials(username, password);
+                setPageMessage("Staff account created successfully.", "success");
+
+                staffAccountForm.reset();
+                updateCustomRoleVisibility();
+                generatedPasswordInput.value = "";
+
+                await loadStaffAccounts();
+            } catch (error) {
+                console.error("Unable to create staff account:", error);
+
+                if (error.code === "password-taken") {
+                    setFormError("Password already taken");
+                } else if (error.code === "username-taken") {
+                    setFormError("Username already taken");
+                } else {
+                    setFormError(error.message || "Unable to create the staff account.");
+                }
+            } finally {
+                createAccountButton.disabled = false;
+                generatePasswordButton.disabled = false;
+                createAccountButton.textContent = "Create Staff Login";
+            }
+        });
+
+        copyCredentialsButton.addEventListener("click", async () => {
+            if (!lastCreatedCredentials) {
+                return;
+            }
+
+            const text = [
+                "Hotel Business Tracker Staff Login",
+                `Username: ${lastCreatedCredentials.username}`,
+                `Password: ${lastCreatedCredentials.password}`
+            ].join("\n");
+
+            const originalText = copyCredentialsButton.textContent;
+
+            try {
+                await copyTextToClipboard(text);
+                copyCredentialsButton.textContent = "Copied";
+
+                window.setTimeout(() => {
+                    copyCredentialsButton.textContent = originalText;
+                }, 1800);
+            } catch (error) {
+                console.error("Unable to copy credentials:", error);
+                setPageMessage(
+                    "Clipboard access failed. Copy the displayed credentials manually."
+                );
+            }
+        });
+
+        refreshButton.addEventListener("click", loadStaffAccounts);
+
+        logoutButton.addEventListener("click", async () => {
+            try {
+                await auth.signOut();
+            } finally {
+                window.location.replace("index.html");
+            }
+        });
+
+        async function initialisePage() {
+            try {
+                currentUserContext = await BusinessAuth.initialisePage({
+                    allowedRoles: ["manager"],
+                    unauthorisedRedirect: "manager-dashboard.html"
+                });
+
+                const profile = currentUserContext.profile || {};
+                const managerName =
+                    profile.name ||
+                    profile.username ||
+                    currentUserContext.email ||
+                    "Manager";
+
+                managerSummary.innerHTML = "";
+
+                const managerStrong = document.createElement("strong");
+                managerStrong.textContent = managerName;
+
+                const managerDetail = document.createElement("span");
+                managerDetail.textContent = `Hotel: ${currentUserContext.hotelId}`;
+
+                managerSummary.append(managerStrong, managerDetail);
+
+                const hotelName =
+                    profile.businessName ||
+                    profile.hotelName ||
+                    profile.hotel ||
+                    "Assigned hotel";
+
+                hotelBadge.innerHTML = "";
+
+                const hotelStrong = document.createElement("strong");
+                hotelStrong.textContent = hotelName;
+
+                const hotelIdentifier = document.createElement("span");
+                hotelIdentifier.textContent = currentUserContext.hotelId;
+
+                hotelBadge.append(hotelStrong, hotelIdentifier);
+
+                await loadStaffAccounts();
+            } catch (error) {
+                console.error("Staff accounts page initialization failed:", error);
+                setPageMessage(error.message || "Unable to verify Manager access.");
+
+                staffList.innerHTML = `
+                    <div class="list-error">
+                        Manager authentication is required to use this page.
+                    </div>
+                `;
+
+                createAccountButton.disabled = true;
+                generatePasswordButton.disabled = true;
+                refreshButton.disabled = true;
+            }
+        }
+
+        updateCustomRoleVisibility();
+        initialisePage();
+    </script>
+</body>
+</html>
