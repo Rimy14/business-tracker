@@ -1410,6 +1410,48 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         </div>
                     </div>
                     
+                    <!-- Currency & Booking Channel -->
+                    <div style="display:flex; gap:10px; width:100%;">
+                        <div class="input-block-node" style="flex:1;">
+                            <select id="bookingCurrency" class="screenshot-input" required>
+                                <option value="LKR" selected>LKR (Sri Lankan Rupee)</option>
+                                <option value="USD">USD (US Dollar)</option>
+                                <option value="EUR">EUR (Euro)</option>
+                                <option value="GBP">GBP (British Pound)</option>
+                                <option value="AUD">AUD (Australian Dollar)</option>
+                            </select>
+                            <span class="bottom-descriptor-label">Currency</span>
+                        </div>
+                        <div class="input-block-node" style="flex:1;">
+                            <select id="bookingChannel" class="screenshot-input" required>
+                                <option value="Direct" selected>Direct</option>
+                                <option value="Website">Website</option>
+                                <option value="Booking.com">Booking.com</option>
+                                <option value="Airbnb">Airbnb</option>
+                                <option value="Expedia">Expedia</option>
+                                <option value="Custom">-- Custom Channel --</option>
+                            </select>
+                            <input type="text" id="bookingChannelCustom" placeholder="Enter custom channel" style="display:none; margin-top:5px; padding:8px 12px; background:#fff; border:1px solid transparent; border-radius:6px; color:#0d0d0d; font-size:0.8rem; outline:none; width:100%;">
+                            <span class="bottom-descriptor-label">Booking Channel</span>
+                        </div>
+                    </div>
+
+                    <!-- Discount Type & Value -->
+                    <div style="display:flex; gap:10px; width:100%;">
+                        <div class="input-block-node" style="flex:1;">
+                            <select id="bookingDiscountType" class="screenshot-input">
+                                <option value="none" selected>No Discount</option>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount</option>
+                            </select>
+                            <span class="bottom-descriptor-label">Discount Type</span>
+                        </div>
+                        <div class="input-block-node" style="flex:1;">
+                            <input type="number" id="bookingDiscountValue" class="screenshot-input" placeholder="0" value="0" min="0">
+                            <span class="bottom-descriptor-label">Discount Value</span>
+                        </div>
+                    </div>
+
                     <div class="input-block-node">
                         <input type="text" id="bookingNotes" class="screenshot-input" placeholder="Special requests...">
                         <span class="bottom-descriptor-label">Notes</span>
@@ -1586,6 +1628,32 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         <div class="form-group">
                             <label>Manual Paid Amount (if early check-out)</label>
                             <input type="number" id="editBookingManualAmount" placeholder="Enter amount">
+                        </div>
+                        <div class="form-group">
+                            <label>Currency</label>
+                            <select id="editBookingCurrency">
+                                <option value="LKR">LKR</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="AUD">AUD</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Booking Channel</label>
+                            <input type="text" id="editBookingChannel">
+                        </div>
+                        <div class="form-group">
+                            <label>Discount Type</label>
+                            <select id="editBookingDiscountType">
+                                <option value="none">No Discount</option>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Discount Value</label>
+                            <input type="number" id="editBookingDiscountValue" min="0">
                         </div>
                     </div>
                 </div>
@@ -1834,7 +1902,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const currentVal = sel.value;
             sel.innerHTML = '<option value="">Select Room</option>';
             availableRooms.forEach(r => {
-                sel.innerHTML += `<option value="${r.roomNumber}" ${r.roomNumber === currentVal ? 'selected' : ''}>${r.roomNumber} - ${r.roomType || 'Standard'} (LKR ${Number(r.rate || 0).toLocaleString()}/night)</option>`;
+                sel.innerHTML += `<option value="${r.roomNumber}" ${r.roomNumber === currentVal ? 'selected' : ''}>${r.roomNumber} - ${r.roomType || 'Standard'}</option>`;
             });
         }
 
@@ -1853,7 +1921,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const isCurrentRoom = currentBooking && r.roomNumber === currentBooking.roomNumber;
                 
                 if (isAvailable || isCurrentRoom) {
-                    sel.innerHTML += `<option value="${r.roomNumber}" ${r.roomNumber === currentVal ? 'selected' : ''}>${r.roomNumber} - ${r.roomType || 'Standard'} (LKR ${Number(r.rate || 0).toLocaleString()}/night) [${r.status || 'Available'}]</option>`;
+                    sel.innerHTML += `<option value="${r.roomNumber}" ${r.roomNumber === currentVal ? 'selected' : ''}>${r.roomNumber} - ${r.roomType || 'Standard'} [${r.status || 'Available'}]</option>`;
                 }
             });
         }
@@ -2068,7 +2136,18 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const roomRate = room ? (room.rate || 0) : 0;
             const roomTotal = roomRate * nights;
             const mealTotal = mealPrice * guestCount * nights;
-            const grandTotal = roomTotal + mealTotal;
+            const baseTotal = roomTotal + mealTotal;
+
+            // Discount calculation
+            const discType = document.getElementById('bookingDiscountType').value;
+            const discVal = parseFloat(document.getElementById('bookingDiscountValue').value) || 0;
+            let discountAmount = 0;
+            if (discType === 'percentage') {
+                discountAmount = (baseTotal * discVal) / 100;
+            } else if (discType === 'fixed') {
+                discountAmount = discVal;
+            }
+            const grandTotal = Math.max(0, baseTotal - discountAmount);
 
             const pbRoom = document.getElementById('pbRoom');
             const pbMeals = document.getElementById('pbMeals');
@@ -2077,10 +2156,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (pbMeals) pbMeals.textContent = `LKR ${mealPrice.toLocaleString()} × ${guestCount} guests × ${nights} nights = LKR ${mealTotal.toLocaleString()}`;
             if (pbTotal) pbTotal.textContent = 'LKR ' + grandTotal.toLocaleString();
 
-            return { roomTotal, mealTotal, grandTotal, nights, roomRate, mealPrice };
+            return { roomTotal, mealTotal, baseTotal, discountAmount, grandTotal, nights, roomRate, mealPrice };
         }
 
-        ['bookingRoom', 'bookingMeals', 'bookingGuestCount', 'bookingCheckIn', 'bookingCheckOut'].forEach(id => {
+        ['bookingRoom', 'bookingMeals', 'bookingGuestCount', 'bookingCheckIn', 'bookingCheckOut', 'bookingDiscountType', 'bookingDiscountValue'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', calculatePrice);
@@ -2105,17 +2184,17 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const checkInTime = document.getElementById('bookingCheckInTime').value || '14:00';
                 const checkOut = document.getElementById('bookingCheckOut').value;
                 const checkOutTime = document.getElementById('bookingCheckOutTime').value || '11:00';
-                const mealPackage = document.getElementById('bookingMeals').value;
-                const paymentStatus = document.getElementById('bookingPaymentStatus').value;
-                const notes = document.getElementById('bookingNotes').value.trim();
-
-                if (!guestName || !roomNumber || !checkIn || !checkOut) {
-                    alert('Please fill in all required fields.');
-                    return;
+                const currency = document.getElementById('bookingCurrency').value;
+                let bookingChannel = document.getElementById('bookingChannel').value;
+                const channelCustom = document.getElementById('bookingChannelCustom');
+                if (bookingChannel === 'Custom' && channelCustom.value.trim()) {
+                    bookingChannel = channelCustom.value.trim();
                 }
+                const discountType = document.getElementById('bookingDiscountType').value;
+                const discountValue = parseFloat(document.getElementById('bookingDiscountValue').value) || 0;
 
-                const { grandTotal } = calculatePrice();
-                if (grandTotal <= 0) {
+                const { grandTotal, discountAmount } = calculatePrice();
+                if (grandTotal < 0) {
                     alert('Please check your dates and room selection.');
                     return;
                 }
@@ -2132,6 +2211,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         paymentStatus: paymentStatus,
                         status: 'upcoming',
                         notes: notes || '',
+                        currency,
+                        bookingChannel,
+                        discountType,
+                        discountValue,
                         createdAt: new Date()
                     });
 
@@ -2150,7 +2233,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                             date: checkIn,
                             source: 'Room Revenue - Booking',
                             amount: grandTotal,
-                            description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealLabel} | PAID`,
+                            currency: currency,
+                            description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealLabel} | Discount: ${discountType === 'percentage' ? discountValue + '%' : 'LKR ' + discountValue} | PAID (${currency})`,
                             bookingId: bookingRef.id,
                             isAutoGenerated: true,
                             createdAt: new Date()
@@ -2250,6 +2334,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             
             document.getElementById('editBookingManualAmount').value = b.manualAmount || 0;
             document.getElementById('editBookingNotes').value = b.notes || '';
+            document.getElementById('editBookingCurrency').value = b.currency || 'LKR';
+            document.getElementById('editBookingChannel').value = b.bookingChannel || 'Direct';
+            document.getElementById('editBookingDiscountType').value = b.discountType || 'none';
+            document.getElementById('editBookingDiscountValue').value = b.discountValue || 0;
 
             document.getElementById('editBookingModal').classList.add('show');
         }
@@ -2281,6 +2369,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 
                 const guestCount = parseInt(document.getElementById('editBookingGuestCount').value) || 1;
                 const mealPackage = document.getElementById('editBookingMeals').value;
+
+                const currency = document.getElementById('editBookingCurrency').value;
+                const bookingChannel = document.getElementById('editBookingChannel').value.trim();
+                const discountType = document.getElementById('editBookingDiscountType').value;
+                const discountValue = parseFloat(document.getElementById('editBookingDiscountValue').value) || 0;
 
                 if (!guestName || !roomNumber || !checkIn || !checkOut) {
                     alert('Please fill in all fields.');
@@ -2314,7 +2407,15 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         }
                         const roomTotal = roomRate * nights;
                         const mealTotal = mealPrice * guestCount * nights;
-                        newTotalAmount = roomTotal + mealTotal;
+                        const baseTotal = roomTotal + mealTotal;
+                        
+                        let discountAmount = 0;
+                        if (discountType === 'percentage') {
+                            discountAmount = (baseTotal * discountValue) / 100;
+                        } else if (discountType === 'fixed') {
+                            discountAmount = discountValue;
+                        }
+                        newTotalAmount = Math.max(0, baseTotal - discountAmount);
                     }
 
                     await db.collection('bookings').doc(id).update({
@@ -2325,7 +2426,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         mealPackage: mealPackage || '',
                         totalAmount: newTotalAmount,
                         manualAmount: status === 'checked_out_early' ? manualAmount : 0,
-                        notes: notes || ''
+                        notes: notes || '',
+                        currency,
+                        bookingChannel,
+                        discountType,
+                        discountValue
                     });
 
                     // 🔥 FIX: Handle income updates
@@ -2339,7 +2444,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                                 date: checkIn,
                                 source: 'Room Revenue - Booking',
                                 amount: incomeAmount,
-                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | PAID (updated)${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`,
+                                currency: currency,
+                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | Discount: ${discountType === 'percentage' ? discountValue + '%' : 'LKR ' + discountValue} | PAID (updated) (${currency})${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`,
                                 bookingId: id,
                                 isAutoGenerated: true,
                                 createdAt: new Date()
@@ -2355,8 +2461,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                                 console.log('🗑️ Income removed for booking:', id);
                             });
                         }
-                    } else if (paymentStatus === 'paid' && oldBooking && oldBooking.totalAmount !== newTotalAmount) {
-                        // 🔥 FIX: Status is still 'paid' but total amount changed - UPDATE income record
+                    } else if (paymentStatus === 'paid' && oldBooking && (oldBooking.totalAmount !== newTotalAmount || oldBooking.currency !== currency)) {
+                        // 🔥 FIX: Status is still 'paid' but total amount or currency changed - UPDATE income record
                         const incomeSnap = await db.collection('income')
                             .where('bookingId', '==', id)
                             .get();
@@ -2365,7 +2471,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                             await db.collection('income').doc(doc.id).update({
                                 amount: newTotalAmount,
                                 date: checkIn,
-                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | PAID (updated)${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`
+                                currency: currency,
+                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | Discount: ${discountType === 'percentage' ? discountValue + '%' : 'LKR ' + discountValue} | PAID (updated) (${currency})${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`
                             });
                             console.log('✅ Income UPDATED for booking:', id, 'New Amount:', newTotalAmount);
                         });
