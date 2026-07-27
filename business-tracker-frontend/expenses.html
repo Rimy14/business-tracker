@@ -911,7 +911,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     aspect-ratio: auto !important;
     height: auto !important;
     width: 100% !important;
-    max-width: 900px !important;
+    max-width: none !important;
+    width: calc(min(1440px, calc(100vw - var(--sb-w))) - 12%) !important;
     margin: 30px auto 50px auto !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -1024,7 +1025,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 .modal .form-actions .btn-submit:hover { background: #3f5858 !important; }
 
 @media (max-width: 768px) {
-    .cinematic-environment-container { margin: 20px 12px 30px 12px !important; }
+    .cinematic-environment-container { margin: 20px auto 30px !important; }
     .right-side-form-panel { padding: 24px 18px !important; }
     .two-column-row { grid-template-columns: 1fr !important; }
 }

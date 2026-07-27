@@ -60,6 +60,18 @@ test('dashboard exchange controls use the responsive currency component', () => 
     assert.match(read('owner-dashboard.html'), /@media \(max-width: 480px\)[\s\S]*--sb-w: 64px/);
 });
 
+test('manager workspace forms share the same responsive content grid', () => {
+    const managerPages = ['meals.html', 'rooms.html', 'staff.html', 'inventory.html', 'suppliers.html', 'expenses.html', 'income.html'];
+    managerPages.forEach(file => {
+        const html = read(file);
+        assert.match(html, /\.cinematic-environment-container\s*\{[\s\S]*max-width:\s*none\s*!important;[\s\S]*width:\s*calc\(min\(1440px,\s*calc\(100vw\s*-\s*var\(--sb-w\)\)\)\s*-\s*12%\)\s*!important;/, file);
+        assert.match(html, /\.cinematic-environment-container\s*\{\s*margin:\s*20px auto 30px !important;/, file);
+    });
+    for (const file of ['meals.html', 'rooms.html']) {
+        assert.match(read(file), /\.dashboard-telemetry-section\s*>\s*\.cinematic-environment-container\s*\{\s*width:\s*100%\s*!important;/, file);
+    }
+});
+
 test('finance source selectors do not expose phantom Bar or Spa options', () => {
     for (const file of ['income.html', 'owner-financials.html']) {
         const html = read(file);
