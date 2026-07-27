@@ -1369,7 +1369,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         <input type="date" id="reportStartDate" style="display:none; width:140px;">
                         <input type="date" id="reportEndDate" style="display:none; width:140px;">
                     </div>
-                    <button class="btn-primary-small" id="downloadBuffetReportBtn">📥 Report</button>
+                    <button class="btn-primary-small" id="downloadBuffetReportBtn" data-requires="manager">📥 Report</button>
                 </div>
             </div>
             <div class="section-body">
@@ -1380,7 +1380,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         </div>
 
         <!-- PACKAGES FORM -->
-        <div class="cinematic-environment-container">
+        <div
+            class="cinematic-environment-container"
+            data-requires="manager"
+        >
             <div class="right-side-form-panel">
                 <form id="packageForm" class="vertical-input-stack">
                     <h4 style="color:#fff; font-weight:600; font-size:0.9rem; margin-bottom:2px;">📦 Add Package</h4>
@@ -1409,7 +1412,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     </div>
                     <div class="form-actions-row">
                         <button type="reset" class="screenshot-btn clear-btn-node">Clear</button>
-                        <button type="submit" class="screenshot-btn submit-btn-node" id="submitPackageBtn">Add Package</button>
+                        <button type="submit" class="screenshot-btn submit-btn-node" id="submitPackageBtn" data-requires="manager">Add Package</button>
                     </div>
                 </form>
             </div>
@@ -1419,7 +1422,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         <div class="section-card">
             <div class="section-header">
                 <h4>📦 Packages</h4>
-                <button class="btn-primary-small" id="downloadPackageReportBtn">📥 Download Report</button>
+                <button class="btn-primary-small" id="downloadPackageReportBtn" data-requires="manager">📥 Download Report</button>
             </div>
             <div class="section-body">
                 <div class="table-wrap">
@@ -1477,7 +1480,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
     </div>
 
     <!-- EDIT PACKAGE MODAL -->
-    <div class="modal-overlay" id="editPackageModal">
+    <div class="modal-overlay" id="editPackageModal" data-requires="manager">
         <div class="modal">
             <h2>✏️ Edit Package</h2>
             <form id="editPackageForm">
@@ -1496,7 +1499,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" onclick="closeEditPackageModal()">Cancel</button>
-                    <button type="submit" class="btn-submit">Update Package</button>
+                    <button type="submit" class="btn-submit" data-requires="manager">Update Package</button>
                 </div>
             </form>
         </div>
@@ -1506,6 +1509,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/auth-permissions.js"></script>
 
     <script>
         // --- FIREBASE CONFIG ---
@@ -1524,7 +1528,28 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         // --- GLOBALS ---
         let currentUser = null;
         let currentUserData = null;
+        let currentUserContext = null;
         let hotelId = null;
+
+        function requireManagerAction(message) {
+            const context =
+                BusinessAuth.getActiveContext();
+
+            if (
+                context &&
+                context.role === "manager"
+            ) {
+                return true;
+            }
+
+            alert(
+                message ||
+                "Only Managers can use this action."
+            );
+
+            return false;
+        }
+
         let buffetItems = [];
         let packages = [];
         let currentFilter = 'month';
@@ -1620,12 +1645,24 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         // --- AUTH ---
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = '/'; return; }
-            currentUser = user;
+
             try {
-                const doc = await db.collection('users').doc(user.uid).get();
-                if (!doc.exists) { alert('User data not found!'); await auth.signOut(); window.location.href = '/'; return; }
-                currentUserData = doc.data();
-                hotelId = user.uid;
+                currentUserContext =
+                    await BusinessAuth.initialisePage({
+                        allowedRoles: [
+                            "manager",
+                            "staff"
+                        ]
+                    });
+
+                currentUser =
+                    currentUserContext.user;
+
+                currentUserData =
+                    currentUserContext.profile;
+
+                hotelId =
+                    currentUserContext.hotelId;
                 
                 // Update profile avatar with initials
                 const initialsElement = document.getElementById('avatarInitials');
@@ -1865,8 +1902,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     <td>LKR ${Number(p.price || 0).toLocaleString()}</td>
                     <td>${p.description || '-'}</td>
                     <td>
-                        <button class="strip-link-btn edit-strip-btn" onclick="openEditPackageModal('${p.id}')">✏️</button>
-                        <button class="strip-link-btn delete-strip-btn" onclick="deletePackage('${p.id}')">🗑️</button>
+                        <button class="strip-link-btn edit-strip-btn" data-requires="manager" onclick="openEditPackageModal('${p.id}')">✏️</button>
+                        <button class="strip-link-btn delete-strip-btn" data-requires="manager" onclick="deletePackage('${p.id}')">🗑️</button>
                     </td>
                 </tr>
             `).join('');
@@ -2115,8 +2152,47 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             });
         }
 
+
+        // package-create-manager-guard
+        const packageSubmitButton =
+            document.getElementById(
+                "submitPackageBtn"
+            );
+
+        if (packageSubmitButton) {
+            const packageCreateForm =
+                packageSubmitButton.closest(
+                    "form"
+                );
+
+            if (packageCreateForm) {
+                packageCreateForm.addEventListener(
+                    "submit",
+                    function(event) {
+                        if (
+                            !requireManagerAction(
+                                "Only Managers can add packages."
+                            )
+                        ) {
+                            event.preventDefault();
+                            event.stopImmediatePropagation();
+                        }
+                    },
+                    true
+                );
+            }
+        }
+
         // --- DELETE PACKAGE ---
         async function deletePackage(id) {
+            if (
+                !requireManagerAction(
+                    "Only Managers can delete packages."
+                )
+            ) {
+                return;
+            }
+
             if (!confirm('Delete this package?')) return;
             try {
                 await db.collection('packages').doc(id).delete();
@@ -2128,6 +2204,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         let editPackageId = null;
 
         function openEditPackageModal(id) {
+            if (
+                !requireManagerAction(
+                    "Only Managers can edit packages."
+                )
+            ) {
+                return;
+            }
+
             const p = packages.find(pkg => pkg.id === id);
             if (!p) { alert('Package not found.'); return; }
             editPackageId = id;
@@ -2149,6 +2233,15 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         if (editPackageForm) {
             editPackageForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                if (
+                    !requireManagerAction(
+                        "Only Managers can edit packages."
+                    )
+                ) {
+                    return;
+                }
+
                 const id = document.getElementById('editPackageId').value;
                 const name = document.getElementById('editPackageName').value.trim();
                 const price = parseFloat(document.getElementById('editPackagePrice').value);
@@ -2181,6 +2274,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         const downloadBuffetBtn = document.getElementById('downloadBuffetReportBtn');
         if (downloadBuffetBtn) {
             downloadBuffetBtn.addEventListener('click', function() {
+                if (
+                    !requireManagerAction(
+                        "Staff accounts cannot download reports."
+                    )
+                ) {
+                    return;
+                }
+
                 const { jsPDF } = window.jspdf;
                 let filtered = buffetItems;
                 if (startDate && endDate) {
@@ -2236,6 +2337,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         const downloadPackageBtn = document.getElementById('downloadPackageReportBtn');
         if (downloadPackageBtn) {
             downloadPackageBtn.addEventListener('click', function() {
+                if (
+                    !requireManagerAction(
+                        "Staff accounts cannot download reports."
+                    )
+                ) {
+                    return;
+                }
+
                 const { jsPDF } = window.jspdf;
                 if (!packages.length) { alert('No packages to export.'); return; }
 
