@@ -2,28 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Gateway | Secure Corporate Authentication</title>
-    <!-- Corporate Typography & Core Sans Fonts -->
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Enterprise Gateway | Secure Corporate Authentication
+    </title>
+
+    <!-- Corporate Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
     <style>
-        /* --- Strict Corporate Palette Adherence ---
-           #dfe5f3 : Accent Focus Tint (Highlights / Glows)
-           #557373 : Sage Slate (Structural Input Borders / Active States)
-           #272401 : Deep Olive Shadow (Underlying Card Ambient Glows)
-           #f2efea : Silk Off-White (Clean Text / Content Fields)
-           #0d0d0d : Obsidian Jet (Primary Enterprise Surface Background)
-        ------------------------------------------- */
         :root {
             --palette-ice: #dfe5f3;
             --palette-sage: #557373;
             --palette-shadow: #272401;
             --palette-cream: #f2efea;
             --palette-obsidian: #0d0d0d;
-            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --palette-error: #ff6b6b;
+            --font-main: "Plus Jakarta Sans", sans-serif;
         }
 
         * {
@@ -33,84 +44,109 @@
             font-family: var(--font-main);
         }
 
-        body, html {
-            width: 100vw;
-            height: 100vh;
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
             background-color: var(--palette-obsidian);
             color: var(--palette-cream);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 3D WebGL Structural Network Layer */
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 30px 15px;
+        }
+
         #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: fixed;
+            inset: 0;
             width: 100%;
             height: 100%;
             z-index: 1;
             pointer-events: none;
         }
 
-        /* Professional Executive Login Card */
+        .corporate-grid-matrix {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(
+                    rgba(85, 115, 115, 0.015) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(85, 115, 115, 0.015) 1px,
+                    transparent 1px
+                );
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .business-auth-wrapper {
             position: relative;
             z-index: 2;
             width: clamp(340px, 92vw, 450px);
-            background: rgba(13, 13, 13, 0.8);
+            background: rgba(13, 13, 13, 0.82);
             border: 1px solid rgba(85, 115, 115, 0.25);
-            padding: 55px 45px;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8),
-                        0 0 80px rgba(39, 36, 1, 0.15);
+            padding: 48px 45px;
+            box-shadow:
+                0 40px 100px rgba(0, 0, 0, 0.8),
+                0 0 80px rgba(39, 36, 1, 0.15);
             opacity: 0;
             transform: translateY(20px);
             transition: border-color 0.4s ease;
+            backdrop-filter: blur(8px);
         }
 
         .business-auth-wrapper:hover {
             border-color: rgba(85, 115, 115, 0.4);
         }
 
-        /* Institutional Brand Header */
         .brand-header {
-            margin-bottom: 40px;
+            margin-bottom: 34px;
             text-align: left;
         }
 
         .brand-header h1 {
+            margin-bottom: 6px;
+            color: #ffffff;
             font-size: 1.75rem;
             font-weight: 700;
             letter-spacing: -0.5px;
-            color: #FFFFFF;
-            margin-bottom: 6px;
         }
 
         .brand-header p {
-            font-size: 0.85rem;
             color: var(--palette-sage);
+            font-size: 0.85rem;
             font-weight: 400;
             letter-spacing: 0.2px;
+            line-height: 1.5;
         }
 
-        /* Structured Corporate Form Components */
         .form-block {
             position: relative;
-            margin-bottom: 25px;
             width: 100%;
+            margin-bottom: 24px;
         }
 
         .form-block label {
             position: absolute;
-            left: 20px;
             top: 50%;
+            left: 20px;
             transform: translateY(-50%);
+            color: var(--palette-sage);
             font-size: 0.9rem;
             letter-spacing: 0.3px;
-            color: var(--palette-sage);
             pointer-events: none;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -127,50 +163,88 @@
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Active Business Input Transitions */
         .business-input:focus {
             border-color: var(--palette-ice);
             background: rgba(13, 13, 13, 0.95);
             box-shadow: 0 0 20px rgba(223, 229, 243, 0.04);
         }
 
-        /* Clean Corporate Floating Label Logic */
         .business-input:focus ~ label,
         .business-input:not(:placeholder-shown) ~ label {
             top: 0;
             left: 15px;
+            padding: 0 6px;
+            background-color: var(--palette-obsidian);
+            color: var(--palette-ice);
             font-size: 0.75rem;
             font-weight: 600;
-            text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--palette-ice);
-            background-color: #0d0d0d;
-            padding: 0 6px;
+            text-transform: uppercase;
         }
 
-        /* Access Infrastructure Options */
+        .role-select {
+            appearance: none;
+            cursor: pointer;
+            padding-right: 48px;
+            background-image:
+                linear-gradient(
+                    45deg,
+                    transparent 50%,
+                    var(--palette-sage) 50%
+                ),
+                linear-gradient(
+                    135deg,
+                    var(--palette-sage) 50%,
+                    transparent 50%
+                );
+            background-position:
+                calc(100% - 22px) calc(50% - 3px),
+                calc(100% - 16px) calc(50% - 3px);
+            background-size: 6px 6px, 6px 6px;
+            background-repeat: no-repeat;
+        }
+
+        .role-select option {
+            background: var(--palette-obsidian);
+            color: var(--palette-cream);
+        }
+
+        .form-block .select-label {
+            top: 0;
+            left: 15px;
+            transform: none;
+            padding: 0 6px;
+            background-color: var(--palette-obsidian);
+            color: var(--palette-ice);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
         .access-options {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.8rem;
+            gap: 15px;
             margin-top: -5px;
-            margin-bottom: 35px;
+            margin-bottom: 30px;
+            font-size: 0.8rem;
         }
 
         .persistence-node {
             display: flex;
             align-items: center;
             gap: 8px;
-            cursor: pointer;
             color: var(--palette-sage);
             font-weight: 400;
+            cursor: pointer;
         }
 
         .persistence-node input {
-            accent-color: var(--palette-sage);
             width: 15px;
             height: 15px;
+            accent-color: var(--palette-sage);
             cursor: pointer;
         }
 
@@ -185,13 +259,26 @@
             color: var(--palette-ice);
         }
 
-        /* High-Converting Executive Action Button */
+        .error-message {
+            display: none;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            color: var(--palette-error);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         .login-submit-button {
             width: 100%;
             padding: 18px;
             background-color: var(--palette-sage);
             border: 1px solid rgba(223, 229, 243, 0.15);
-            color: #FFFFFF;
+            color: #ffffff;
             font-size: 0.9rem;
             font-weight: 600;
             letter-spacing: 1px;
@@ -199,14 +286,14 @@
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .login-submit-button:hover {
+        .login-submit-button:hover:not(:disabled) {
             background-color: var(--palette-ice);
             color: var(--palette-obsidian);
             box-shadow: 0 10px 25px rgba(223, 229, 243, 0.15);
             transform: translateY(-2px);
         }
 
-        .login-submit-button:active {
+        .login-submit-button:active:not(:disabled) {
             transform: translateY(0);
         }
 
@@ -215,110 +302,200 @@
             cursor: not-allowed;
         }
 
-        /* Account Registration Footer Block */
         .registration-footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 0.85rem;
+            margin-top: 28px;
             color: var(--palette-sage);
+            font-size: 0.85rem;
             font-weight: 400;
+            text-align: center;
         }
 
         .registration-footer a {
+            margin-left: 5px;
             color: var(--palette-ice);
+            border-bottom: 1px solid transparent;
             text-decoration: none;
             font-weight: 600;
-            margin-left: 5px;
-            border-bottom: 1px solid transparent;
-            transition: border-color 0.2s ease, color 0.2s ease;
+            transition:
+                border-color 0.2s ease,
+                color 0.2s ease;
         }
 
         .registration-footer a:hover {
-            color: #FFFFFF;
-            border-color: #FFFFFF;
+            color: #ffffff;
+            border-color: #ffffff;
         }
 
-        /* Corporate Ambient Grid Lining Overlay */
-        .corporate-grid-matrix {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: linear-gradient(rgba(85, 115, 115, 0.015) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(85, 115, 115, 0.015) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
+        .is-hidden {
+            display: none !important;
         }
 
-        .error-message {
-            color: #ff6b6b;
-            font-size: 0.85rem;
-            text-align: center;
-            margin-top: 10px;
-            margin-bottom: 10px;
-            display: none;
-        }
+        @media (max-width: 520px) {
+            body {
+                padding: 20px 12px;
+            }
 
-        .error-message.show {
-            display: block;
+            .business-auth-wrapper {
+                padding: 38px 26px;
+            }
+
+            .access-options {
+                align-items: flex-start;
+                flex-direction: column;
+            }
         }
     </style>
 </head>
-<body>
 
+<body>
     <div class="corporate-grid-matrix"></div>
 
-    <!-- WebGL Background Viewport Layer -->
     <div id="canvas-container"></div>
 
-    <!-- Central Authentication Frame Interface -->
-    <div class="business-auth-wrapper" id="auth-box">
+    <main
+        class="business-auth-wrapper"
+        id="auth-box"
+    >
         <div class="brand-header">
             <h1>Corporate Gateway</h1>
-            <p>Enter your enterprise credentials below</p>
+
+            <p id="login-instructions">
+                Enter your manager credentials below
+            </p>
         </div>
 
-        <form autocomplete="off" id="login-form">
+        <form
+            autocomplete="off"
+            id="login-form"
+            novalidate
+        >
             <div class="form-block">
-                <input type="text" id="username" class="business-input" placeholder=" " required autocomplete="off">
-                <label for="username">Username</label>
+                <select
+                    id="login-role"
+                    class="business-input role-select"
+                    required
+                >
+                    <option value="manager" selected>
+                        Login as Manager
+                    </option>
+
+                    <option value="owner">
+                        Login as Owner
+                    </option>
+
+                    <option value="staff">
+                        Login as Staff
+                    </option>
+                </select>
+
+                <label
+                    for="login-role"
+                    class="select-label"
+                >
+                    Account Type
+                </label>
+            </div>
+
+            <div
+                class="form-block"
+                id="username-block"
+            >
+                <input
+                    type="text"
+                    id="username"
+                    class="business-input"
+                    placeholder=" "
+                    required
+                    autocomplete="username"
+                    maxlength="40"
+                >
+
+                <label for="username">
+                    Username
+                </label>
             </div>
 
             <div class="form-block">
-                <input type="password" id="password" class="business-input" placeholder=" " required autocomplete="off">
-                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    class="business-input"
+                    placeholder=" "
+                    required
+                    autocomplete="current-password"
+                >
+
+                <label for="password">
+                    Password
+                </label>
             </div>
 
             <div class="access-options">
                 <label class="persistence-node">
-                    <input type="checkbox"> Remember Station
+                    <input
+                        type="checkbox"
+                        id="remember-station"
+                    >
+
+                    Remember Station
                 </label>
-                <a href="#" class="recovery-anchor">Forgot Password?</a>
+
+                <a
+                    href="#"
+                    class="recovery-anchor"
+                    id="forgot-password-link"
+                >
+                    Forgot Password?
+                </a>
             </div>
 
-            <div class="error-message" id="error-message"></div>
+            <div
+                class="error-message"
+                id="error-message"
+                role="alert"
+                aria-live="polite"
+            ></div>
 
-            <button type="submit" class="login-submit-button" id="login-btn">Sign In to Dashboard</button>
+            <button
+                type="submit"
+                class="login-submit-button"
+                id="login-btn"
+            >
+                Sign In as Manager
+            </button>
         </form>
 
-        <div class="registration-footer">
-            Don't have an account?<a href="signup.html">Sign Up</a>
-        </div>
-    </div>
+        <div
+            class="registration-footer"
+            id="registration-footer"
+        >
+            Don't have an account?
 
-    <!-- Production Dependency Framework Assemblies -->
+            <a href="signup.html">
+                Sign Up
+            </a>
+        </div>
+    </main>
+
+    <!-- Visual libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // --- FIREBASE CONFIG ---
+        "use strict";
+
+        // --------------------------------------------------
+        // FIREBASE CONFIGURATION
+        // --------------------------------------------------
+
         const firebaseConfig = {
             apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
             authDomain: "business-tracker-3707a.firebaseapp.com",
@@ -329,268 +506,1028 @@
         };
 
         firebase.initializeApp(firebaseConfig);
+
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- CHECK IF USER IS ALREADY LOGGED IN ---
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                try {
-                    // Get user role from Firestore
-                    const doc = await db.collection('users').doc(user.uid).get();
-                    if (doc.exists) {
-                        const userData = doc.data();
-                        if (userData.role === 'owner') {
-                            // 🔥 CHANGED: Owners go to hotel selection page first
-                            window.location.href = '/owner-select-hotel.html';
-                        } else {
-                            window.location.href = '/manager-dashboard.html';
-                        }
-                    } else {
-                        // Fallback - if no role found, go to manager
-                        window.location.href = '/manager-dashboard.html';
-                    }
-                } catch (error) {
-                    console.error('Error checking role:', error);
-                    window.location.href = '/manager-dashboard.html';
-                }
-            }
-        });
+        // --------------------------------------------------
+        // DOM REFERENCES
+        // --------------------------------------------------
 
-        // --- INITIAL UI ENTRANCE TRANSLATION ---
-        window.addEventListener('DOMContentLoaded', () => {
-            gsap.to('#auth-box', {
-                opacity: 1,
-                y: 0,
-                duration: 1.4,
-                ease: "power4.out"
-            });
-        });
+        const loginForm =
+            document.getElementById("login-form");
 
-        // --- THREE.JS 3D PROFESSIONAL NETWORK ENGINE ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2('#0d0d0d', 0.15);
+        const loginRoleSelect =
+            document.getElementById("login-role");
 
-        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.z = 7;
+        const usernameBlock =
+            document.getElementById("username-block");
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
+        const usernameInput =
+            document.getElementById("username");
 
-        // Build a professional interconnected structural graph network node grid
-        const nodeCount = 80;
-        const nodeGeometry = new THREE.BufferGeometry();
-        const nodePositions = new Float32Array(nodeCount * 3);
-        const nodeVelocities = [];
+        const passwordInput =
+            document.getElementById("password");
 
-        for(let i = 0; i < nodeCount * 3; i += 3) {
-            nodePositions[i] = (Math.random() - 0.5) * 12;
-            nodePositions[i+1] = (Math.random() - 0.5) * 8;
-            nodePositions[i+2] = (Math.random() - 0.5) * 6;
-            nodeVelocities.push(new THREE.Vector3(
-                (Math.random() - 0.5) * 0.003,
-                (Math.random() - 0.5) * 0.003,
-                (Math.random() - 0.5) * 0.003
-            ));
+        const rememberStationInput =
+            document.getElementById("remember-station");
+
+        const forgotPasswordLink =
+            document.getElementById("forgot-password-link");
+
+        const loginButton =
+            document.getElementById("login-btn");
+
+        const registrationFooter =
+            document.getElementById("registration-footer");
+
+        const loginInstructions =
+            document.getElementById("login-instructions");
+
+        const errorMessage =
+            document.getElementById("error-message");
+
+        /*
+         * The owner uses the existing Firebase Auth account with
+         * username "owner".
+         *
+         * Do not put the owner's password inside this HTML file.
+         */
+        const FIXED_OWNER_USERNAME = "owner";
+
+        /*
+         * Prevent the authentication observer from redirecting before
+         * the selected role has been validated during form submission.
+         */
+        let loginSubmissionInProgress = false;
+
+        // --------------------------------------------------
+        // GENERAL HELPERS
+        // --------------------------------------------------
+
+        function clearLoginError() {
+            errorMessage.textContent = "";
+            errorMessage.classList.remove("show");
         }
 
-        nodeGeometry.setAttribute('position', new THREE.BufferAttribute(nodePositions, 3));
+        function showLoginError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add("show");
+        }
 
-        const createNodeTexture = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = 16; canvas.height = 16;
-            const ctx = canvas.getContext('2d');
-            ctx.beginPath();
-            ctx.arc(8, 8, 5, 0, Math.PI * 2);
-            ctx.fillStyle = '#557373';
-            ctx.fill();
-            return new THREE.CanvasTexture(canvas);
-        };
+        function normaliseUsername(value) {
+            return String(value || "")
+                .trim()
+                .toLowerCase();
+        }
 
-        const nodeMaterial = new THREE.PointsMaterial({
-            size: 0.12,
-            map: createNodeTexture(),
-            transparent: true,
-            opacity: 0.6,
-            depthWrite: false
-        });
+        function getRoleDisplayName(role) {
+            const roleNames = {
+                owner: "Owner",
+                manager: "Manager",
+                staff: "Staff"
+            };
 
-        const nodePointCloud = new THREE.Points(nodeGeometry, nodeMaterial);
-        scene.add(nodePointCloud);
+            return roleNames[role] || "Unknown";
+        }
 
-        const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0x557373,
-            transparent: true,
-            opacity: 0.08
-        });
+        function setLoginButtonLabel() {
+            const selectedRole = loginRoleSelect.value;
 
-        let lineMesh = new THREE.LineSegments(new THREE.BufferGeometry(), lineMaterial);
-        scene.add(lineMesh);
+            const labels = {
+                owner: "Sign In as Owner",
+                manager: "Sign In as Manager",
+                staff: "Sign In as Staff"
+            };
 
-        // --- BUSINESS INTERACTION FEEDBACK CHANNELS ---
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
+            loginButton.textContent =
+                labels[selectedRole] || "Sign In";
+        }
 
-        usernameInput.addEventListener('focus', () => {
-            gsap.to(nodeMaterial, { size: 0.18, opacity: 0.9, duration: 0.5 });
-            gsap.to(lineMaterial, { opacity: 0.2, duration: 0.5 });
-            gsap.to(camera.position, { z: 6.2, ease: "power2.out", duration: 1.0 });
-        });
+        // --------------------------------------------------
+        // ROLE SELECTOR UI
+        // --------------------------------------------------
 
-        usernameInput.addEventListener('blur', () => {
-            gsap.to(nodeMaterial, { size: 0.12, opacity: 0.6, duration: 0.6 });
-            gsap.to(lineMaterial, { opacity: 0.08, duration: 0.6 });
-            gsap.to(camera.position, { z: 7, ease: "power2.out", duration: 1.0 });
-        });
+        function updateLoginFormForRole() {
+            const selectedRole = loginRoleSelect.value;
 
-        passwordInput.addEventListener('focus', () => {
-            gsap.to(nodeMaterial, { size: 0.08, opacity: 0.4, duration: 0.4 });
-            gsap.to(lineMaterial, { opacity: 0.15, duration: 0.4 });
-            gsap.to(camera.position, { z: 7.8, ease: "power3.out", duration: 0.8 });
-        });
+            clearLoginError();
 
-        passwordInput.addEventListener('blur', () => {
-            gsap.to(nodeMaterial, { size: 0.12, opacity: 0.6, duration: 0.6 });
-            gsap.to(lineMaterial, { opacity: 0.08, duration: 0.6 });
-            gsap.to(camera.position, { z: 7, ease: "power2.out", duration: 1.0 });
-        });
+            /*
+             * Clear the password whenever the account type changes.
+             */
+            passwordInput.value = "";
 
-        let mouseX = 0, mouseY = 0;
+            if (selectedRole === "owner") {
+                /*
+                 * The owner username is fixed, so it is not necessary
+                 * to show the username field.
+                 */
+                usernameInput.value = FIXED_OWNER_USERNAME;
+                usernameInput.required = false;
+                usernameBlock.classList.add("is-hidden");
 
-        window.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+                registrationFooter.classList.add("is-hidden");
 
-            gsap.to('#auth-box', {
-                rotationY: mouseX * 5,
-                rotationX: -mouseY * 5,
-                duration: 0.5,
-                ease: "power1.out"
-            });
-        });
+                loginInstructions.textContent =
+                    "Enter the owner account password below";
+            } else {
+                usernameBlock.classList.remove("is-hidden");
+                usernameInput.required = true;
 
-        // --- REAL-TIME RENDERING FRAME ENGINE ---
-        const animate = () => {
-            requestAnimationFrame(animate);
+                /*
+                 * Do not leave the owner username inside the field
+                 * after switching back to manager or staff.
+                 */
+                if (
+                    normaliseUsername(usernameInput.value) ===
+                    FIXED_OWNER_USERNAME
+                ) {
+                    usernameInput.value = "";
+                }
 
-            const positions = nodePointCloud.geometry.attributes.position.array;
-            const linePositions = [];
+                if (selectedRole === "staff") {
+                    registrationFooter.classList.add("is-hidden");
 
-            for(let i = 0; i < nodeCount; i++) {
-                const i3 = i * 3;
-                positions[i3] += nodeVelocities[i].x;
-                positions[i3+1] += nodeVelocities[i].y;
-                positions[i3+2] += nodeVelocities[i].z;
+                    loginInstructions.textContent =
+                        "Enter the credentials generated by your manager";
+                } else {
+                    registrationFooter.classList.remove("is-hidden");
 
-                if(Math.abs(positions[i3]) > 6) nodeVelocities[i].x *= -1;
-                if(Math.abs(positions[i3+1]) > 4) nodeVelocities[i].y *= -1;
-                if(Math.abs(positions[i3+2]) > 3) nodeVelocities[i].z *= -1;
-
-                for(let j = i + 1; j < nodeCount; j++) {
-                    const j3 = j * 3;
-                    const dx = positions[i3] - positions[j3];
-                    const dy = positions[i3+1] - positions[j3+1];
-                    const dz = positions[i3+2] - positions[j3+2];
-                    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
-                    if(dist < 2.5) {
-                        linePositions.push(positions[i3], positions[i3+1], positions[i3+2]);
-                        linePositions.push(positions[j3], positions[j3+1], positions[j3+2]);
-                    }
+                    loginInstructions.textContent =
+                        "Enter your manager credentials below";
                 }
             }
 
-            nodePointCloud.geometry.attributes.position.needsUpdate = true;
+            setLoginButtonLabel();
+        }
 
-            lineMesh.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
-            lineMesh.geometry.computeBoundingSphere();
+        // --------------------------------------------------
+        // USER PROFILE AND ROUTING
+        // --------------------------------------------------
 
-            nodePointCloud.rotation.y += 0.001;
-            lineMesh.rotation.y += 0.001;
+        async function loadUserProfile(uid) {
+            const userDocument = await db
+                .collection("users")
+                .doc(uid)
+                .get();
 
-            camera.position.x += (mouseX * 0.4 - camera.position.x) * 0.05;
-            camera.position.y += (mouseY * 0.4 - camera.position.y) * 0.05;
+            if (!userDocument.exists) {
+                throw new Error(
+                    "Your account profile is missing. " +
+                    "Please contact an administrator."
+                );
+            }
 
-            renderer.render(scene, camera);
-        };
+            return userDocument.data();
+        }
 
-        animate();
+        function validateUserProfile(userData) {
+            if (
+                !userData ||
+                typeof userData.role !== "string"
+            ) {
+                throw new Error(
+                    "This account does not have a valid role."
+                );
+            }
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+            const validRoles = [
+                "owner",
+                "manager",
+                "staff"
+            ];
 
-        // --- FIREBASE LOGIN LOGIC WITH ROLE CHECK ---
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('error-message');
-            const btn = document.getElementById('login-btn');
-            
-            // Hide any previous error
-            errorMsg.classList.remove('show');
-            errorMsg.textContent = '';
-            
-            // Validate
-            if (!username || !password) {
-                errorMsg.textContent = 'Please enter both username and password.';
-                errorMsg.classList.add('show');
+            if (!validRoles.includes(userData.role)) {
+                throw new Error(
+                    "This account has an unsupported role."
+                );
+            }
+
+            if (
+                (
+                    userData.role === "manager" ||
+                    userData.role === "staff"
+                ) &&
+                !userData.hotelId
+            ) {
+                throw new Error(
+                    "This account does not have an assigned hotel."
+                );
+            }
+        }
+
+        async function redirectAuthenticatedUser(userData) {
+            validateUserProfile(userData);
+
+            if (userData.role === "owner") {
+                window.location.replace(
+                    "owner-select-hotel.html"
+                );
+
                 return;
             }
-            
-            // Show loading state
-            btn.textContent = 'Authenticating...';
-            btn.disabled = true;
-            
+
+            /*
+             * Managers and staff use the same manager-side pages.
+             *
+             * Staff restrictions and hotel scoping will be enforced by
+             * the shared auth-permissions.js helper on those pages.
+             */
+            if (
+                userData.role === "manager" ||
+                userData.role === "staff"
+            ) {
+                window.location.replace(
+                    "manager-dashboard.html"
+                );
+
+                return;
+            }
+
+            throw new Error(
+                "Unable to determine the correct dashboard."
+            );
+        }
+
+        // --------------------------------------------------
+        // AUTHENTICATION PERSISTENCE
+        // --------------------------------------------------
+
+        rememberStationInput.addEventListener(
+            "change",
+            async () => {
+                try {
+                    const persistence =
+                        rememberStationInput.checked
+                            ? firebase.auth.Auth.Persistence.LOCAL
+                            : firebase.auth.Auth.Persistence.SESSION;
+
+                    await auth.setPersistence(persistence);
+                } catch (error) {
+                    console.error(
+                        "Unable to update authentication persistence:",
+                        error
+                    );
+
+                    showLoginError(
+                        "Unable to update the remember-me setting."
+                    );
+                }
+            }
+        );
+
+        // --------------------------------------------------
+        // ROLE SELECTION
+        // --------------------------------------------------
+
+        loginRoleSelect.addEventListener(
+            "change",
+            updateLoginFormForRole
+        );
+
+        updateLoginFormForRole();
+
+        // --------------------------------------------------
+        // ALREADY SIGNED-IN USER CHECK
+        // --------------------------------------------------
+
+        auth.onAuthStateChanged(async (user) => {
+            if (
+                !user ||
+                loginSubmissionInProgress
+            ) {
+                return;
+            }
+
             try {
-                // Sign in with Firebase using email (username + @business.local)
-                const email = username + '@business.local';
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Get user role from Firestore
-                const doc = await db.collection('users').doc(user.uid).get();
-                
-                if (doc.exists) {
-                    const userData = doc.data();
-                    
-                    // Redirect based on role
-                    if (userData.role === 'owner') {
-                        // 🔥 CHANGED: Owners go to hotel selection page first
-                        window.location.href = '/owner-select-hotel.html';
-                    } else {
-                        window.location.href = '/manager-dashboard.html';
-                    }
-                } else {
-                    // No role found - default to manager
-                    window.location.href = '/manager-dashboard.html';
-                }
-                
+                const userData =
+                    await loadUserProfile(user.uid);
+
+                validateUserProfile(userData);
+
+                await redirectAuthenticatedUser(userData);
             } catch (error) {
-                let message = 'Login failed. Please check your credentials.';
-                if (error.code === 'auth/user-not-found') {
-                    message = 'User not found. Please check your username.';
-                } else if (error.code === 'auth/wrong-password') {
-                    message = 'Incorrect password. Please try again.';
-                } else if (error.code === 'auth/invalid-email') {
-                    message = 'Invalid username format.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    message = 'Too many failed attempts. Please try again later.';
+                console.error(
+                    "Automatic account verification failed:",
+                    error
+                );
+
+                try {
+                    await auth.signOut();
+                } catch (signOutError) {
+                    console.error(
+                        "Sign-out failed:",
+                        signOutError
+                    );
                 }
-                
-                errorMsg.textContent = message;
-                errorMsg.classList.add('show');
-                btn.textContent = 'Sign In to Dashboard';
-                btn.disabled = false;
+
+                showLoginError(
+                    error.message ||
+                    "Unable to verify your account."
+                );
             }
         });
+
+        // --------------------------------------------------
+        // LOGIN SUBMISSION
+        // --------------------------------------------------
+
+        loginForm.addEventListener(
+            "submit",
+            async (event) => {
+                event.preventDefault();
+
+                clearLoginError();
+
+                const selectedRole =
+                    loginRoleSelect.value;
+
+                const username =
+                    selectedRole === "owner"
+                        ? FIXED_OWNER_USERNAME
+                        : normaliseUsername(
+                            usernameInput.value
+                        );
+
+                const password =
+                    passwordInput.value;
+
+                if (!username || !password) {
+                    showLoginError(
+                        "Please enter your username and password."
+                    );
+
+                    return;
+                }
+
+                loginSubmissionInProgress = true;
+                loginButton.disabled = true;
+                loginButton.textContent =
+                    "Authenticating...";
+
+                try {
+                    const persistence =
+                        rememberStationInput.checked
+                            ? firebase.auth.Auth.Persistence.LOCAL
+                            : firebase.auth.Auth.Persistence.SESSION;
+
+                    await auth.setPersistence(persistence);
+
+                    /*
+                     * Keep the existing synthetic Firebase Auth email
+                     * mechanism.
+                     */
+                    const syntheticEmail =
+                        `${username}@business.local`;
+
+                    const userCredential =
+                        await auth.signInWithEmailAndPassword(
+                            syntheticEmail,
+                            password
+                        );
+
+                    const userData =
+                        await loadUserProfile(
+                            userCredential.user.uid
+                        );
+
+                    validateUserProfile(userData);
+
+                    /*
+                     * Reject accounts when the selected login type does
+                     * not match the role stored in Firestore.
+                     */
+                    if (userData.role !== selectedRole) {
+                        await auth.signOut();
+
+                        throw new Error(
+                            "This account is registered as " +
+                            `${getRoleDisplayName(userData.role)}, ` +
+                            `not ${getRoleDisplayName(selectedRole)}.`
+                        );
+                    }
+
+                    await redirectAuthenticatedUser(
+                        userData
+                    );
+                } catch (error) {
+                    console.error(
+                        "Login failed:",
+                        error
+                    );
+
+                    let message =
+                        error.message ||
+                        "Login failed. Please check your credentials.";
+
+                    if (
+                        error.code ===
+                            "auth/invalid-credential" ||
+                        error.code ===
+                            "auth/invalid-login-credentials" ||
+                        error.code ===
+                            "auth/wrong-password" ||
+                        error.code ===
+                            "auth/user-not-found"
+                    ) {
+                        message =
+                            "Incorrect username or password.";
+                    } else if (
+                        error.code ===
+                        "auth/too-many-requests"
+                    ) {
+                        message =
+                            "Too many failed attempts. " +
+                            "Please try again later.";
+                    } else if (
+                        error.code ===
+                        "auth/user-disabled"
+                    ) {
+                        message =
+                            "This account has been disabled.";
+                    } else if (
+                        error.code ===
+                        "auth/network-request-failed"
+                    ) {
+                        message =
+                            "Network error. Please check " +
+                            "your internet connection.";
+                    } else if (
+                        error.code ===
+                        "auth/invalid-email"
+                    ) {
+                        message =
+                            "The username format is invalid.";
+                    }
+
+                    showLoginError(message);
+
+                    loginSubmissionInProgress = false;
+                    loginButton.disabled = false;
+
+                    setLoginButtonLabel();
+                }
+            }
+        );
+
+        // --------------------------------------------------
+        // FORGOT PASSWORD PLACEHOLDER
+        // --------------------------------------------------
+
+        forgotPasswordLink.addEventListener(
+            "click",
+            (event) => {
+                event.preventDefault();
+
+                const selectedRole =
+                    loginRoleSelect.value;
+
+                if (selectedRole === "staff") {
+                    showLoginError(
+                        "Please contact your manager to reset " +
+                        "your staff password."
+                    );
+
+                    return;
+                }
+
+                showLoginError(
+                    "Please contact the system administrator " +
+                    "to reset your password."
+                );
+            }
+        );
+
+        // --------------------------------------------------
+        // INITIAL LOGIN CARD ANIMATION
+        // --------------------------------------------------
+
+        window.addEventListener(
+            "DOMContentLoaded",
+            () => {
+                if (typeof gsap !== "undefined") {
+                    gsap.to("#auth-box", {
+                        opacity: 1,
+                        y: 0,
+                        duration: 1.4,
+                        ease: "power4.out"
+                    });
+                } else {
+                    const authBox =
+                        document.getElementById("auth-box");
+
+                    authBox.style.opacity = "1";
+                    authBox.style.transform =
+                        "translateY(0)";
+                }
+            }
+        );
+
+        // --------------------------------------------------
+        // THREE.JS VISUAL BACKGROUND
+        // --------------------------------------------------
+
+        function initialiseVisualBackground() {
+            if (
+                typeof THREE === "undefined" ||
+                typeof gsap === "undefined"
+            ) {
+                console.warn(
+                    "Visual libraries did not load. " +
+                    "Authentication remains available."
+                );
+
+                return;
+            }
+
+            const container =
+                document.getElementById(
+                    "canvas-container"
+                );
+
+            const scene =
+                new THREE.Scene();
+
+            scene.fog =
+                new THREE.FogExp2(
+                    "#0d0d0d",
+                    0.15
+                );
+
+            const camera =
+                new THREE.PerspectiveCamera(
+                    55,
+                    window.innerWidth /
+                        window.innerHeight,
+                    0.1,
+                    100
+                );
+
+            camera.position.z = 7;
+
+            const renderer =
+                new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true,
+                    powerPreference:
+                        "high-performance"
+                });
+
+            renderer.setSize(
+                window.innerWidth,
+                window.innerHeight
+            );
+
+            renderer.setPixelRatio(
+                Math.min(
+                    window.devicePixelRatio,
+                    2
+                )
+            );
+
+            container.appendChild(
+                renderer.domElement
+            );
+
+            const nodeCount = 80;
+
+            const nodeGeometry =
+                new THREE.BufferGeometry();
+
+            const nodePositions =
+                new Float32Array(
+                    nodeCount * 3
+                );
+
+            const nodeVelocities = [];
+
+            for (
+                let index = 0;
+                index < nodeCount * 3;
+                index += 3
+            ) {
+                nodePositions[index] =
+                    (Math.random() - 0.5) * 12;
+
+                nodePositions[index + 1] =
+                    (Math.random() - 0.5) * 8;
+
+                nodePositions[index + 2] =
+                    (Math.random() - 0.5) * 6;
+
+                nodeVelocities.push(
+                    new THREE.Vector3(
+                        (Math.random() - 0.5) *
+                            0.003,
+                        (Math.random() - 0.5) *
+                            0.003,
+                        (Math.random() - 0.5) *
+                            0.003
+                    )
+                );
+            }
+
+            nodeGeometry.setAttribute(
+                "position",
+                new THREE.BufferAttribute(
+                    nodePositions,
+                    3
+                )
+            );
+
+            function createNodeTexture() {
+                const canvas =
+                    document.createElement(
+                        "canvas"
+                    );
+
+                canvas.width = 16;
+                canvas.height = 16;
+
+                const context =
+                    canvas.getContext("2d");
+
+                context.beginPath();
+
+                context.arc(
+                    8,
+                    8,
+                    5,
+                    0,
+                    Math.PI * 2
+                );
+
+                context.fillStyle =
+                    "#557373";
+
+                context.fill();
+
+                return new THREE.CanvasTexture(
+                    canvas
+                );
+            }
+
+            const nodeMaterial =
+                new THREE.PointsMaterial({
+                    size: 0.12,
+                    map: createNodeTexture(),
+                    transparent: true,
+                    opacity: 0.6,
+                    depthWrite: false
+                });
+
+            const nodePointCloud =
+                new THREE.Points(
+                    nodeGeometry,
+                    nodeMaterial
+                );
+
+            scene.add(nodePointCloud);
+
+            const lineMaterial =
+                new THREE.LineBasicMaterial({
+                    color: 0x557373,
+                    transparent: true,
+                    opacity: 0.08
+                });
+
+            const lineMesh =
+                new THREE.LineSegments(
+                    new THREE.BufferGeometry(),
+                    lineMaterial
+                );
+
+            scene.add(lineMesh);
+
+            usernameInput.addEventListener(
+                "focus",
+                () => {
+                    gsap.to(nodeMaterial, {
+                        size: 0.18,
+                        opacity: 0.9,
+                        duration: 0.5
+                    });
+
+                    gsap.to(lineMaterial, {
+                        opacity: 0.2,
+                        duration: 0.5
+                    });
+
+                    gsap.to(
+                        camera.position,
+                        {
+                            z: 6.2,
+                            ease: "power2.out",
+                            duration: 1
+                        }
+                    );
+                }
+            );
+
+            usernameInput.addEventListener(
+                "blur",
+                () => {
+                    gsap.to(nodeMaterial, {
+                        size: 0.12,
+                        opacity: 0.6,
+                        duration: 0.6
+                    });
+
+                    gsap.to(lineMaterial, {
+                        opacity: 0.08,
+                        duration: 0.6
+                    });
+
+                    gsap.to(
+                        camera.position,
+                        {
+                            z: 7,
+                            ease: "power2.out",
+                            duration: 1
+                        }
+                    );
+                }
+            );
+
+            passwordInput.addEventListener(
+                "focus",
+                () => {
+                    gsap.to(nodeMaterial, {
+                        size: 0.08,
+                        opacity: 0.4,
+                        duration: 0.4
+                    });
+
+                    gsap.to(lineMaterial, {
+                        opacity: 0.15,
+                        duration: 0.4
+                    });
+
+                    gsap.to(
+                        camera.position,
+                        {
+                            z: 7.8,
+                            ease: "power3.out",
+                            duration: 0.8
+                        }
+                    );
+                }
+            );
+
+            passwordInput.addEventListener(
+                "blur",
+                () => {
+                    gsap.to(nodeMaterial, {
+                        size: 0.12,
+                        opacity: 0.6,
+                        duration: 0.6
+                    });
+
+                    gsap.to(lineMaterial, {
+                        opacity: 0.08,
+                        duration: 0.6
+                    });
+
+                    gsap.to(
+                        camera.position,
+                        {
+                            z: 7,
+                            ease: "power2.out",
+                            duration: 1
+                        }
+                    );
+                }
+            );
+
+            let mouseX = 0;
+            let mouseY = 0;
+
+            window.addEventListener(
+                "mousemove",
+                (event) => {
+                    mouseX =
+                        (
+                            event.clientX /
+                            window.innerWidth
+                        ) * 2 - 1;
+
+                    mouseY =
+                        -(
+                            event.clientY /
+                            window.innerHeight
+                        ) * 2 + 1;
+
+                    gsap.to("#auth-box", {
+                        rotationY: mouseX * 5,
+                        rotationX: -mouseY * 5,
+                        duration: 0.5,
+                        ease: "power1.out"
+                    });
+                }
+            );
+
+            function animate() {
+                window.requestAnimationFrame(
+                    animate
+                );
+
+                const positions =
+                    nodePointCloud
+                        .geometry
+                        .attributes
+                        .position
+                        .array;
+
+                const linePositions = [];
+
+                for (
+                    let index = 0;
+                    index < nodeCount;
+                    index += 1
+                ) {
+                    const positionIndex =
+                        index * 3;
+
+                    positions[positionIndex] +=
+                        nodeVelocities[index].x;
+
+                    positions[positionIndex + 1] +=
+                        nodeVelocities[index].y;
+
+                    positions[positionIndex + 2] +=
+                        nodeVelocities[index].z;
+
+                    if (
+                        Math.abs(
+                            positions[positionIndex]
+                        ) > 6
+                    ) {
+                        nodeVelocities[index].x *= -1;
+                    }
+
+                    if (
+                        Math.abs(
+                            positions[
+                                positionIndex + 1
+                            ]
+                        ) > 4
+                    ) {
+                        nodeVelocities[index].y *= -1;
+                    }
+
+                    if (
+                        Math.abs(
+                            positions[
+                                positionIndex + 2
+                            ]
+                        ) > 3
+                    ) {
+                        nodeVelocities[index].z *= -1;
+                    }
+
+                    for (
+                        let comparisonIndex =
+                            index + 1;
+                        comparisonIndex <
+                            nodeCount;
+                        comparisonIndex += 1
+                    ) {
+                        const comparisonPositionIndex =
+                            comparisonIndex * 3;
+
+                        const differenceX =
+                            positions[positionIndex] -
+                            positions[
+                                comparisonPositionIndex
+                            ];
+
+                        const differenceY =
+                            positions[
+                                positionIndex + 1
+                            ] -
+                            positions[
+                                comparisonPositionIndex +
+                                1
+                            ];
+
+                        const differenceZ =
+                            positions[
+                                positionIndex + 2
+                            ] -
+                            positions[
+                                comparisonPositionIndex +
+                                2
+                            ];
+
+                        const distance =
+                            Math.sqrt(
+                                (
+                                    differenceX *
+                                    differenceX
+                                ) +
+                                (
+                                    differenceY *
+                                    differenceY
+                                ) +
+                                (
+                                    differenceZ *
+                                    differenceZ
+                                )
+                            );
+
+                        if (distance < 2.5) {
+                            linePositions.push(
+                                positions[
+                                    positionIndex
+                                ],
+                                positions[
+                                    positionIndex + 1
+                                ],
+                                positions[
+                                    positionIndex + 2
+                                ],
+                                positions[
+                                    comparisonPositionIndex
+                                ],
+                                positions[
+                                    comparisonPositionIndex +
+                                    1
+                                ],
+                                positions[
+                                    comparisonPositionIndex +
+                                    2
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                nodePointCloud
+                    .geometry
+                    .attributes
+                    .position
+                    .needsUpdate = true;
+
+                lineMesh.geometry.setAttribute(
+                    "position",
+                    new THREE.BufferAttribute(
+                        new Float32Array(
+                            linePositions
+                        ),
+                        3
+                    )
+                );
+
+                if (linePositions.length > 0) {
+                    lineMesh.geometry
+                        .computeBoundingSphere();
+                }
+
+                nodePointCloud.rotation.y +=
+                    0.001;
+
+                lineMesh.rotation.y +=
+                    0.001;
+
+                camera.position.x +=
+                    (
+                        mouseX * 0.4 -
+                        camera.position.x
+                    ) * 0.05;
+
+                camera.position.y +=
+                    (
+                        mouseY * 0.4 -
+                        camera.position.y
+                    ) * 0.05;
+
+                renderer.render(
+                    scene,
+                    camera
+                );
+            }
+
+            animate();
+
+            window.addEventListener(
+                "resize",
+                () => {
+                    camera.aspect =
+                        window.innerWidth /
+                        window.innerHeight;
+
+                    camera.updateProjectionMatrix();
+
+                    renderer.setSize(
+                        window.innerWidth,
+                        window.innerHeight
+                    );
+                }
+            );
+        }
+
+        initialiseVisualBackground();
     </script>
 </body>
 </html>

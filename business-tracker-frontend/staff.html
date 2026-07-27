@@ -1294,6 +1294,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         <nav>
             <a href="manager-dashboard.html">Dashboard</a>
             <a href="staff.html" class="active">Staff</a>
+            <a
+                href="staff-accounts.html"
+                data-requires="manager"
+            >
+                Staff Accounts
+            </a>
             <a href="income.html">Income</a>
             <a href="expenses.html">Expenses</a>
             <a href="rooms.html">Rooms &amp; Bookings</a>
@@ -1408,7 +1414,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 </select>
                 <input type="date" id="reportStartDate" style="display:none; width:140px;">
                 <input type="date" id="reportEndDate" style="display:none; width:140px;">
-                <button class="download-pdf-btn" id="downloadPdfBtn">
+                <button class="download-pdf-btn" id="downloadPdfBtn" data-requires="manager">
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
@@ -1586,6 +1592,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/auth-permissions.js"></script>
 
     <script>
         // --- FIREBASE CONFIG ---
@@ -1604,6 +1611,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         // --- GLOBALS ---
         let currentUser = null;
         let currentUserData = null;
+        let currentUserContext = null;
         let hotelId = null;
         let staffData = [];
         let attendanceData = [];
@@ -1613,10 +1621,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (!user) { window.location.href = '/'; return; }
             currentUser = user;
             try {
-                const doc = await db.collection('users').doc(user.uid).get();
-                if (!doc.exists) { alert('User data not found!'); await auth.signOut(); window.location.href = '/'; return; }
-                currentUserData = doc.data();
-                hotelId = user.uid;
+                currentUserContext = await BusinessAuth.initialisePage({
+                    allowedRoles: ['manager', 'staff']
+                });
+                currentUserData = currentUserContext.profile;
+                hotelId = currentUserContext.hotelId;
                 
                 // Update profile avatar with initials
                 const initialsElement = document.getElementById('avatarInitials');
