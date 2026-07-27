@@ -364,6 +364,11 @@
             const resolved = await resolveHotel(user);
             if (!resolved) return;
             if (byId('hotelName')) byId('hotelName').textContent = state.hotelName || 'Selected Hotel';
+            const profileName = state.userData.username || state.userData.businessName || state.user.email || 'User';
+            if (byId('profileName')) byId('profileName').textContent = profileName;
+            if (byId('avatarInitials')) {
+                byId('avatarInitials').textContent = profileName.split(/\s+/).map(part => part[0]).join('').toUpperCase().slice(0, 2) || 'U';
+            }
             if (!canManage() && byId('restaurantFormPanel')) byId('restaurantFormPanel').hidden = true;
             if (!canDownload()) byId('downloadReportBtn').hidden = true;
             wireEvents();

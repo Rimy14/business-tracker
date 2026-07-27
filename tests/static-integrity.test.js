@@ -28,6 +28,17 @@ test('Restaurant navigation is present on every existing manager and owner works
     ownerPages.forEach(file => assert.match(read(file), /owner-restaurant\.html/, file));
 });
 
+test('Restaurant views use the established manager and owner workspace shells', () => {
+    const css = fs.readFileSync(path.join(frontend, 'css', 'restaurant.css'), 'utf8');
+    assert.match(read('restaurant.html'), /body data-mode="manager"/);
+    assert.match(read('restaurant.html'), /class="profile-chip"/);
+    assert.match(read('owner-restaurant.html'), /class="navbar"/);
+    assert.match(read('owner-restaurant.html'), /class="nav-item back-btn"/);
+    assert.match(css, /--color-canvas:\s*#dfe5f3/);
+    assert.match(css, /body\[data-mode="manager"\]\s+header/);
+    assert.match(css, /body\[data-mode="owner"\]\s+\{[\s\S]*background:\s*linear-gradient/);
+});
+
 test('finance source selectors do not expose phantom Bar or Spa options', () => {
     for (const file of ['income.html', 'owner-financials.html']) {
         const html = read(file);

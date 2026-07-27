@@ -11,14 +11,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body data-mode="owner">
-    <header>
-        <nav aria-label="Owner navigation">
-            <a href="owner-dashboard.html">Dashboard</a><a href="owner-staff.html">Staff</a><a href="owner-financials.html">Financials</a>
-            <a href="owner-rooms.html">Rooms</a><a href="owner-partners.html">Partners</a><a class="active" href="owner-restaurant.html">Restaurant</a>
-            <a href="owner-inventory.html">Inventory</a><a href="owner-maintenance.html">Maintenance</a><a href="owner-complaints.html">Complaints</a>
-        </nav>
-        <div class="header-actions"><button type="button" onclick="window.location.href='owner-select-hotel.html'">Change hotel</button><button id="logoutBtn" type="button">Logout</button></div>
-    </header>
+    <nav class="navbar" aria-label="Owner navigation">
+        <div class="navbar-brand">Vance<span>.Hub</span></div>
+        <div class="nav-links">
+            <a class="nav-item" href="owner-dashboard.html">Dashboard</a>
+            <a class="nav-item" href="owner-staff.html">Staff</a>
+            <a class="nav-item" href="owner-financials.html">Financials</a>
+            <a class="nav-item" href="owner-rooms.html">Rooms</a>
+            <a class="nav-item" href="owner-partners.html">Partners</a>
+            <a class="nav-item active" href="owner-restaurant.html">Restaurant</a>
+            <a class="nav-item" href="owner-inventory.html">Inventory</a>
+            <a class="nav-item" href="owner-maintenance.html">Maintenance</a>
+            <a class="nav-item" href="owner-complaints.html">Complaints</a>
+            <button class="nav-item back-btn" type="button" onclick="window.location.href='owner-select-hotel.html'">← Properties</button>
+            <button class="nav-item logout-nav" id="logoutBtn" type="button">Logout</button>
+        </div>
+    </nav>
     <main class="page-shell">
         <section class="page-heading"><h1>Restaurant</h1><p id="hotelName">Loading hotel…</p><p class="rate-line" id="exchangeRateLabel">Loading USD/LKR exchange rate…</p></section>
         <section class="toolbar" aria-label="Restaurant filters">
