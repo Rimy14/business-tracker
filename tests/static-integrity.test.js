@@ -52,6 +52,8 @@ test('dashboard exchange controls use the responsive currency component', () => 
         assert.match(html, /class="exchange-rate-text"/, file);
         assert.match(html, /class="currency-control"/, file);
         assert.match(html, /class="currency-select"/, file);
+        assert.match(html, /\.currency-select\s*\{[\s\S]*color-scheme:\s*dark/, file);
+        assert.match(html, /\.currency-select\s+option\s*\{[\s\S]*color:\s*#f4f4f4[\s\S]*background:\s*#22242c/, file);
     }
     assert.match(read('owner-dashboard.html'), /@media \(max-width: 480px\)[\s\S]*--sb-w: 64px/);
 });

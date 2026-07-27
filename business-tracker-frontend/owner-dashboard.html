@@ -182,13 +182,18 @@
             padding: 9px 28px 9px 11px;
             border: 1px solid rgba(255,255,255,.12);
             border-radius: 4px;
-            color: var(--text-light);
-            background: #151821;
+            color: #f4f4f4;
+            background: #22242c;
+            color-scheme: dark;
             font: inherit;
             font-size: .78rem;
             outline: none;
         }
-        .dashboard-exchange-tools .currency-select:focus { border-color: var(--antique-gold); }
+        .dashboard-exchange-tools .currency-select option {
+            color: #f4f4f4;
+            background: #22242c;
+        }
+        .dashboard-exchange-tools .currency-select:focus { border-color: var(--antique-gold); box-shadow: 0 0 0 3px rgba(194,166,107,.14); }
 
         /* Clean Metrics Strip */
         .metrics-grid {

@@ -511,30 +511,36 @@
             align-items: center;
             gap: 10px;
             padding: 8px 10px;
-            border: 1px solid rgba(85,115,115,.18);
-            border-radius: 8px;
-            background: rgba(255,255,255,.55);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 6px;
+            background: rgba(20,23,29,.92);
         }
         .dashboard-exchange-tools label {
             margin: 0;
-            color: var(--color-espresso);
-            font-size: .7rem;
+            color: #8e96a3;
+            font-size: .65rem;
             font-weight: 700;
-            letter-spacing: .05em;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
             white-space: nowrap;
         }
         .dashboard-exchange-tools .currency-select {
-            min-width: 88px;
-            padding: 8px 26px 8px 10px;
-            border: 1px solid rgba(85,115,115,.25);
-            border-radius: 6px;
-            color: var(--color-espresso);
-            background: #fff;
+            min-width: 96px;
+            padding: 9px 28px 9px 11px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 4px;
+            color: #f4f4f4;
+            background: #22242c;
+            color-scheme: dark;
             font: inherit;
             font-size: .78rem;
             outline: none;
         }
-        .dashboard-exchange-tools .currency-select:focus { border-color: var(--color-sage); box-shadow: 0 0 0 3px rgba(85,115,115,.12); }
+        .dashboard-exchange-tools .currency-select option {
+            color: #f4f4f4;
+            background: #22242c;
+        }
+        .dashboard-exchange-tools .currency-select:focus { border-color: var(--color-gold); box-shadow: 0 0 0 3px rgba(192,178,131,.14); }
         .btn-create-new {
             padding: 9px 22px;
             background: var(--color-sage);
