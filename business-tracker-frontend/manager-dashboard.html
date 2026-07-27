@@ -864,6 +864,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         <nav>
             <a href="manager-dashboard.html" class="active">Dashboard</a>
             <a href="staff.html">Staff</a>
+            <a
+                href="staff-accounts.html"
+                data-requires="manager"
+            >
+                Staff Accounts
+            </a>
             <a href="income.html">Income</a>
             <a href="expenses.html">Expenses</a>
             <a href="rooms.html">Rooms &amp; Bookings</a>
@@ -1227,6 +1233,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/auth-permissions.js"></script>
 
     <script>
         gsap.registerPlugin(ScrollTrigger);
@@ -1269,15 +1276,48 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 }
 
                 currentUserData = userDoc.data();
-                hotelId = user.uid;
+                hotelId = String(currentUserData.hotelId || '').trim();
+                // Update avatar initials
+                const initialsElement = document.getElementById('avatarInitials');
+                const dashboardRole = String(currentUserData.role || "")
+                    .trim()
+                    .toLowerCase();
 
-                if (currentUserData.role === 'owner') {
-                    window.location.href = '/owner-dashboard.html';
+                if (dashboardRole === "owner") {
+                    window.location.replace("owner-select-hotel.html");
                     return;
                 }
 
-                // Update avatar initials
-                const initialsElement = document.getElementById('avatarInitials');
+                if (!["manager", "staff"].includes(dashboardRole)) {
+                    console.error(
+                        "Manager dashboard access denied for role:",
+                        dashboardRole
+                    );
+
+                    auth.signOut().finally(() => {
+                        window.location.replace("index.html");
+                    });
+
+                    return;
+                }
+
+                if (!hotelId) {
+                    console.error(
+                        "Manager or staff profile is missing hotelId."
+                    );
+
+                    alert(
+                        "Your account is not assigned to a hotel. " +
+                        "Please contact the project administrator."
+                    );
+
+                    auth.signOut().finally(() => {
+                        window.location.replace("index.html");
+                    });
+
+                    return;
+                }
+
                 if (initialsElement && currentUserData) {
                     const name = currentUserData.username || currentUserData.businessName || 'User';
                     const initials = name
@@ -2036,5 +2076,51 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             });
         }
     </script>
+
+    <!-- Package 1 dashboard permissions -->
+    <script id="dashboard-package-one-permissions">
+        "use strict";
+
+        (function initialisePackageOnePermissions() {
+            async function startPermissions() {
+                try {
+                    window.dashboardUserContext =
+                        await BusinessAuth.initialisePage({
+                            allowedRoles: [
+                                "manager",
+                                "staff"
+                            ]
+                        });
+
+                    console.log(
+                        "Dashboard permissions ready:",
+                        window.dashboardUserContext.role,
+                        window.dashboardUserContext.hotelId
+                    );
+                } catch (error) {
+                    console.error(
+                        "Dashboard permission initialisation failed:",
+                        error
+                    );
+                }
+            }
+
+            if (
+                document.readyState ===
+                "loading"
+            ) {
+                document.addEventListener(
+                    "DOMContentLoaded",
+                    startPermissions,
+                    {
+                        once: true
+                    }
+                );
+            } else {
+                startPermissions();
+            }
+        })();
+    </script>
+
 </body>
 </html>
