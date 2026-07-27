@@ -2477,6 +2477,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 if (booking) {
                     // REMOVE linked income records
                     const incomeSnap = await db.collection('income')
+                        .where('hotelId', '==', hotelId)
                         .where('bookingId', '==', id)
                         .get();
                     incomeSnap.forEach(async (doc) => {
@@ -2637,6 +2638,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         } else {
                             // ❌ REMOVE income record
                             const incomeSnap = await db.collection('income')
+                                .where('hotelId', '==', hotelId)
                                 .where('bookingId', '==', id)
                                 .get();
                             incomeSnap.forEach(async (doc) => {
@@ -2647,6 +2649,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     } else if (paymentStatus === 'paid' && oldBooking && oldBooking.totalAmount !== newTotalAmount) {
                         // 🔥 FIX: Status is still 'paid' but total amount changed - UPDATE income record
                         const incomeSnap = await db.collection('income')
+                            .where('hotelId', '==', hotelId)
                             .where('bookingId', '==', id)
                             .get();
                         
