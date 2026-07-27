@@ -334,97 +334,182 @@
         .calendar-section {
             background: #FFFFFF;
             border: 1px solid rgba(85,115,115,0.08);
-            box-shadow: 0 4px 12px rgba(25,34,49,0.03);
-            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(25,34,49,0.05);
+            margin-bottom: 30px;
+            border-radius: 12px;
+            overflow: hidden;
         }
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 25px;
+            padding: 20px 25px;
             border-bottom: 1px solid rgba(85,115,115,0.08);
+            background: linear-gradient(to right, #ffffff, #fcfdfd);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
         }
         .calendar-header h4 {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--color-espresso);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .calendar-nav {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
         }
         .calendar-nav button {
-            padding: 4px 12px;
-            background: transparent;
-            border: 1px solid rgba(85,115,115,0.2);
-            border-radius: 4px;
+            padding: 6px 14px;
+            background: #FFFFFF;
+            border: 1px solid rgba(85,115,115,0.18);
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
             color: var(--color-espresso);
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .calendar-nav button:hover {
             background: var(--color-sage);
             color: #fff;
             border-color: var(--color-sage);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(85,115,115,0.25);
+        }
+        .calendar-nav button:active {
+            transform: translateY(0);
         }
         .calendar-nav .month-label {
-            font-weight: 600;
-            font-size: 0.95rem;
-            min-width: 130px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            min-width: 140px;
             text-align: center;
+            color: var(--color-espresso);
+            letter-spacing: -0.3px;
         }
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            padding: 10px 15px 15px 15px;
+            gap: 6px;
+            padding: 15px 20px 20px 20px;
+            background: #f8fafc;
         }
         .calendar-day-header {
             text-align: center;
-            font-size: 0.65rem;
-            font-weight: 600;
+            font-size: 0.72rem;
+            font-weight: 700;
             color: var(--color-sage);
             text-transform: uppercase;
-            padding: 6px 0;
+            padding: 8px 0;
+            letter-spacing: 0.8px;
         }
         .calendar-day {
-            min-height: 55px;
-            background: rgba(255,255,255,0.5);
-            border-radius: 4px;
-            padding: 3px 4px;
-            border: 1px solid rgba(85,115,115,0.05);
-            transition: all 0.2s ease;
-            cursor: default;
+            min-height: 85px;
+            background: #FFFFFF;
+            border-radius: 10px;
+            padding: 8px 8px;
+            border: 1px solid rgba(85,115,115,0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
         }
-        .calendar-day:hover { background: rgba(223,229,243,0.2); }
+        .calendar-day:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(25,34,49,0.08);
+            border-color: rgba(85,115,115,0.25);
+            z-index: 5;
+        }
         .calendar-day .day-number {
-            font-size: 0.7rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             color: var(--color-espresso);
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
         }
         .calendar-day .booking-dot {
-            display: block;
-            font-size: 0.45rem;
-            color: var(--color-sage);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.6rem;
+            font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-top: 1px;
-            padding: 1px 3px;
-            border-radius: 2px;
-            background: rgba(85,115,115,0.05);
+            padding: 3px 6px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
-        .calendar-day .booking-dot.active { background: rgba(46,125,50,0.15); color: #2e7d32; }
-        .calendar-day .booking-dot.upcoming { background: rgba(25,118,210,0.12); color: #0d47a1; }
-        .calendar-day .booking-dot.past { background: rgba(85,115,115,0.08); color: #557373; }
-        .calendar-day .booking-dot.cancelled { background: rgba(198,40,40,0.12); color: #c62828; }
-        .calendar-day .booking-dot.checked_out_early { background: rgba(255,152,0,0.12); color: #e65100; }
-        .calendar-day.other-month .day-number { opacity: 0.3; }
-        .calendar-day.today { background: rgba(85,115,115,0.08); border-color: var(--color-sage); }
+        .calendar-day .booking-dot.active { 
+            background: #e8f8f0; 
+            color: #1e7e34;
+            border-color: #c3e6cb;
+        }
+        .calendar-day .booking-dot.upcoming { 
+            background: #eaf2f8; 
+            color: #1b4f72;
+            border-color: #bee5eb;
+        }
+        .calendar-day .booking-dot.past { 
+            background: #f2f4f4; 
+            color: #495057;
+            border-color: #e2e3e5;
+        }
+        .calendar-day .booking-dot.cancelled { 
+            background: #fdeaea; 
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        .calendar-day .booking-dot.checked_out_early { 
+            background: #fef5eb; 
+            color: #944a00;
+            border-color: #ffe8cc;
+        }
+        .calendar-day .booking-dot.more-badge {
+            background: rgba(85,115,115,0.08);
+            color: var(--color-sage);
+            justify-content: center;
+            font-size: 0.55rem;
+            font-weight: 700;
+            border: 1px dashed rgba(85,115,115,0.25);
+        }
+        .calendar-day.other-month { 
+            background: #fcfdfe;
+            opacity: 0.5;
+        }
+        .calendar-day.other-month:hover {
+            opacity: 0.8;
+            transform: none;
+            box-shadow: none;
+        }
+        .calendar-day.other-month .day-number { 
+            color: #adb5bd;
+        }
+        .calendar-day.today { 
+            background: #fffdf5;
+            border: 2px solid #c0b283; 
+            box-shadow: 0 4px 10px rgba(192,178,131,0.15);
+        }
+        .calendar-day.today .day-number {
+            background: #c0b283;
+            color: #ffffff;
+        }
 
         .price-breakdown {
             background: rgba(255,255,255,0.08);
@@ -2009,15 +2094,23 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             const label = document.getElementById('calendarMonthLabel');
             if (label) label.textContent = monthNames[month] + ' ' + year;
+            
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
             const today = new Date();
             let html = '';
+            
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             days.forEach(d => { html += `<div class="calendar-day-header">${d}</div>`; });
-            for (let i = 0; i < firstDay; i++) {
-                html += `<div class="calendar-day other-month"></div>`;
+            
+            // Trailing days of previous month
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const prevDay = prevMonthLastDay - i;
+                html += `<div class="calendar-day other-month"><div class="day-number">${prevDay}</div></div>`;
             }
+            
+            // Current month days
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
@@ -2025,19 +2118,29 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     if (!b.checkIn || !b.checkOut || b.status === 'cancelled') return false;
                     return b.checkIn <= dateStr && b.checkOut >= dateStr;
                 });
+                
                 html += `<div class="calendar-day ${isToday ? 'today' : ''}">`;
                 html += `<div class="day-number">${day}</div>`;
                 if (dayBookings.length > 0) {
-                    dayBookings.slice(0, 2).forEach(b => {
+                    dayBookings.slice(0, 3).forEach(b => {
                         const statusClass = b.status || 'upcoming';
-                        html += `<span class="booking-dot ${statusClass}">• ${b.guestName || 'Guest'}</span>`;
+                        const emoji = statusClass === 'active' ? '🔑' : statusClass === 'upcoming' ? '⏳' : statusClass === 'past' ? '✅' : statusClass === 'checked_out_early' ? '🏃' : '❌';
+                        html += `<span class="booking-dot ${statusClass}">${emoji} ${b.guestName || 'Guest'}</span>`;
                     });
-                    if (dayBookings.length > 2) {
-                        html += `<span class="booking-dot">+${dayBookings.length - 2} more</span>`;
+                    if (dayBookings.length > 3) {
+                        html += `<span class="booking-dot more-badge">+${dayBookings.length - 3} more</span>`;
                     }
                 }
                 html += `</div>`;
             }
+            
+            // Leading days of next month to complete standard 6-week layout (42 cells)
+            const totalCells = firstDay + daysInMonth;
+            const nextMonthCells = 42 - totalCells;
+            for (let i = 1; i <= nextMonthCells; i++) {
+                html += `<div class="calendar-day other-month"><div class="day-number">${i}</div></div>`;
+            }
+            
             grid.innerHTML = html;
         }
 
