@@ -275,29 +275,29 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.78rem;
+            font-size: 0.95rem;
         }
 
         .data-table th {
             text-align: left;
-            padding: 12px 8px;
+            padding: 16px 12px;
             color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.6rem;
+            font-weight: 700;
+            font-size: 0.72rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
         .data-table td {
-            padding: 14px 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.85);
+            padding: 18px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.95);
         }
 
         .data-table tr:hover td {
             color: #fff;
-            background: rgba(255,255,255,0.01);
+            background: rgba(255,255,255,0.03);
         }
 
         .empty-state {
@@ -309,15 +309,36 @@
 
         /* Actions strip */
         .strip-link-btn {
-            background: none;
-            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border: 1px solid transparent;
             cursor: pointer;
-            padding: 4px 8px;
-            font-size: 0.85rem;
-            transition: transform 0.2s ease;
+            transition: all 0.2s ease;
         }
-        .strip-link-btn:hover {
-            transform: scale(1.2);
+        .edit-strip-btn { 
+            background: rgba(194,166,107,0.1); 
+            color: var(--antique-gold); 
+            border-color: rgba(194,166,107,0.15); 
+        }
+        .edit-strip-btn:hover { 
+            background: var(--antique-gold); 
+            color: #000000; 
+            transform: translateY(-1px);
+        }
+        .delete-strip-btn { 
+            background: rgba(239,68,68,0.08); 
+            color: var(--alert-red); 
+            border-color: rgba(239,68,68,0.12); 
+        }
+        .delete-strip-btn:hover { 
+            background: var(--alert-red); 
+            color: #ffffff; 
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -555,8 +576,8 @@
                     <td>LKR ${Number(p.price || 0).toLocaleString()}</td>
                     <td>${p.description || '-'}</td>
                     <td>
-                        <button class="strip-link-btn" onclick="openEditPackageModal('${p.id}')">✏️</button>
-                        <button class="strip-link-btn" onclick="deletePackage('${p.id}')">🗑️</button>
+                        <button class="strip-link-btn edit-strip-btn" onclick="openEditPackageModal('${p.id}')">✏️</button>
+                        <button class="strip-link-btn delete-strip-btn" onclick="deletePackage('${p.id}')">🗑️</button>
                     </td>
                 </tr>
             `).join('');

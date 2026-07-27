@@ -309,24 +309,24 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.8rem;
+            font-size: 0.95rem;
         }
         .data-table th {
             text-align: left;
-            padding: 8px 8px;
+            padding: 14px 18px;
             color: var(--color-sage);
-            font-weight: 600;
-            font-size: 0.6rem;
+            font-weight: 700;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(85,115,115,0.1);
+            letter-spacing: 0.8px;
+            border-bottom: 1px solid rgba(85,115,115,0.12);
         }
         .data-table td {
-            padding: 8px 8px;
-            border-bottom: 1px solid rgba(85,115,115,0.05);
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(85,115,115,0.08);
             vertical-align: middle;
         }
-        .data-table tr:hover { background: rgba(223,229,243,0.08); }
+        .data-table tr:hover { background: rgba(85,115,115,0.04); }
 
         .empty-state {
             text-align: center;
@@ -353,19 +353,37 @@
         }
 
         .strip-link-btn {
-            background: transparent;
-            border: none;
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border: 1px solid transparent;
             cursor: pointer;
-            transition: color 0.2s ease;
+            transition: all 0.2s ease;
         }
-        .edit-strip-btn { color: var(--color-sage); }
-        .edit-strip-btn:hover { color: var(--color-espresso); }
-        .delete-strip-btn { color: rgba(39,36,1,0.3); }
-        .delete-strip-btn:hover { color: #b14d2a; }
+        .edit-strip-btn { 
+            background: rgba(85,115,115,0.08); 
+            color: var(--color-sage); 
+            border-color: rgba(85,115,115,0.12); 
+        }
+        .edit-strip-btn:hover { 
+            background: var(--color-sage); 
+            color: #fff; 
+            transform: translateY(-1px);
+        }
+        .delete-strip-btn { 
+            background: rgba(198,40,40,0.06); 
+            color: #c62828; 
+            border-color: rgba(198,40,40,0.1); 
+        }
+        .delete-strip-btn:hover { 
+            background: #c62828; 
+            color: #fff; 
+            transform: translateY(-1px);
+        }
 
         /* --- TODAY'S MENU --- */
         /* ===== TODAY'S MENU — NEW PROFESSIONAL DESIGN ===== */
