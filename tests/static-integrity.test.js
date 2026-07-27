@@ -45,6 +45,17 @@ test('Restaurant views use the established manager and owner workspace shells', 
     assert.match(css, /@media \(max-width: 480px\)[\s\S]*body\[data-mode="owner"\]\s+\{ --sb-w: 64px; \}/);
 });
 
+test('dashboard exchange controls use the responsive currency component', () => {
+    for (const file of ['manager-dashboard.html', 'owner-dashboard.html']) {
+        const html = read(file);
+        assert.match(html, /class="dashboard-exchange-tools"/, file);
+        assert.match(html, /class="exchange-rate-text"/, file);
+        assert.match(html, /class="currency-control"/, file);
+        assert.match(html, /class="currency-select"/, file);
+    }
+    assert.match(read('owner-dashboard.html'), /@media \(max-width: 480px\)[\s\S]*--sb-w: 64px/);
+});
+
 test('finance source selectors do not expose phantom Bar or Spa options', () => {
     for (const file of ['income.html', 'owner-financials.html']) {
         const html = read(file);

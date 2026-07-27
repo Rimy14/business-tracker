@@ -487,6 +487,54 @@
             color: var(--color-sage);
             margin-top: 6px;
         }
+        .dashboard-exchange-tools {
+            display: flex;
+            max-width: 760px;
+            align-items: center;
+            gap: 16px;
+            margin-top: 14px;
+        }
+        .dashboard-exchange-tools .exchange-rate-text {
+            flex: 1 1 320px;
+            min-width: 0;
+            margin: 0;
+            color: var(--color-sage);
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .4px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+        .dashboard-exchange-tools .currency-control {
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border: 1px solid rgba(85,115,115,.18);
+            border-radius: 8px;
+            background: rgba(255,255,255,.55);
+        }
+        .dashboard-exchange-tools label {
+            margin: 0;
+            color: var(--color-espresso);
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .05em;
+            white-space: nowrap;
+        }
+        .dashboard-exchange-tools .currency-select {
+            min-width: 88px;
+            padding: 8px 26px 8px 10px;
+            border: 1px solid rgba(85,115,115,.25);
+            border-radius: 6px;
+            color: var(--color-espresso);
+            background: #fff;
+            font: inherit;
+            font-size: .78rem;
+            outline: none;
+        }
+        .dashboard-exchange-tools .currency-select:focus { border-color: var(--color-sage); box-shadow: 0 0 0 3px rgba(85,115,115,.12); }
         .btn-create-new {
             padding: 9px 22px;
             background: var(--color-sage);
@@ -733,6 +781,10 @@
         @media (max-width: 768px) {
             header { height: auto; padding: 25px 5%; flex-direction: column; gap: 20px; }
             nav { flex-wrap: wrap; justify-content: center; gap: 15px; }
+            .dashboard-exchange-tools { align-items: stretch; flex-direction: column; gap: 12px; }
+            .dashboard-exchange-tools .exchange-rate-text { flex-basis: auto; max-width: 100%; }
+            .dashboard-exchange-tools .currency-control { justify-content: space-between; }
+            .dashboard-exchange-tools .currency-select { min-height: 40px; }
             .chrono-hero-viewport { padding-top: 140px; min-height: 40vh; padding-bottom: 60px; flex-direction: column; text-align: center; }
             .telemetry-summary-grid { grid-template-columns: 1fr; }
             .cloud-vector-node { transform: scale(0.5); transform-origin: center; }
@@ -1072,9 +1124,13 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <span class="section-intro-kicker">Overview</span>
             <h3 class="section-intro-title">Operational Snapshot</h3>
             <p class="section-intro-sub">Key performance indicators across your property, updated in real time.</p>
-            <p id="exchangeRateLabel" class="section-intro-sub" style="margin-top:8px;color:#557373;font-weight:600;">Loading USD/LKR exchange rate...</p>
-            <label for="displayCurrency" style="font-size:.75rem;font-weight:700;">Display Currency</label>
-            <select id="displayCurrency" style="margin-left:8px;padding:7px 10px;"><option value="LKR">LKR</option><option value="USD">USD</option></select>
+            <div class="dashboard-exchange-tools">
+                <p id="exchangeRateLabel" class="exchange-rate-text">Loading USD/LKR exchange rate...</p>
+                <div class="currency-control">
+                    <label for="displayCurrency">Display Currency</label>
+                    <select id="displayCurrency" class="currency-select"><option value="LKR">LKR</option><option value="USD">USD</option></select>
+                </div>
+            </div>
         </div>
         <div class="telemetry-summary-grid">
             <div class="telemetry-metric-card">
