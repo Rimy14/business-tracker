@@ -34,9 +34,15 @@ test('Restaurant views use the established manager and owner workspace shells', 
     assert.match(read('restaurant.html'), /class="profile-chip"/);
     assert.match(read('owner-restaurant.html'), /class="navbar"/);
     assert.match(read('owner-restaurant.html'), /class="nav-item back-btn"/);
+    assert.match(read('owner-restaurant.html'), /class="page-heading animated-element delay-1"/);
+    assert.match(read('owner-restaurant.html'), /class="toolbar animated-element delay-2"/);
     assert.match(css, /--color-canvas:\s*#dfe5f3/);
+    assert.match(css, /--font-owner:\s*-apple-system/);
     assert.match(css, /body\[data-mode="manager"\]\s+header/);
     assert.match(css, /body\[data-mode="owner"\]\s+\{[\s\S]*background:\s*linear-gradient/);
+    assert.match(css, /@keyframes premiumFadeUp/);
+    assert.match(css, /body\[data-mode="owner"\]\s+\.animated-element/);
+    assert.match(css, /@media \(max-width: 480px\)[\s\S]*body\[data-mode="owner"\]\s+\{ --sb-w: 64px; \}/);
 });
 
 test('finance source selectors do not expose phantom Bar or Spa options', () => {

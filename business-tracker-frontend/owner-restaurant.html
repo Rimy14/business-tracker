@@ -28,8 +28,8 @@
         </div>
     </nav>
     <main class="page-shell">
-        <section class="page-heading"><h1>Restaurant</h1><p id="hotelName">Loading hotel…</p><p class="rate-line" id="exchangeRateLabel">Loading USD/LKR exchange rate…</p></section>
-        <section class="toolbar" aria-label="Restaurant filters">
+        <section class="page-heading animated-element delay-1"><h1>Restaurant</h1><p id="hotelName">Loading hotel…</p><p class="rate-line" id="exchangeRateLabel">Loading USD/LKR exchange rate…</p></section>
+        <section class="toolbar animated-element delay-2" aria-label="Restaurant filters">
             <div class="field"><label for="statusFilter">Payment</label><select id="statusFilter"><option value="all">All</option><option value="pending">Pending</option><option value="paid">Paid</option></select></div>
             <div class="field"><label for="currencyFilter">Paid currency</label><select id="currencyFilter"><option value="all">All</option><option value="LKR">LKR</option><option value="USD">USD</option></select></div>
             <div class="field"><label for="startDateFilter">From</label><input id="startDateFilter" type="date"></div>
@@ -37,7 +37,7 @@
             <div class="field"><label for="displayCurrency">Display as</label><select id="displayCurrency"><option value="LKR">LKR</option><option value="USD">USD</option></select></div>
             <button class="btn" id="downloadReportBtn" type="button">Download PDF</button>
         </section>
-        <section class="panel table-panel"><h2>Orders</h2><div class="summary"><span>Records: <strong id="orderCount">0</strong></span><span>Confirmed total: <strong id="paidTotal">LKR 0</strong></span></div><table><thead><tr><th>#</th><th>Date</th><th>Order</th><th>Items</th><th>Paid currency</th><th>Amount</th><th>Payment</th><th>Created by</th><th>Access</th></tr></thead><tbody id="restaurantTableBody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody></table></section>
+        <section class="panel table-panel animated-element delay-3"><h2>Orders</h2><div class="summary"><span>Records: <strong id="orderCount">0</strong></span><span>Confirmed total: <strong id="paidTotal">LKR 0</strong></span></div><table><thead><tr><th>#</th><th>Date</th><th>Order</th><th>Items</th><th>Paid currency</th><th>Amount</th><th>Payment</th><th>Created by</th><th>Access</th></tr></thead><tbody id="restaurantTableBody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody></table></section>
     </main>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
