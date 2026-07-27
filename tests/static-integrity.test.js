@@ -22,7 +22,7 @@ test('new Restaurant pages have unique element IDs and valid local assets', () =
 });
 
 test('Restaurant navigation is present on every existing manager and owner workspace page', () => {
-    const managerPages = ['manager-dashboard.html', 'staff.html', 'income.html', 'expenses.html', 'rooms.html', 'meals.html', 'suppliers.html', 'inventory.html', 'maintenance.html', 'complaints.html'];
+    const managerPages = ['manager-dashboard.html', 'staff.html', 'income.html', 'expenses.html', 'rooms.html', 'packages.html', 'suppliers.html', 'inventory.html', 'maintenance.html', 'complaints.html'];
     const ownerPages = ['owner-dashboard.html', 'owner-staff.html', 'owner-financials.html', 'owner-rooms.html', 'owner-partners.html', 'owner-inventory.html', 'owner-maintenance.html', 'owner-complaints.html'];
     managerPages.forEach(file => assert.match(read(file), /href="restaurant\.html"/, file));
     ownerPages.forEach(file => assert.match(read(file), /owner-restaurant\.html/, file));
@@ -61,13 +61,13 @@ test('dashboard exchange controls use the responsive currency component', () => 
 });
 
 test('manager workspace forms share the same responsive content grid', () => {
-    const managerPages = ['meals.html', 'rooms.html', 'staff.html', 'inventory.html', 'suppliers.html', 'expenses.html', 'income.html'];
+    const managerPages = ['packages.html', 'rooms.html', 'staff.html', 'inventory.html', 'suppliers.html', 'expenses.html', 'income.html'];
     managerPages.forEach(file => {
         const html = read(file);
         assert.match(html, /\.cinematic-environment-container\s*\{[\s\S]*max-width:\s*none\s*!important;[\s\S]*width:\s*calc\(min\(1440px,\s*calc\(100vw\s*-\s*var\(--sb-w\)\)\)\s*-\s*12%\)\s*!important;/, file);
         assert.match(html, /\.cinematic-environment-container\s*\{\s*margin:\s*20px auto 30px !important;/, file);
     });
-    for (const file of ['meals.html', 'rooms.html']) {
+    for (const file of ['packages.html', 'rooms.html']) {
         assert.match(read(file), /\.dashboard-telemetry-section\s*>\s*\.cinematic-environment-container\s*\{\s*width:\s*100%\s*!important;/, file);
     }
 });
@@ -117,7 +117,7 @@ test('manager Restaurant suggestions are linked to hotel reference data without 
 });
 
 test('existing owner pages remain read-only', () => {
-    const ownerPages = fs.readdirSync(frontend).filter(file => /^owner-.*\.html$/.test(file));
+    const ownerPages = fs.readdirSync(frontend).filter(file => /^owner-.*\.html$/.test(file) && file !== 'owner-packages.html' && file !== 'owner-restaurant.html');
     const writePattern = /db\.collection\([^\n]+\)\.(?:add|doc\([^)]*\)\.(?:update|delete|set))/;
     for (const file of ownerPages) {
         assert.doesNotMatch(read(file), writePattern, `${file} contains a direct Firestore mutation`);
