@@ -2295,6 +2295,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 }
                 const discountType = document.getElementById('bookingDiscountType').value;
                 const discountValue = parseFloat(document.getElementById('bookingDiscountValue').value) || 0;
+                const mealPackage = document.getElementById('bookingMeals').value;
+                const paymentStatus = document.getElementById('bookingPaymentStatus').value;
+                const notes = document.getElementById('bookingNotes').value.trim();
+
+                if (!guestName || !roomNumber || !checkIn || !checkOut) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
 
                 const { grandTotal, discountAmount } = calculatePrice();
                 if (grandTotal < 0) {
