@@ -1,48 +1,1050 @@
-const express = require('express');
-const cors = require('cors');
-const admin = require('firebase-admin');
-const path = require('path');
+"use strict";
 
-const serviceAccount = require('./serviceAccountKey.json');
+const path = require("path");
+const crypto = require("crypto");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+require("dotenv").config({
+    path: path.join(__dirname, ".env")
 });
+
+const express = require("express");
+const cors = require("cors");
+const admin = require("firebase-admin");
+
+const serviceAccount =
+    require("./serviceAccountKey.json");
+
+// --------------------------------------------------
+// ENVIRONMENT VALIDATION
+// --------------------------------------------------
+
+const PORT =
+    Number(process.env.PORT) || 5000;
+
+const PASSWORD_LOOKUP_SECRET =
+    String(
+        process.env.PASSWORD_LOOKUP_SECRET || ""
+    ).trim();
+
+if (PASSWORD_LOOKUP_SECRET.length < 32) {
+    throw new Error(
+        "PASSWORD_LOOKUP_SECRET is missing or too short. " +
+        "Add a random secret of at least 32 characters to backend/.env."
+    );
+}
+
+// --------------------------------------------------
+// FIREBASE ADMIN
+// --------------------------------------------------
+
+if (admin.apps.length === 0) {
+    admin.initializeApp({
+        credential:
+            admin.credential.cert(serviceAccount)
+    });
+}
 
 const db = admin.firestore();
+const firebaseAuth = admin.auth();
+
+const {
+    FieldValue
+} = admin.firestore;
+
+// --------------------------------------------------
+// EXPRESS
+// --------------------------------------------------
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// CORRECT PATH - going up one level to PROJECTS folder, then into frontend
-const frontendPath = path.join(__dirname, '..', 'business-tracker-frontend');
-console.log(`📁 Serving frontend from: ${frontendPath}`);
+app.disable("x-powered-by");
 
-app.use(express.static(frontendPath));
+app.use(
+    cors({
+        origin: true,
+        credentials: true
+    })
+);
 
-// Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
+app.use(
+    express.json({
+        limit: "100kb"
+    })
+);
 
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Business Tracker API is running! 🚀' });
-});
+// --------------------------------------------------
+// FRONTEND
+// --------------------------------------------------
 
-app.get('/api/test-firebase', async (req, res) => {
-  try {
-    await db.collection('test').add({
-      message: 'Hello from backend!',
-      timestamp: new Date()
-    });
-    res.json({ success: true, message: 'Firebase is connected! ✅' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+const frontendPath = path.join(
+    __dirname,
+    "..",
+    "business-tracker-frontend"
+);
 
-const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+console.log(
+    `📁 Serving frontend from: ${frontendPath}`
+);
+
+app.use(
+    express.static(frontendPath)
+);
+
+// --------------------------------------------------
+// CONSTANTS
+// --------------------------------------------------
+
+const USERNAME_RESERVATIONS_COLLECTION =
+    "credentialUsernames";
+
+const PASSWORD_RESERVATIONS_COLLECTION =
+    "credentialPasswords";
+
+const STAFF_ROLE = "staff";
+const MANAGER_ROLE = "manager";
+
+const ALLOWED_USERNAME_PATTERN =
+    /^[a-z0-9._-]{3,40}$/;
+
+const ALLOWED_STAFF_ROLE_TITLES = new Set([
+    "Chef",
+    "Front Desk",
+    "Housekeeping",
+    "Waiter",
+    "Security",
+    "Maintenance",
+    "Receptionist",
+    "Supervisor",
+    "Accountant",
+    "Manager Assistant",
+    "Custom"
+]);
+
+// --------------------------------------------------
+// ERROR CLASS
+// --------------------------------------------------
+
+class HttpError extends Error {
+    constructor(
+        status,
+        message,
+        code = "request-failed"
+    ) {
+        super(message);
+
+        this.name = "HttpError";
+        this.status = status;
+        this.code = code;
+    }
+}
+
+// --------------------------------------------------
+// GENERAL HELPERS
+// --------------------------------------------------
+
+function asyncRoute(handler) {
+    return function wrappedRoute(
+        request,
+        response,
+        next
+    ) {
+        Promise.resolve(
+            handler(
+                request,
+                response,
+                next
+            )
+        ).catch(next);
+    };
+}
+
+function normaliseText(value) {
+    return String(value || "").trim();
+}
+
+function normaliseUsername(value) {
+    return normaliseText(value)
+        .toLowerCase();
+}
+
+function normaliseEmail(value) {
+    return normaliseText(value)
+        .toLowerCase();
+}
+
+function createSha256(value) {
+    return crypto
+        .createHash("sha256")
+        .update(value)
+        .digest("hex");
+}
+
+/**
+ * Passwords are never stored.
+ *
+ * The server stores only an HMAC fingerprint generated
+ * with a private backend secret.
+ */
+function createPasswordFingerprint(password) {
+    return crypto
+        .createHmac(
+            "sha256",
+            PASSWORD_LOOKUP_SECRET
+        )
+        .update(password)
+        .digest("hex");
+}
+
+function buildSyntheticEmail(username) {
+    return `${username}@business.local`;
+}
+
+function isValidContactEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        .test(email);
+}
+
+function validateStaffPayload(body) {
+    const name =
+        normaliseText(body.name);
+
+    const requestedRoleTitle =
+        normaliseText(body.roleTitle);
+
+    const customRoleTitle =
+        normaliseText(body.customRoleTitle);
+
+    const email =
+        normaliseEmail(body.email);
+
+    const phone =
+        normaliseText(body.phone);
+
+    const username =
+        normaliseUsername(body.username);
+
+    const password =
+        String(body.password || "");
+
+    if (name.length < 2 || name.length > 100) {
+        throw new HttpError(
+            400,
+            "Name must contain between 2 and 100 characters.",
+            "invalid-name"
+        );
+    }
+
+    if (!requestedRoleTitle) {
+        throw new HttpError(
+            400,
+            "Please select a staff role.",
+            "invalid-role-title"
+        );
+    }
+
+    if (
+        requestedRoleTitle !== "Custom" &&
+        !ALLOWED_STAFF_ROLE_TITLES.has(
+            requestedRoleTitle
+        )
+    ) {
+        throw new HttpError(
+            400,
+            "The selected staff role is invalid.",
+            "invalid-role-title"
+        );
+    }
+
+    let roleTitle =
+        requestedRoleTitle;
+
+    if (requestedRoleTitle === "Custom") {
+        if (
+            customRoleTitle.length < 2 ||
+            customRoleTitle.length > 60
+        ) {
+            throw new HttpError(
+                400,
+                "Enter a custom role containing between 2 and 60 characters.",
+                "invalid-custom-role"
+            );
+        }
+
+        roleTitle =
+            customRoleTitle;
+    }
+
+    if (!isValidContactEmail(email)) {
+        throw new HttpError(
+            400,
+            "Enter a valid contact email address.",
+            "invalid-contact-email"
+        );
+    }
+
+    if (phone.length < 5 || phone.length > 30) {
+        throw new HttpError(
+            400,
+            "Enter a valid phone number.",
+            "invalid-phone"
+        );
+    }
+
+    if (
+        !ALLOWED_USERNAME_PATTERN.test(username)
+    ) {
+        throw new HttpError(
+            400,
+            "Username must contain 3–40 lowercase letters, numbers, dots, underscores or hyphens.",
+            "invalid-username"
+        );
+    }
+
+    if (
+        username === "owner" ||
+        username === "admin"
+    ) {
+        throw new HttpError(
+            409,
+            "Username already taken",
+            "username-taken"
+        );
+    }
+
+    if (password.length < 8) {
+        throw new HttpError(
+            400,
+            "Password must contain at least 8 characters.",
+            "weak-password"
+        );
+    }
+
+    if (password.length > 128) {
+        throw new HttpError(
+            400,
+            "Password is too long.",
+            "invalid-password"
+        );
+    }
+
+    return {
+        name,
+        roleTitle,
+        email,
+        phone,
+        username,
+        password
+    };
+}
+
+// --------------------------------------------------
+// AUTHENTICATION MIDDLEWARE
+// --------------------------------------------------
+
+async function requireManager(
+    request,
+    response,
+    next
+) {
+    try {
+        const authorizationHeader =
+            String(
+                request.headers.authorization || ""
+            );
+
+        if (
+            !authorizationHeader.startsWith(
+                "Bearer "
+            )
+        ) {
+            throw new HttpError(
+                401,
+                "Authentication required.",
+                "missing-auth-token"
+            );
+        }
+
+        const idToken =
+            authorizationHeader
+                .slice("Bearer ".length)
+                .trim();
+
+        if (!idToken) {
+            throw new HttpError(
+                401,
+                "Authentication required.",
+                "missing-auth-token"
+            );
+        }
+
+        const decodedToken =
+            await firebaseAuth.verifyIdToken(
+                idToken
+            );
+
+        const managerDocument =
+            await db
+                .collection("users")
+                .doc(decodedToken.uid)
+                .get();
+
+        if (!managerDocument.exists) {
+            throw new HttpError(
+                403,
+                "Your user profile is missing.",
+                "missing-user-profile"
+            );
+        }
+
+        const managerProfile =
+            managerDocument.data() || {};
+
+        if (
+            managerProfile.role !==
+            MANAGER_ROLE
+        ) {
+            throw new HttpError(
+                403,
+                "Manager permission is required.",
+                "manager-required"
+            );
+        }
+
+        if (!managerProfile.hotelId) {
+            throw new HttpError(
+                403,
+                "Your manager account does not have an assigned hotel.",
+                "missing-hotel"
+            );
+        }
+
+        request.managerContext = {
+            uid: decodedToken.uid,
+            email:
+                decodedToken.email || "",
+            hotelId:
+                managerProfile.hotelId,
+            profile:
+                managerProfile
+        };
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
+// --------------------------------------------------
+// CREDENTIAL RESERVATIONS
+// --------------------------------------------------
+
+function getCredentialReferences(
+    username,
+    password
+) {
+    const usernameKey =
+        createSha256(username);
+
+    const passwordKey =
+        createPasswordFingerprint(
+            password
+        );
+
+    return {
+        usernameReference:
+            db
+                .collection(
+                    USERNAME_RESERVATIONS_COLLECTION
+                )
+                .doc(usernameKey),
+
+        passwordReference:
+            db
+                .collection(
+                    PASSWORD_RESERVATIONS_COLLECTION
+                )
+                .doc(passwordKey)
+    };
+}
+
+async function reserveCredentials({
+    username,
+    password,
+    managerUid,
+    hotelId
+}) {
+    const {
+        usernameReference,
+        passwordReference
+    } = getCredentialReferences(
+        username,
+        password
+    );
+
+    await db.runTransaction(
+        async transaction => {
+            const [
+                usernameDocument,
+                passwordDocument
+            ] = await Promise.all([
+                transaction.get(
+                    usernameReference
+                ),
+                transaction.get(
+                    passwordReference
+                )
+            ]);
+
+            if (usernameDocument.exists) {
+                throw new HttpError(
+                    409,
+                    "Username already taken",
+                    "username-taken"
+                );
+            }
+
+            if (passwordDocument.exists) {
+                throw new HttpError(
+                    409,
+                    "Password already taken",
+                    "password-taken"
+                );
+            }
+
+            transaction.create(
+                usernameReference,
+                {
+                    username,
+                    status: "pending",
+                    createdBy: managerUid,
+                    hotelId,
+                    createdAt:
+                        FieldValue
+                            .serverTimestamp()
+                }
+            );
+
+            transaction.create(
+                passwordReference,
+                {
+                    algorithm:
+                        "hmac-sha256",
+                    status: "pending",
+                    createdBy: managerUid,
+                    hotelId,
+                    createdAt:
+                        FieldValue
+                            .serverTimestamp()
+                }
+            );
+        }
+    );
+
+    return {
+        usernameReference,
+        passwordReference
+    };
+}
+
+async function removePendingReservations(
+    usernameReference,
+    passwordReference
+) {
+    const batch = db.batch();
+
+    batch.delete(
+        usernameReference
+    );
+
+    batch.delete(
+        passwordReference
+    );
+
+    try {
+        await batch.commit();
+    } catch (error) {
+        console.error(
+            "Unable to clean credential reservations:",
+            error
+        );
+    }
+}
+
+// --------------------------------------------------
+// ROUTES
+// --------------------------------------------------
+
+app.get(
+    "/",
+    (request, response) => {
+        response.sendFile(
+            path.join(
+                frontendPath,
+                "index.html"
+            )
+        );
+    }
+);
+
+app.get(
+    "/api/test",
+    (request, response) => {
+        response.json({
+            success: true,
+            message:
+                "Business Tracker API is running! 🚀"
+        });
+    }
+);
+
+app.get(
+    "/api/test-firebase",
+    asyncRoute(
+        async (
+            request,
+            response
+        ) => {
+            await db
+                .collection("test")
+                .add({
+                    message:
+                        "Hello from backend!",
+                    timestamp:
+                        FieldValue
+                            .serverTimestamp()
+                });
+
+            response.json({
+                success: true,
+                message:
+                    "Firebase is connected! ✅"
+            });
+        }
+    )
+);
+
+/**
+ * List staff login accounts for the authenticated
+ * manager's own hotel.
+ */
+app.get(
+    "/api/staff",
+    requireManager,
+    asyncRoute(
+        async (
+            request,
+            response
+        ) => {
+            const {
+                hotelId
+            } = request.managerContext;
+
+            /*
+             * Query by hotelId only so this does not require
+             * a composite role + hotelId Firestore index.
+             */
+            const snapshot =
+                await db
+                    .collection("users")
+                    .where(
+                        "hotelId",
+                        "==",
+                        hotelId
+                    )
+                    .get();
+
+            const staffAccounts = [];
+
+            snapshot.forEach(document => {
+                const data =
+                    document.data() || {};
+
+                if (
+                    data.role !==
+                    STAFF_ROLE
+                ) {
+                    return;
+                }
+
+                staffAccounts.push({
+                    uid:
+                        document.id,
+                    name:
+                        data.name || "",
+                    roleTitle:
+                        data.roleTitle || "",
+                    email:
+                        data.email || "",
+                    phone:
+                        data.phone || "",
+                    username:
+                        data.username || "",
+                    hotelId:
+                        data.hotelId,
+                    createdAt:
+                        data.createdAt &&
+                        typeof data.createdAt
+                            .toDate ===
+                            "function"
+                            ? data.createdAt
+                                .toDate()
+                                .toISOString()
+                            : null
+                });
+            });
+
+            staffAccounts.sort(
+                (
+                    first,
+                    second
+                ) => {
+                    return String(
+                        first.name
+                    ).localeCompare(
+                        String(
+                            second.name
+                        )
+                    );
+                }
+            );
+
+            response.json({
+                success: true,
+                hotelId,
+                staff:
+                    staffAccounts
+            });
+        }
+    )
+);
+
+/**
+ * Create a real Firebase Auth staff account.
+ *
+ * The requester must be a manager.
+ * hotelId always comes from the manager's Firestore
+ * profile and is never trusted from the browser.
+ */
+app.post(
+    "/api/staff",
+    requireManager,
+    asyncRoute(
+        async (
+            request,
+            response
+        ) => {
+            const {
+                uid: managerUid,
+                hotelId
+            } = request.managerContext;
+
+            const {
+                name,
+                roleTitle,
+                email,
+                phone,
+                username,
+                password
+            } = validateStaffPayload(
+                request.body || {}
+            );
+
+            const syntheticEmail =
+                buildSyntheticEmail(
+                    username
+                );
+
+            let createdAuthUser = null;
+            let usernameReference = null;
+            let passwordReference = null;
+            let credentialsReserved = false;
+
+            try {
+                const reservations =
+                    await reserveCredentials({
+                        username,
+                        password,
+                        managerUid,
+                        hotelId
+                    });
+
+                usernameReference =
+                    reservations
+                        .usernameReference;
+
+                passwordReference =
+                    reservations
+                        .passwordReference;
+
+                credentialsReserved = true;
+
+                /*
+                 * Firebase Auth is also globally unique by
+                 * synthetic email.
+                 */
+                createdAuthUser =
+                    await firebaseAuth
+                        .createUser({
+                            email:
+                                syntheticEmail,
+                            password,
+                            displayName:
+                                name,
+                            disabled:
+                                false
+                        });
+
+                const userReference =
+                    db
+                        .collection("users")
+                        .doc(
+                            createdAuthUser.uid
+                        );
+
+                const writeBatch =
+                    db.batch();
+
+                /*
+                 * Create the role document in the same
+                 * successful operation as finalising the
+                 * credential reservations.
+                 */
+                writeBatch.create(
+                    userReference,
+                    {
+                        role:
+                            STAFF_ROLE,
+                        hotelId,
+                        staffId:
+                            createdAuthUser.uid,
+                        name,
+                        roleTitle,
+                        email,
+                        phone,
+                        username,
+                        authEmail:
+                            syntheticEmail,
+                        createdBy:
+                            managerUid,
+                        createdAt:
+                            FieldValue
+                                .serverTimestamp(),
+                        updatedAt:
+                            FieldValue
+                                .serverTimestamp()
+                    }
+                );
+
+                writeBatch.update(
+                    usernameReference,
+                    {
+                        status:
+                            "active",
+                        uid:
+                            createdAuthUser.uid,
+                        activatedAt:
+                            FieldValue
+                                .serverTimestamp()
+                    }
+                );
+
+                writeBatch.update(
+                    passwordReference,
+                    {
+                        status:
+                            "active",
+                        uid:
+                            createdAuthUser.uid,
+                        activatedAt:
+                            FieldValue
+                                .serverTimestamp()
+                    }
+                );
+
+                await writeBatch.commit();
+
+                response.status(201).json({
+                    success: true,
+                    message:
+                        "Staff account created successfully.",
+                    staff: {
+                        uid:
+                            createdAuthUser.uid,
+                        name,
+                        roleTitle,
+                        email,
+                        phone,
+                        username,
+                        hotelId
+                    }
+                });
+            } catch (error) {
+                /*
+                 * If Auth was created but Firestore failed,
+                 * delete the Auth account to avoid a logged-in
+                 * user with no users/{uid} role document.
+                 */
+                if (createdAuthUser) {
+                    try {
+                        await firebaseAuth
+                            .deleteUser(
+                                createdAuthUser.uid
+                            );
+                    } catch (
+                        deleteAuthError
+                    ) {
+                        console.error(
+                            "Unable to roll back Firebase Auth user:",
+                            deleteAuthError
+                        );
+                    }
+                }
+
+                if (
+                    credentialsReserved &&
+                    usernameReference &&
+                    passwordReference
+                ) {
+                    await removePendingReservations(
+                        usernameReference,
+                        passwordReference
+                    );
+                }
+
+                if (
+                    error.code ===
+                        "auth/email-already-exists" ||
+                    error.code ===
+                        "auth/uid-already-exists"
+                ) {
+                    throw new HttpError(
+                        409,
+                        "Username already taken",
+                        "username-taken"
+                    );
+                }
+
+                if (
+                    error.code ===
+                    "auth/invalid-password"
+                ) {
+                    throw new HttpError(
+                        400,
+                        "The generated password is invalid.",
+                        "invalid-password"
+                    );
+                }
+
+                throw error;
+            }
+        }
+    )
+);
+
+// --------------------------------------------------
+// NOT FOUND
+// --------------------------------------------------
+
+app.use(
+    "/api",
+    (
+        request,
+        response
+    ) => {
+        response.status(404).json({
+            success: false,
+            error:
+                "API route not found.",
+            code:
+                "not-found"
+        });
+    }
+);
+
+// --------------------------------------------------
+// ERROR HANDLER
+// --------------------------------------------------
+
+app.use(
+    (
+        error,
+        request,
+        response,
+        next
+    ) => {
+        console.error(
+            "API error:",
+            {
+                message:
+                    error.message,
+                code:
+                    error.code,
+                path:
+                    request.path
+            }
+        );
+
+        if (
+            error.code ===
+            "auth/id-token-expired"
+        ) {
+            response.status(401).json({
+                success: false,
+                error:
+                    "Your login session has expired. Please sign in again.",
+                code:
+                    "token-expired"
+            });
+
+            return;
+        }
+
+        if (
+            error.code ===
+                "auth/argument-error" ||
+            error.code ===
+                "auth/invalid-id-token"
+        ) {
+            response.status(401).json({
+                success: false,
+                error:
+                    "Your authentication token is invalid.",
+                code:
+                    "invalid-auth-token"
+            });
+
+            return;
+        }
+
+        const status =
+            Number(error.status) || 500;
+
+        response.status(status).json({
+            success: false,
+            error:
+                status >= 500
+                    ? "An unexpected server error occurred."
+                    : error.message,
+            code:
+                error.code ||
+                "server-error"
+        });
+    }
+);
+
+// --------------------------------------------------
+// START SERVER
+// --------------------------------------------------
+
+app.listen(
+    PORT,
+    () => {
+        console.log(
+            `✅ Server running on http://localhost:${PORT}`
+        );
+
+        console.log(
+            "🔐 Staff account API is ready."
+        );
+    }
+);

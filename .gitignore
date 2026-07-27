@@ -21,3 +21,4 @@ _pv4/
 .DS_Store
 Thumbs.db
 *.log
+backend/.env
