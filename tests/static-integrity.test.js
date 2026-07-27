@@ -43,6 +43,8 @@ test('Restaurant views use the established manager and owner workspace shells', 
     assert.match(css, /@keyframes premiumFadeUp/);
     assert.match(css, /body\[data-mode="owner"\]\s+\.animated-element/);
     assert.match(css, /@media \(max-width: 480px\)[\s\S]*body\[data-mode="owner"\]\s+\{ --sb-w: 64px; \}/);
+    assert.match(css, /body\[data-mode="owner"\]\s+select\s*\{[\s\S]*color-scheme:\s*dark/);
+    assert.match(css, /body\[data-mode="owner"\]\s+select\s+option\s*\{[\s\S]*color:\s*#f4f4f4[\s\S]*background:\s*#22242c/);
 });
 
 test('dashboard exchange controls use the responsive currency component', () => {

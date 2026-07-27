@@ -304,6 +304,15 @@ body[data-mode="owner"] label { color: #8e96a3; }
 body[data-mode="owner"] input,
 body[data-mode="owner"] select,
 body[data-mode="owner"] textarea { border-color: rgba(255,255,255,.08); color: #fff; background: rgba(255,255,255,.05); }
+body[data-mode="owner"] select {
+    color: #f4f4f4;
+    background: #22242c;
+    color-scheme: dark;
+}
+body[data-mode="owner"] select option {
+    color: #f4f4f4;
+    background: #22242c;
+}
 body[data-mode="owner"] input:focus,
 body[data-mode="owner"] select:focus,
 body[data-mode="owner"] textarea:focus { background: rgba(255,255,255,.09); }
