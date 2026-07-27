@@ -1840,9 +1840,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 
         function bookingReportAmount(booking) {
             const original = FinanceUtils.normalizeCurrency(booking.currency);
-            if (original === bookingDisplayCurrency) return Number(booking.totalAmount || 0);
-            if (!bookingExchangeRate) return Number(booking.totalAmount || 0);
-            return FinanceUtils.convertAmount(booking.totalAmount, original, bookingDisplayCurrency, bookingExchangeRate.rate);
+            return FinanceUtils.convertAmountOrUnavailable(
+                booking.totalAmount,
+                original,
+                bookingDisplayCurrency,
+                bookingExchangeRate && bookingExchangeRate.rate
+            );
         }
 
         // --- LOAD PACKAGES FROM FIREBASE ---
@@ -2064,9 +2067,16 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (occupiedPercentEl) occupiedPercentEl.textContent = rate + '%';
 
             const paidBookings = bookings.filter(b => b.paymentStatus === 'paid');
-            const revenue = paidBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-            if (bookingRevenueEl) bookingRevenueEl.textContent = 'LKR ' + revenue.toLocaleString();
+            const revenue = paidBookings.reduce((sum, b) => sum + bookingReportAmount(b), 0);
+            if (bookingRevenueEl) bookingRevenueEl.textContent = FinanceUtils.formatMoney(revenue, bookingDisplayCurrency);
             if (revenueCountEl) revenueCountEl.textContent = paidBookings.length + ' bookings';
+        }
+
+        function roomStatusForBookingStatus(status) {
+            if (status === 'upcoming') return 'Reserved';
+            if (status === 'active') return 'Occupied';
+            if (['past', 'checked_out_early', 'cancelled'].includes(status)) return 'Available';
+            return null;
         }
 
         // --- UPDATE ROOM STATUS BASED ON BOOKING STATUS ---
@@ -2076,23 +2086,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const room = rooms.find(r => r.roomNumber === booking.roomNumber);
             if (!room) return;
 
-            let newRoomStatus = room.status;
-
-            switch (booking.status) {
-                case 'upcoming':
-                    newRoomStatus = 'Reserved';
-                    break;
-                case 'active':
-                    newRoomStatus = 'Occupied';
-                    break;
-                case 'past':
-                case 'checked_out_early':
-                case 'cancelled':
-                    newRoomStatus = 'Available';
-                    break;
-                default:
-                    return;
-            }
+            const newRoomStatus = roomStatusForBookingStatus(booking.status);
+            if (!newRoomStatus) return;
 
             if (room.status !== newRoomStatus) {
                 await db.collection('rooms').doc(room.id).update({ status: newRoomStatus });
@@ -2421,39 +2416,37 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 btn.disabled = true;
 
                 try {
-                    const bookingRef = await db.collection('bookings').add({
+                    const bookingRef = db.collection('bookings').doc();
+                    const booking = {
                         hotelId, guestName, nic: nic || '', phone: phone || '', guestCount, roomNumber,
                         checkIn, checkInTime, checkOut, checkOutTime,
                         mealPackage, totalAmount: grandTotal, currency, bookingChannel,
                         paymentStatus: paymentStatus,
                         status: 'upcoming',
                         notes: notes || '',
-                        createdAt: new Date()
-                    });
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    const batch = db.batch();
+                    batch.set(bookingRef, booking);
 
                     // UPDATE ROOM STATUS TO RESERVED
                     const room = rooms.find(r => r.roomNumber === roomNumber);
                     if (room && (room.status === 'Available' || room.status === 'Cleaning')) {
-                        await db.collection('rooms').doc(room.id).update({ status: 'Reserved' });
-                        room.status = 'Reserved';
+                        batch.update(db.collection('rooms').doc(room.id), { status: 'Reserved' });
                     }
 
                     // Auto-income if paid
-                    if (paymentStatus === 'paid') {
-                        const mealLabel = mealPackage || 'No Package';
-                        await db.collection('income').add({
-                            hotelId,
-                            date: checkIn,
-                            source: 'Room Revenue - Booking',
-                            amount: grandTotal,
-                            currency,
-                            bookingChannel,
-                            description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealLabel} | PAID`,
-                            bookingId: bookingRef.id,
-                            isAutoGenerated: true,
-                            createdAt: new Date()
+                    const income = FinanceUtils.buildBookingIncome(bookingRef.id, booking);
+                    if (income) {
+                        batch.set(db.collection('income').doc(FinanceUtils.bookingIncomeDocumentId(bookingRef.id)), {
+                            ...income,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                     }
+                    await batch.commit();
+                    if (room && (room.status === 'Available' || room.status === 'Cleaning')) room.status = 'Reserved';
 
                     alert('✅ Booking created!' + (paymentStatus === 'paid' ? ' Income record auto-generated.' : ''));
                     bookingForm.reset();
@@ -2483,24 +2476,29 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (!confirm('Delete this booking?')) return;
             try {
                 const booking = bookings.find(b => b.id === id);
+                const batch = db.batch();
+                const canonicalIncomeRef = db.collection('income').doc(FinanceUtils.bookingIncomeDocumentId(id));
+                const incomeRefs = new Map([[canonicalIncomeRef.path, canonicalIncomeRef]]);
                 if (booking) {
                     // REMOVE linked income records
                     const incomeSnap = await db.collection('income')
                         .where('bookingId', '==', id)
                         .get();
-                    incomeSnap.forEach(async (doc) => {
-                        await db.collection('income').doc(doc.id).delete();
-                        console.log('🗑️ Income removed for deleted booking:', id);
+                    incomeSnap.forEach(doc => {
+                        if (!doc.data().hotelId || doc.data().hotelId === hotelId) incomeRefs.set(doc.ref.path, doc.ref);
                     });
                     
                     // FREE THE ROOM
                     const room = rooms.find(r => r.roomNumber === booking.roomNumber);
                     if (room && room.status === 'Reserved') {
-                        await db.collection('rooms').doc(room.id).update({ status: 'Available' });
-                        room.status = 'Available';
+                        batch.update(db.collection('rooms').doc(room.id), { status: 'Available' });
                     }
                 }
-                await db.collection('bookings').doc(id).delete();
+                incomeRefs.forEach(ref => batch.delete(ref));
+                batch.delete(db.collection('bookings').doc(id));
+                await batch.commit();
+                const room = booking && rooms.find(r => r.roomNumber === booking.roomNumber);
+                if (room && room.status === 'Reserved') room.status = 'Available';
                 await loadBookings();
                 await loadRooms();
                 updateStats();
@@ -2626,7 +2624,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         newTotalAmount = roomTotal + mealTotal;
                     }
 
-                    await db.collection('bookings').doc(id).update({
+                    const bookingUpdate = {
                         guestName, nic: nic || '', phone: phone || '', roomNumber,
                         checkIn, checkInTime, checkOut, checkOutTime,
                         status, paymentStatus,
@@ -2634,78 +2632,52 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         mealPackage: mealPackage || '', currency, bookingChannel,
                         totalAmount: newTotalAmount,
                         manualAmount: status === 'checked_out_early' ? manualAmount : 0,
-                        notes: notes || ''
+                        notes: notes || '',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    const updatedBooking = { ...oldBooking, ...bookingUpdate, hotelId };
+                    const linkedIncomeSnapshot = await db.collection('income').where('bookingId', '==', id).get();
+                    const canonicalIncomeRef = db.collection('income').doc(FinanceUtils.bookingIncomeDocumentId(id));
+                    const now = firebase.firestore.FieldValue.serverTimestamp();
+                    const batch = db.batch();
+                    batch.update(db.collection('bookings').doc(id), bookingUpdate);
+
+                    const linkedIncomeRefs = new Map([[canonicalIncomeRef.path, canonicalIncomeRef]]);
+                    let canonicalIncomeSnapshot = null;
+                    linkedIncomeSnapshot.forEach(doc => {
+                        if (!doc.data().hotelId || doc.data().hotelId === hotelId) {
+                            linkedIncomeRefs.set(doc.ref.path, doc.ref);
+                            if (doc.ref.path === canonicalIncomeRef.path) canonicalIncomeSnapshot = doc;
+                        }
                     });
 
-                    // 🔥 FIX: Handle income updates
-                    if (oldPaymentStatus !== paymentStatus) {
-                        // Status changed
-                        if (paymentStatus === 'paid') {
-                            // ✅ ADD income record with NEW amount
-                            const incomeAmount = newTotalAmount;
-                            await db.collection('income').add({
-                                hotelId,
-                                date: checkIn,
-                                source: 'Room Revenue - Booking',
-                                amount: incomeAmount,
-                                currency,
-                                bookingChannel,
-                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | PAID (updated)${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`,
-                                bookingId: id,
-                                isAutoGenerated: true,
-                                createdAt: new Date()
-                            });
-                            console.log('✅ Income added for booking:', id, 'Amount:', incomeAmount);
-                        } else {
-                            // ❌ REMOVE income record
-                            const incomeSnap = await db.collection('income')
-                                .where('bookingId', '==', id)
-                                .get();
-                            incomeSnap.forEach(async (doc) => {
-                                await db.collection('income').doc(doc.id).delete();
-                                console.log('🗑️ Income removed for booking:', id);
-                            });
-                        }
-                    } else if (paymentStatus === 'paid' && oldBooking && oldBooking.totalAmount !== newTotalAmount) {
-                        // 🔥 FIX: Status is still 'paid' but total amount changed - UPDATE income record
-                        const incomeSnap = await db.collection('income')
-                            .where('bookingId', '==', id)
-                            .get();
-                        
-                        incomeSnap.forEach(async (doc) => {
-                            await db.collection('income').doc(doc.id).update({
-                                amount: newTotalAmount,
-                                currency,
-                                bookingChannel,
-                                date: checkIn,
-                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | PAID (updated)${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`
-                            });
-                            console.log('✅ Income UPDATED for booking:', id, 'New Amount:', newTotalAmount);
+                    const income = FinanceUtils.buildBookingIncome(id, updatedBooking);
+                    if (income) {
+                        linkedIncomeRefs.forEach((ref, path) => {
+                            if (path !== canonicalIncomeRef.path) batch.delete(ref);
                         });
+                        batch.set(canonicalIncomeRef, {
+                            ...income,
+                            createdAt: canonicalIncomeSnapshot?.data().createdAt || now,
+                            updatedAt: now
+                        }, { merge: true });
+                    } else {
+                        linkedIncomeRefs.forEach(ref => batch.delete(ref));
                     }
 
-                    // UPDATE ROOM STATUS BASED ON NEW BOOKING STATUS
-                    await updateRoomStatusForBooking({ roomNumber, status });
-
-                    // If room changed, update old and new room statuses
-                    if (oldBooking && oldBooking.roomNumber !== roomNumber) {
-                        // Free old room - set to Available
-                        const oldRoom = rooms.find(r => r.roomNumber === oldBooking.roomNumber);
-                        if (oldRoom) {
-                            await db.collection('rooms').doc(oldRoom.id).update({ status: 'Available' });
-                            oldRoom.status = 'Available';
-                        }
-                        // Update new room based on booking status
-                        const newRoom = rooms.find(r => r.roomNumber === roomNumber);
-                        if (newRoom) {
-                            let newRoomStatus = 'Available';
-                            if (status === 'upcoming') newRoomStatus = 'Reserved';
-                            else if (status === 'active') newRoomStatus = 'Occupied';
-                            else if (status === 'past' || status === 'checked_out_early' || status === 'cancelled') newRoomStatus = 'Available';
-                            await db.collection('rooms').doc(newRoom.id).update({ status: newRoomStatus });
-                            newRoom.status = newRoomStatus;
-                        }
+                    const oldRoom = oldBooking && rooms.find(r => r.roomNumber === oldBooking.roomNumber);
+                    const newRoom = rooms.find(r => r.roomNumber === roomNumber);
+                    const newRoomStatus = roomStatusForBookingStatus(status);
+                    if (oldRoom && oldRoom.roomNumber !== roomNumber) {
+                        batch.update(db.collection('rooms').doc(oldRoom.id), { status: 'Available' });
                     }
+                    if (newRoom && newRoomStatus) {
+                        batch.update(db.collection('rooms').doc(newRoom.id), { status: newRoomStatus });
+                    }
+
+                    await batch.commit();
+                    if (oldRoom && oldRoom.roomNumber !== roomNumber) oldRoom.status = 'Available';
+                    if (newRoom && newRoomStatus) newRoom.status = newRoomStatus;
 
                     alert('✅ Booking updated!');
                     closeEditBookingModal();
@@ -2792,7 +2764,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     b.checkIn + (b.checkInTime ? ' ' + b.checkInTime : ''),
                     b.checkOut + (b.checkOutTime ? ' ' + b.checkOutTime : ''),
                     FinanceUtils.normalizeCurrency(b.currency),
-                    bookingReportAmount(b).toFixed(bookingDisplayCurrency === 'USD' ? 2 : 0),
+                    FinanceUtils.formatAmountNumber(bookingReportAmount(b), bookingDisplayCurrency),
                     b.paymentStatus || 'pending',
                     b.status || 'N/A'
                 ]);

@@ -818,9 +818,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
         function bookingAmount(booking) {
             const original = FinanceUtils.normalizeCurrency(booking.currency);
-            if (original === bookingDisplayCurrency) return Number(booking.totalAmount || 0);
-            if (!bookingExchangeRate) return Number(booking.totalAmount || 0);
-            return FinanceUtils.convertAmount(booking.totalAmount, original, bookingDisplayCurrency, bookingExchangeRate.rate);
+            return FinanceUtils.convertAmountOrUnavailable(
+                booking.totalAmount,
+                original,
+                bookingDisplayCurrency,
+                bookingExchangeRate && bookingExchangeRate.rate
+            );
         }
 
         // --- LOAD DATA ---
@@ -1156,7 +1159,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 b.checkIn + (b.checkInTime ? ' ' + b.checkInTime : ''),
                 b.checkOut + (b.checkOutTime ? ' ' + b.checkOutTime : ''),
                 FinanceUtils.normalizeCurrency(b.currency),
-                bookingAmount(b).toFixed(bookingDisplayCurrency === 'USD' ? 2 : 0),
+                FinanceUtils.formatAmountNumber(bookingAmount(b), bookingDisplayCurrency),
                 b.paymentStatus || 'N/A',
                 b.status || 'N/A'
             ]);

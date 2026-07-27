@@ -25,9 +25,12 @@
 
     function getDisplayAmount(amount, originalCurrency) {
         const original = FinanceUtils.normalizeCurrency(originalCurrency);
-        if (original === state.displayCurrency) return Number(amount || 0);
-        if (!state.exchangeRate) return Number(amount || 0);
-        return FinanceUtils.convertAmount(amount, original, state.displayCurrency, state.exchangeRate.rate);
+        return FinanceUtils.convertAmountOrUnavailable(
+            amount,
+            original,
+            state.displayCurrency,
+            state.exchangeRate && state.exchangeRate.rate
+        );
     }
 
     function formatDisplayAmount(amount, originalCurrency) {
@@ -300,7 +303,7 @@
                 order.customerName || order.roomNumber || '—',
                 (order.items || []).map(item => `${item.name} x${item.quantity}`).join(', '),
                 FinanceUtils.normalizeCurrency(order.currency),
-                getDisplayAmount(order.totalAmount, order.currency).toFixed(state.displayCurrency === 'USD' ? 2 : 0),
+                FinanceUtils.formatAmountNumber(getDisplayAmount(order.totalAmount, order.currency), state.displayCurrency),
                 order.paymentStatus || 'pending'
             ]),
             styles: { fontSize: 7 },

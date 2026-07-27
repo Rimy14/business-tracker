@@ -1363,8 +1363,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         }
 
         function convertedExpenseAmount(item) {
-            if (displayCurrency === 'LKR' || !exchangeRate) return Number(item.amount || 0);
-            return FinanceUtils.convertAmount(item.amount, 'LKR', 'USD', exchangeRate.rate);
+            return FinanceUtils.convertAmountOrUnavailable(
+                item.amount,
+                'LKR',
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
         }
 
         function formattedExpenseAmount(item) {
@@ -1424,16 +1428,16 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 return;
             }
             root.innerHTML = filtered.map((item, i) => `
-                <div class="matrix-data-strip-node" data-id="${item.id}">
+                <div class="matrix-data-strip-node" data-id="${FinanceUtils.escapeHtml(item.id)}">
                     <div class="strip-core-fields">
                         <div class="node-tag">${i + 1}</div>
                         <div class="identity-column">
-                            <h4>${item.date || 'N/A'}</h4>
-                            <span>${item.category || 'Unknown'}</span>
+                            <h4>${FinanceUtils.escapeHtml(item.date || 'N/A')}</h4>
+                            <span>${FinanceUtils.escapeHtml(item.category || 'Unknown')}</span>
                         </div>
-                        <div><span class="category-badge">${item.category || 'Unknown'}</span></div>
+                        <div><span class="category-badge">${FinanceUtils.escapeHtml(item.category || 'Unknown')}</span></div>
                         <div class="salary-column">- ${formattedExpenseAmount(item)}</div>
-                        <div>${item.description || '-'}</div>
+                        <div>${FinanceUtils.escapeHtml(item.description || '-')}</div>
                         <div class="actions-column-triggers">
                             <button class="strip-link-btn edit-strip-btn" onclick="openEditModal('${item.id}')">✏️</button>
                             <button class="strip-link-btn delete-strip-btn" onclick="deleteExpense('${item.id}')">🗑️</button>
@@ -1441,9 +1445,9 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     </div>
                     <div class="strip-notes-expanding-tray">
                         <div class="notes-inner-content">
-                            <span><strong>Notes:</strong> ${item.description || 'No additional notes.'}</span>
-                            ${item.paymentMethod === 'cheque' ? `<span><strong>Cheque #:</strong> ${item.chequeNumber || 'N/A'} <strong>Status:</strong> ${item.chequeStatus || 'pending'}</span>` : ''}
-                            ${item.createdBy ? `<span><strong>Created By:</strong> ${item.createdBy}</span>` : ''}
+                            <span><strong>Notes:</strong> ${FinanceUtils.escapeHtml(item.description || 'No additional notes.')}</span>
+                            ${item.paymentMethod === 'cheque' ? `<span><strong>Cheque #:</strong> ${FinanceUtils.escapeHtml(item.chequeNumber || 'N/A')} <strong>Status:</strong> ${FinanceUtils.escapeHtml(item.chequeStatus || 'pending')}</span>` : ''}
+                            ${item.createdBy ? `<span><strong>Created By:</strong> ${FinanceUtils.escapeHtml(item.createdBy)}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -1469,10 +1473,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 
             tbody.innerHTML = pending.map((item, i) => `
                 <tr>
-                    <td><strong>${item.chequeNumber || 'N/A'}</strong></td>
-                    <td>${item.description || 'N/A'}</td>
+                    <td><strong>${FinanceUtils.escapeHtml(item.chequeNumber || 'N/A')}</strong></td>
+                    <td>${FinanceUtils.escapeHtml(item.description || 'N/A')}</td>
                     <td>${formattedExpenseAmount(item)}</td>
-                    <td>${item.date || 'N/A'}</td>
+                    <td>${FinanceUtils.escapeHtml(item.date || 'N/A')}</td>
                     <td><span class="cheque-status-badge pending">Pending</span></td>
                     <td>
                         <button class="strip-link-btn edit-strip-btn" onclick="updateChequeStatus('${item.id}', 'cleared')" style="color:#2e7d32;">Mark Cleared</button>
@@ -1749,7 +1753,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     i + 1,
                     item.date || 'N/A',
                     item.category || 'N/A',
-                    convertedExpenseAmount(item).toFixed(displayCurrency === 'USD' ? 2 : 0),
+                    FinanceUtils.formatAmountNumber(convertedExpenseAmount(item), displayCurrency),
                     item.description || '-',
                     item.createdBy || 'N/A'
                 ]);

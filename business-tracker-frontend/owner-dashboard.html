@@ -733,9 +733,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
         function dashboardAmount(amount, originalCurrency) {
             const original = FinanceUtils.normalizeCurrency(originalCurrency);
-            if (original === displayCurrency) return Number(amount || 0);
-            if (!exchangeRate) return Number(amount || 0);
-            return FinanceUtils.convertAmount(amount, original, displayCurrency, exchangeRate.rate);
+            return FinanceUtils.convertAmountOrUnavailable(
+                amount,
+                original,
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
         }
 
         // --- LOAD HOTEL DATA ---
@@ -839,8 +842,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                         bookingsHtml += `
                             <div class="activity-item">
                                 <div>
-                                    <span class="activity-user">${guestName}</span>
-                                    <span class="activity-room">Room ${roomNum}</span>
+                                    <span class="activity-user">${FinanceUtils.escapeHtml(guestName)}</span>
+                                    <span class="activity-room">Room ${FinanceUtils.escapeHtml(roomNum)}</span>
                                 </div>
                                 <span class="activity-price">${FinanceUtils.formatMoney(dashboardAmount(amount, data.currency || 'LKR'), displayCurrency)}</span>
                             </div>

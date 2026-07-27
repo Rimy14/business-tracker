@@ -1321,9 +1321,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
         function dashboardAmount(amount, originalCurrency) {
             const original = FinanceUtils.normalizeCurrency(originalCurrency);
-            if (original === displayCurrency) return Number(amount || 0);
-            if (!exchangeRate) return Number(amount || 0);
-            return FinanceUtils.convertAmount(amount, original, displayCurrency, exchangeRate.rate);
+            return FinanceUtils.convertAmountOrUnavailable(
+                amount,
+                original,
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
         }
 
         // --- UPDATE UI ---

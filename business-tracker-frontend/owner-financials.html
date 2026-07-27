@@ -989,14 +989,21 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
         function incomeAmount(item) {
             const original = FinanceUtils.normalizeCurrency(item.currency);
-            if (original === displayCurrency) return Number(item.amount || 0);
-            if (!exchangeRate) return Number(item.amount || 0);
-            return FinanceUtils.convertAmount(item.amount, original, displayCurrency, exchangeRate.rate);
+            return FinanceUtils.convertAmountOrUnavailable(
+                item.amount,
+                original,
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
         }
 
         function expenseAmount(item) {
-            if (displayCurrency === 'LKR' || !exchangeRate) return Number(item.amount || 0);
-            return FinanceUtils.convertAmount(item.amount, 'LKR', 'USD', exchangeRate.rate);
+            return FinanceUtils.convertAmountOrUnavailable(
+                item.amount,
+                'LKR',
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
         }
 
         function formatIncomeAmount(item) {
@@ -1194,15 +1201,15 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             }
 
             tbody.innerHTML = filtered.map((item, i) => {
-                const sourceDisplay = item.source || 'N/A';
+                const sourceDisplay = FinanceUtils.escapeHtml(item.source || 'N/A');
                 return `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${item.date || 'N/A'}</td>
+                        <td>${FinanceUtils.escapeHtml(item.date || 'N/A')}</td>
                         <td><span class="source-badge">${sourceDisplay}</span></td>
                         <td class="amount-positive">${formatIncomeAmount(item)} <small>(${FinanceUtils.normalizeCurrency(item.currency)} paid)</small></td>
-                        <td>${item.description || '-'}</td>
-                        <td>${item.createdBy || '-'}</td>
+                        <td>${FinanceUtils.escapeHtml(item.description || '-')}</td>
+                        <td>${FinanceUtils.escapeHtml(item.createdBy || '-')}</td>
                     </tr>
                 `;
             }).join('');
@@ -1232,15 +1239,15 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             }
 
             tbody.innerHTML = filtered.map((item, i) => {
-                const categoryDisplay = item.category || 'N/A';
+                const categoryDisplay = FinanceUtils.escapeHtml(item.category || 'N/A');
                 return `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${item.date || 'N/A'}</td>
+                        <td>${FinanceUtils.escapeHtml(item.date || 'N/A')}</td>
                         <td><span class="category-badge">${categoryDisplay}</span></td>
                         <td class="amount-negative">${FinanceUtils.formatMoney(expenseAmount(item), displayCurrency)}</td>
-                        <td>${item.description || '-'}</td>
-                        <td>${item.createdBy || '-'}</td>
+                        <td>${FinanceUtils.escapeHtml(item.description || '-')}</td>
+                        <td>${FinanceUtils.escapeHtml(item.createdBy || '-')}</td>
                     </tr>
                 `;
             }).join('');
@@ -1423,7 +1430,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 item.date || 'N/A',
                 item.source || 'N/A',
                 FinanceUtils.normalizeCurrency(item.currency),
-                incomeAmount(item).toFixed(displayCurrency === 'USD' ? 2 : 0),
+                FinanceUtils.formatAmountNumber(incomeAmount(item), displayCurrency),
                 item.description || '-',
                 item.createdBy || '-'
             ]);
@@ -1486,7 +1493,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 i + 1,
                 item.date || 'N/A',
                 item.category || 'N/A',
-                expenseAmount(item).toFixed(displayCurrency === 'USD' ? 2 : 0),
+                FinanceUtils.formatAmountNumber(expenseAmount(item), displayCurrency),
                 item.description || '-',
                 item.createdBy || '-'
             ]);
