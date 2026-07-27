@@ -911,7 +911,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     aspect-ratio: auto !important;
     height: auto !important;
     width: 100% !important;
-    max-width: 900px !important;
+    max-width: none !important;
+    width: calc(min(1440px, calc(100vw - var(--sb-w))) - 12%) !important;
     margin: 30px auto 50px auto !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -1024,7 +1025,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 .modal .form-actions .btn-submit:hover { background: #3f5858 !important; }
 
 @media (max-width: 768px) {
-    .cinematic-environment-container { margin: 20px 12px 30px 12px !important; }
+    .cinematic-environment-container { margin: 20px auto 30px !important; }
     .right-side-form-panel { padding: 24px 18px !important; }
     .two-column-row { grid-template-columns: 1fr !important; }
 }
@@ -1044,6 +1045,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="expenses.html" class="active">Expenses</a>
             <a href="rooms.html" >Rooms &amp; Bookings</a>
             <a href="meals.html" >Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html" >Suppliers</a>
             <a href="inventory.html" >Inventory</a>
             <a href="maintenance.html" >Maintenance</a>
@@ -1129,8 +1131,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <div class="ledger-header-left">
                 <h4>Outgoing Expense Matrix Stacks</h4>
                 <p>Consolidated organizational ledger index logs synchronized in real-time.</p>
+                <p id="exchangeRateLabel" style="margin-top:8px;color:#557373;font-weight:600;">Loading USD/LKR exchange rate...</p>
             </div>
             <div class="ledger-header-right">
+                <label>Display</label>
+                <select id="displayCurrency"><option value="LKR">LKR</option><option value="USD">USD</option></select>
                 <label>Period</label>
                 <select id="reportPeriodFilter">
                     <option value="all" selected>All</option>
@@ -1283,6 +1288,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/finance-utils.js"></script>
+    <script src="js/exchange-rate.js"></script>
 
     <script>
         // --- FIREBASE CONFIG ---
@@ -1305,6 +1312,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         let expenseData = [];
         let currentFilter = 'all';
         let startDate, endDate;
+        let displayCurrency = 'LKR';
+        let exchangeRate = null;
 
         // --- AUTH ---
         auth.onAuthStateChanged(async (user) => {
@@ -1314,7 +1323,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const doc = await db.collection('users').doc(user.uid).get();
                 if (!doc.exists) { alert('User data not found!'); await auth.signOut(); window.location.href = '/'; return; }
                 currentUserData = doc.data();
-                hotelId = user.uid;
+                hotelId = currentUserData.role === 'staff' ? currentUserData.hotelId : user.uid;
+                if (!hotelId) throw new Error('No hotel is assigned to this account.');
+                if (currentUserData.role === 'staff') {
+                    const download = document.getElementById('downloadPdfBtn');
+                    if (download) download.style.display = 'none';
+                }
                 
                 // Update profile avatar with initials
                 const initialsElement = document.getElementById('avatarInitials');
@@ -1332,10 +1346,36 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const today = new Date().toISOString().split('T')[0];
                 const dateInput = document.getElementById('expenseDate');
                 if (dateInput) dateInput.value = today;
-                await loadExpenseData();
+                await Promise.all([loadExpenseData(), loadExchangeRate()]);
                 applyFilter('all');
             } catch (e) { console.error(e); }
         });
+
+        async function loadExchangeRate() {
+            const label = document.getElementById('exchangeRateLabel');
+            try {
+                exchangeRate = await ExchangeRateService.loadUsdToLkrRate(db);
+                if (label) label.textContent = ExchangeRateService.describeRate(exchangeRate);
+            } catch (error) {
+                exchangeRate = null;
+                if (label) label.textContent = 'Exchange rate unavailable: ' + error.message;
+            }
+            renderExpenseList(); updateStats(); renderPendingCheques();
+        }
+
+        function convertedExpenseAmount(item) {
+            return FinanceUtils.convertAmountOrUnavailable(
+                item.amount,
+                'LKR',
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
+        }
+
+        function formattedExpenseAmount(item) {
+            if (!exchangeRate && displayCurrency === 'USD') return FinanceUtils.formatMoney(item.amount, 'LKR');
+            return FinanceUtils.formatMoney(convertedExpenseAmount(item), displayCurrency);
+        }
 
         // --- SHOW/HIDE CHEQUE FIELDS ---
         const paymentMethodEl = document.getElementById('paymentMethod');
@@ -1389,16 +1429,16 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 return;
             }
             root.innerHTML = filtered.map((item, i) => `
-                <div class="matrix-data-strip-node" data-id="${item.id}">
+                <div class="matrix-data-strip-node" data-id="${FinanceUtils.escapeHtml(item.id)}">
                     <div class="strip-core-fields">
                         <div class="node-tag">${i + 1}</div>
                         <div class="identity-column">
-                            <h4>${item.date || 'N/A'}</h4>
-                            <span>${item.category || 'Unknown'}</span>
+                            <h4>${FinanceUtils.escapeHtml(item.date || 'N/A')}</h4>
+                            <span>${FinanceUtils.escapeHtml(item.category || 'Unknown')}</span>
                         </div>
-                        <div><span class="category-badge">${item.category || 'Unknown'}</span></div>
-                        <div class="salary-column">- LKR ${Number(item.amount || 0).toLocaleString()}</div>
-                        <div>${item.description || '-'}</div>
+                        <div><span class="category-badge">${FinanceUtils.escapeHtml(item.category || 'Unknown')}</span></div>
+                        <div class="salary-column">- ${formattedExpenseAmount(item)}</div>
+                        <div>${FinanceUtils.escapeHtml(item.description || '-')}</div>
                         <div class="actions-column-triggers">
                             <button class="strip-link-btn edit-strip-btn" onclick="openEditModal('${item.id}')">✏️</button>
                             <button class="strip-link-btn delete-strip-btn" onclick="deleteExpense('${item.id}')">🗑️</button>
@@ -1406,9 +1446,9 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     </div>
                     <div class="strip-notes-expanding-tray">
                         <div class="notes-inner-content">
-                            <span><strong>Notes:</strong> ${item.description || 'No additional notes.'}</span>
-                            ${item.paymentMethod === 'cheque' ? `<span><strong>Cheque #:</strong> ${item.chequeNumber || 'N/A'} <strong>Status:</strong> ${item.chequeStatus || 'pending'}</span>` : ''}
-                            ${item.createdBy ? `<span><strong>Created By:</strong> ${item.createdBy}</span>` : ''}
+                            <span><strong>Notes:</strong> ${FinanceUtils.escapeHtml(item.description || 'No additional notes.')}</span>
+                            ${item.paymentMethod === 'cheque' ? `<span><strong>Cheque #:</strong> ${FinanceUtils.escapeHtml(item.chequeNumber || 'N/A')} <strong>Status:</strong> ${FinanceUtils.escapeHtml(item.chequeStatus || 'pending')}</span>` : ''}
+                            ${item.createdBy ? `<span><strong>Created By:</strong> ${FinanceUtils.escapeHtml(item.createdBy)}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -1424,20 +1464,20 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (!pending.length) {
                 tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No pending cheques.</td></tr>`;
                 const totalEl = document.getElementById('pendingChequeTotal');
-                if (totalEl) totalEl.textContent = 'LKR 0';
+                if (totalEl) totalEl.textContent = FinanceUtils.formatMoney(0, displayCurrency);
                 return;
             }
 
-            const total = pending.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const total = pending.reduce((sum, i) => sum + convertedExpenseAmount(i), 0);
             const totalEl = document.getElementById('pendingChequeTotal');
-            if (totalEl) totalEl.textContent = 'LKR ' + total.toLocaleString();
+            if (totalEl) totalEl.textContent = FinanceUtils.formatMoney(total, displayCurrency);
 
             tbody.innerHTML = pending.map((item, i) => `
                 <tr>
-                    <td><strong>${item.chequeNumber || 'N/A'}</strong></td>
-                    <td>${item.description || 'N/A'}</td>
-                    <td>LKR ${Number(item.amount || 0).toLocaleString()}</td>
-                    <td>${item.date || 'N/A'}</td>
+                    <td><strong>${FinanceUtils.escapeHtml(item.chequeNumber || 'N/A')}</strong></td>
+                    <td>${FinanceUtils.escapeHtml(item.description || 'N/A')}</td>
+                    <td>${formattedExpenseAmount(item)}</td>
+                    <td>${FinanceUtils.escapeHtml(item.date || 'N/A')}</td>
                     <td><span class="cheque-status-badge pending">Pending</span></td>
                     <td>
                         <button class="strip-link-btn edit-strip-btn" onclick="updateChequeStatus('${item.id}', 'cleared')" style="color:#2e7d32;">Mark Cleared</button>
@@ -1511,11 +1551,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         // --- UPDATE STATS ---
         function updateStats() {
             const filtered = getFilteredData();
-            const total = filtered.reduce((sum, item) => sum + (item.amount || 0), 0);
-            const salaryTotal = filtered.filter(i => i.category === 'Salary').reduce((sum, i) => sum + (i.amount || 0), 0);
-            const billsTotal = filtered.filter(i => i.category === 'Bills' || i.category === 'Utilities').reduce((sum, i) => sum + (i.amount || 0), 0);
-            const suppliesTotal = filtered.filter(i => i.category === 'Supplies').reduce((sum, i) => sum + (i.amount || 0), 0);
-            const maintenanceTotal = filtered.filter(i => i.category === 'Maintenance').reduce((sum, i) => sum + (i.amount || 0), 0);
+            const total = filtered.reduce((sum, item) => sum + convertedExpenseAmount(item), 0);
+            const salaryTotal = filtered.filter(i => i.category === 'Salary').reduce((sum, i) => sum + convertedExpenseAmount(i), 0);
+            const billsTotal = filtered.filter(i => i.category === 'Bills' || i.category === 'Utilities').reduce((sum, i) => sum + convertedExpenseAmount(i), 0);
+            const suppliesTotal = filtered.filter(i => i.category === 'Supplies').reduce((sum, i) => sum + convertedExpenseAmount(i), 0);
+            const maintenanceTotal = filtered.filter(i => i.category === 'Maintenance').reduce((sum, i) => sum + convertedExpenseAmount(i), 0);
 
             const totalEl = document.getElementById('totalExpense');
             const totalCountEl = document.getElementById('totalExpenseCount');
@@ -1524,12 +1564,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const suppliesEl = document.getElementById('suppliesExpense');
             const maintenanceEl = document.getElementById('maintenanceExpense');
 
-            if (totalEl) totalEl.textContent = 'LKR ' + total.toLocaleString();
+            if (totalEl) totalEl.textContent = FinanceUtils.formatMoney(total, displayCurrency);
             if (totalCountEl) totalCountEl.textContent = filtered.length + ' entries';
-            if (salaryEl) salaryEl.textContent = 'LKR ' + salaryTotal.toLocaleString();
-            if (billsEl) billsEl.textContent = 'LKR ' + billsTotal.toLocaleString();
-            if (suppliesEl) suppliesEl.textContent = 'LKR ' + suppliesTotal.toLocaleString();
-            if (maintenanceEl) maintenanceEl.textContent = 'LKR ' + maintenanceTotal.toLocaleString();
+            if (salaryEl) salaryEl.textContent = FinanceUtils.formatMoney(salaryTotal, displayCurrency);
+            if (billsEl) billsEl.textContent = FinanceUtils.formatMoney(billsTotal, displayCurrency);
+            if (suppliesEl) suppliesEl.textContent = FinanceUtils.formatMoney(suppliesTotal, displayCurrency);
+            if (maintenanceEl) maintenanceEl.textContent = FinanceUtils.formatMoney(maintenanceTotal, displayCurrency);
         }
 
         // --- ADD EXPENSE ---
@@ -1566,6 +1606,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         date,
                         category,
                         amount,
+                        currency: 'LKR',
                         paymentMethod,
                         chequeNumber: paymentMethod === 'cheque' ? chequeNumber : null,
                         chequeStatus: chequeStatus,
@@ -1702,23 +1743,24 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 doc.text(`Period: ${periodLabel}`, margin, 36);
                 doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
 
-                const total = filtered.reduce((sum, i) => sum + (i.amount || 0), 0);
+                const total = filtered.reduce((sum, i) => sum + convertedExpenseAmount(i), 0);
                 doc.setFontSize(11);
                 doc.setTextColor(60, 60, 60);
-                doc.text(`Total Expenses: LKR ${total.toLocaleString()}`, margin, 52);
+                doc.text(`Total Expenses: ${FinanceUtils.formatMoney(total, displayCurrency)}`, margin, 52);
+                doc.text(ExchangeRateService.describeRate(exchangeRate), margin, 57);
 
-                const headers = ['#', 'Date', 'Category', 'Amount (LKR)', 'Description', 'Created By'];
+                const headers = ['#', 'Date', 'Category', `Amount (${displayCurrency})`, 'Description', 'Created By'];
                 const rows = filtered.map((item, i) => [
                     i + 1,
                     item.date || 'N/A',
                     item.category || 'N/A',
-                    Number(item.amount || 0).toLocaleString(),
+                    FinanceUtils.formatAmountNumber(convertedExpenseAmount(item), displayCurrency),
                     item.description || '-',
                     item.createdBy || 'N/A'
                 ]);
 
                 doc.autoTable({
-                    startY: 58,
+                    startY: 63,
                     head: [headers],
                     body: rows,
                     theme: 'striped',
@@ -1747,6 +1789,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 }
             });
         }
+
+        document.getElementById('displayCurrency').addEventListener('change', function() {
+            displayCurrency = FinanceUtils.normalizeCurrency(this.value);
+            renderExpenseList(); updateStats(); renderPendingCheques();
+        });
 
         const startDateInput = document.getElementById('reportStartDate');
         const endDateInput = document.getElementById('reportEndDate');

@@ -890,7 +890,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     aspect-ratio: auto !important;
     height: auto !important;
     width: 100% !important;
-    max-width: 900px !important;
+    max-width: none !important;
+    width: calc(min(1440px, calc(100vw - var(--sb-w))) - 12%) !important;
     margin: 30px auto 50px auto !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -1003,7 +1004,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 .modal .form-actions .btn-submit:hover { background: #3f5858 !important; }
 
 @media (max-width: 768px) {
-    .cinematic-environment-container { margin: 20px 12px 30px 12px !important; }
+    .cinematic-environment-container { margin: 20px auto 30px !important; }
     .right-side-form-panel { padding: 24px 18px !important; }
     .two-column-row { grid-template-columns: 1fr !important; }
 }
@@ -1023,6 +1024,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="expenses.html" >Expenses</a>
             <a href="rooms.html" >Rooms &amp; Bookings</a>
             <a href="meals.html" >Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html" >Suppliers</a>
             <a href="inventory.html" class="active">Inventory</a>
             <a href="maintenance.html" >Maintenance</a>
@@ -1629,6 +1631,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const catSelect = document.getElementById('itemCategory').value;
                 const catCustom = document.getElementById('itemCategoryCustom').value.trim();
                 const finalCategory = catSelect === 'Custom' ? catCustom : catSelect;
+                if (!finalCategory) { alert('Select or enter an inventory category.'); return; }
 
                 const supplierSelectVal = document.getElementById('supplierId').value;
                 let finalSupplierId = '';
@@ -1754,6 +1757,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const catSelect = document.getElementById('editItemCategory').value;
                 const catCustom = document.getElementById('editItemCategoryCustom').value.trim();
                 const finalCategory = catSelect === 'Custom' ? catCustom : catSelect;
+                if (!finalCategory) { alert('Select or enter an inventory category.'); return; }
 
                 const supSelectVal = document.getElementById('editSupplierId').value;
                 let finalSupplierId = '';

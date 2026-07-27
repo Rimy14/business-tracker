@@ -1129,7 +1129,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     aspect-ratio: auto !important;
     height: auto !important;
     width: 100% !important;
-    max-width: 900px !important;
+    max-width: none !important;
+    width: calc(min(1440px, calc(100vw - var(--sb-w))) - 12%) !important;
     margin: 30px auto 50px auto !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -1241,8 +1242,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 .modal .form-actions .btn-submit { background: var(--color-sage) !important; color: #fff !important; }
 .modal .form-actions .btn-submit:hover { background: #3f5858 !important; }
 
+/* Keep every manager workspace surface on the same content grid. */
+.dashboard-telemetry-section > .cinematic-environment-container { width: 100% !important; }
+.section-card { border-radius: 14px; }
+
 @media (max-width: 768px) {
-    .cinematic-environment-container { margin: 20px 12px 30px 12px !important; }
+    .cinematic-environment-container { margin: 20px auto 30px !important; }
     .right-side-form-panel { padding: 24px 18px !important; }
     .two-column-row { grid-template-columns: 1fr !important; }
 }
@@ -1262,6 +1267,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="expenses.html" >Expenses</a>
             <a href="rooms.html" class="active">Rooms &amp; Bookings</a>
             <a href="meals.html" >Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html" >Suppliers</a>
             <a href="inventory.html" >Inventory</a>
             <a href="maintenance.html" >Maintenance</a>
@@ -1433,6 +1439,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <div class="section-header">
                 <h4>📋 Bookings</h4>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <span id="bookingExchangeRateLabel" style="font-size:.68rem;color:#557373;font-weight:600;">Loading USD/LKR rate...</span>
                     <div class="filter-group">
                         <button class="btn-secondary-small filter-btn active" data-filter="all">All</button>
                         <button class="btn-secondary-small filter-btn" data-filter="upcoming">Upcoming</button>
@@ -1452,6 +1459,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         </select>
                         <input type="date" id="bookingFilterStart" style="display:none; padding:4px 10px; border:1px solid rgba(85,115,115,0.2); border-radius:4px; background:#fff; font-size:0.75rem; color:var(--color-espresso); outline:none; width:130px;">
                         <input type="date" id="bookingFilterEnd" style="display:none; padding:4px 10px; border:1px solid rgba(85,115,115,0.2); border-radius:4px; background:#fff; font-size:0.75rem; color:var(--color-espresso); outline:none; width:130px;">
+                        <select id="bookingCurrencyFilter" style="padding:4px 10px;"><option value="all">All Paid Currencies</option><option value="LKR">LKR</option><option value="USD">USD</option></select>
+                        <select id="bookingDisplayCurrency" style="padding:4px 10px;"><option value="LKR">Display LKR</option><option value="USD">Display USD</option></select>
                     </div>
                     <button class="btn-primary-small" id="downloadBookingReportBtn">📥 Report</button>
                 </div>
@@ -1736,6 +1745,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/finance-utils.js"></script>
+    <script src="js/exchange-rate.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -1760,6 +1771,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         let currentBookingFilter = 'all';
         let bookingFilterStart = null;
         let bookingFilterEnd = null;
+        let bookingDisplayCurrency = 'LKR';
+        let bookingExchangeRate = null;
 
         // For tracking payment status changes
         let oldPaymentStatus = null;
@@ -1771,7 +1784,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const doc = await db.collection('users').doc(user.uid).get();
                 if (!doc.exists) { alert('User data not found!'); await auth.signOut(); window.location.href = '/'; return; }
                 currentUserData = doc.data();
-                hotelId = user.uid;
+                hotelId = currentUserData.role === 'staff' ? currentUserData.hotelId : user.uid;
+                if (!hotelId) throw new Error('No hotel is assigned to this account.');
+                if (currentUserData.role === 'staff') {
+                    document.getElementById('downloadBookingReportBtn').style.display = 'none';
+                    document.getElementById('downloadRoomReportBtn').style.display = 'none';
+                }
                 
                 // Update profile avatar with initials
                 const initialsElement = document.getElementById('avatarInitials');
@@ -1789,6 +1807,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 await loadPackages();
                 await loadRooms();
                 await loadBookings();
+                await loadBookingExchangeRate();
                 updateStats();
                 renderCalendar();
                 populateRoomSelects();
@@ -1811,6 +1830,28 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 applyBookingFilter('month');
             } catch (e) { console.error(e); }
         });
+
+        async function loadBookingExchangeRate() {
+            const label = document.getElementById('bookingExchangeRateLabel');
+            try {
+                bookingExchangeRate = await ExchangeRateService.loadUsdToLkrRate(db);
+                if (label) label.textContent = ExchangeRateService.describeRate(bookingExchangeRate);
+            } catch (error) {
+                bookingExchangeRate = null;
+                if (label) label.textContent = 'Exchange rate unavailable: ' + error.message;
+            }
+            renderBookings();
+        }
+
+        function bookingReportAmount(booking) {
+            const original = FinanceUtils.normalizeCurrency(booking.currency);
+            return FinanceUtils.convertAmountOrUnavailable(
+                booking.totalAmount,
+                original,
+                bookingDisplayCurrency,
+                bookingExchangeRate && bookingExchangeRate.rate
+            );
+        }
 
         // --- LOAD PACKAGES FROM FIREBASE ---
         async function loadPackages() {
@@ -1978,6 +2019,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     return b.checkIn >= bookingFilterStart && b.checkIn <= bookingFilterEnd;
                 });
             }
+            const currencyFilter = document.getElementById('bookingCurrencyFilter')?.value || 'all';
+            if (currencyFilter !== 'all') filtered = filtered.filter(b => FinanceUtils.matchesOriginalCurrency(b, currencyFilter));
 
             if (!filtered.length) {
                 tbody.innerHTML = `<tr><td colspan="11" class="empty-state">No bookings found.</td></tr>`;
@@ -1998,7 +2041,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         <td>${b.roomNumber || 'N/A'}</td>
                         <td>${checkInDisplay}</td>
                         <td>${checkOutDisplay}</td>
-                        <td>LKR ${Number(b.totalAmount || 0).toLocaleString()}</td>
+                        <td>${FinanceUtils.formatMoney(bookingReportAmount(b), bookingDisplayCurrency)} <small>(${FinanceUtils.normalizeCurrency(b.currency)} paid)</small></td>
                         <td><span class="payment-status-badge ${paymentClass}">${paymentClass.charAt(0).toUpperCase() + paymentClass.slice(1)}</span></td>
                         <td><span class="booking-status-badge ${statusClass}">${statusClass === 'checked_out_early' ? 'Early' : statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span></td>
                         <td>
@@ -2029,9 +2072,16 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (occupiedPercentEl) occupiedPercentEl.textContent = rate + '%';
 
             const paidBookings = bookings.filter(b => b.paymentStatus === 'paid');
-            const revenue = paidBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-            if (bookingRevenueEl) bookingRevenueEl.textContent = 'LKR ' + revenue.toLocaleString();
+            const revenue = paidBookings.reduce((sum, b) => sum + bookingReportAmount(b), 0);
+            if (bookingRevenueEl) bookingRevenueEl.textContent = FinanceUtils.formatMoney(revenue, bookingDisplayCurrency);
             if (revenueCountEl) revenueCountEl.textContent = paidBookings.length + ' bookings';
+        }
+
+        function roomStatusForBookingStatus(status) {
+            if (status === 'upcoming') return 'Reserved';
+            if (status === 'active') return 'Occupied';
+            if (['past', 'checked_out_early', 'cancelled'].includes(status)) return 'Available';
+            return null;
         }
 
         // --- UPDATE ROOM STATUS BASED ON BOOKING STATUS ---
@@ -2041,23 +2091,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const room = rooms.find(r => r.roomNumber === booking.roomNumber);
             if (!room) return;
 
-            let newRoomStatus = room.status;
-
-            switch (booking.status) {
-                case 'upcoming':
-                    newRoomStatus = 'Reserved';
-                    break;
-                case 'active':
-                    newRoomStatus = 'Occupied';
-                    break;
-                case 'past':
-                case 'checked_out_early':
-                case 'cancelled':
-                    newRoomStatus = 'Available';
-                    break;
-                default:
-                    return;
-            }
+            const newRoomStatus = roomStatusForBookingStatus(booking.status);
+            if (!newRoomStatus) return;
 
             if (room.status !== newRoomStatus) {
                 await db.collection('rooms').doc(room.id).update({ status: newRoomStatus });
@@ -2362,6 +2397,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const checkOutTime = document.getElementById('bookingCheckOutTime').value || '11:00';
                 const mealPackage = document.getElementById('bookingMeals').value;
                 const paymentStatus = document.getElementById('bookingPaymentStatus').value;
+                const currency = (document.getElementById('bookingCurrency')?.value || 'LKR').toUpperCase();
+                const bookingChannelSelect = document.getElementById('bookingChannel');
+                const bookingChannelCustom = document.getElementById('bookingChannelCustom');
+                const bookingChannel = bookingChannelSelect
+                    ? (bookingChannelSelect.value === 'Custom' ? bookingChannelCustom?.value.trim() : bookingChannelSelect.value)
+                    : '';
                 const notes = document.getElementById('bookingNotes').value.trim();
 
                 if (!guestName || !roomNumber || !checkIn || !checkOut) {
@@ -2380,37 +2421,37 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 btn.disabled = true;
 
                 try {
-                    const bookingRef = await db.collection('bookings').add({
+                    const bookingRef = db.collection('bookings').doc();
+                    const booking = {
                         hotelId, guestName, nic: nic || '', phone: phone || '', guestCount, roomNumber,
                         checkIn, checkInTime, checkOut, checkOutTime,
-                        mealPackage, totalAmount: grandTotal,
+                        mealPackage, totalAmount: grandTotal, currency, bookingChannel,
                         paymentStatus: paymentStatus,
                         status: 'upcoming',
                         notes: notes || '',
-                        createdAt: new Date()
-                    });
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    const batch = db.batch();
+                    batch.set(bookingRef, booking);
 
                     // UPDATE ROOM STATUS TO RESERVED
                     const room = rooms.find(r => r.roomNumber === roomNumber);
                     if (room && (room.status === 'Available' || room.status === 'Cleaning')) {
-                        await db.collection('rooms').doc(room.id).update({ status: 'Reserved' });
-                        room.status = 'Reserved';
+                        batch.update(db.collection('rooms').doc(room.id), { status: 'Reserved' });
                     }
 
                     // Auto-income if paid
-                    if (paymentStatus === 'paid') {
-                        const mealLabel = mealPackage || 'No Package';
-                        await db.collection('income').add({
-                            hotelId,
-                            date: checkIn,
-                            source: 'Room Revenue - Booking',
-                            amount: grandTotal,
-                            description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealLabel} | PAID`,
-                            bookingId: bookingRef.id,
-                            isAutoGenerated: true,
-                            createdAt: new Date()
+                    const income = FinanceUtils.buildBookingIncome(bookingRef.id, booking);
+                    if (income) {
+                        batch.set(db.collection('income').doc(FinanceUtils.bookingIncomeDocumentId(bookingRef.id)), {
+                            ...income,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                     }
+                    await batch.commit();
+                    if (room && (room.status === 'Available' || room.status === 'Cleaning')) room.status = 'Reserved';
 
                     alert('✅ Booking created!' + (paymentStatus === 'paid' ? ' Income record auto-generated.' : ''));
                     bookingForm.reset();
@@ -2440,24 +2481,29 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (!confirm('Delete this booking?')) return;
             try {
                 const booking = bookings.find(b => b.id === id);
+                const batch = db.batch();
+                const canonicalIncomeRef = db.collection('income').doc(FinanceUtils.bookingIncomeDocumentId(id));
+                const incomeRefs = new Map([[canonicalIncomeRef.path, canonicalIncomeRef]]);
                 if (booking) {
                     // REMOVE linked income records
                     const incomeSnap = await db.collection('income')
                         .where('bookingId', '==', id)
                         .get();
-                    incomeSnap.forEach(async (doc) => {
-                        await db.collection('income').doc(doc.id).delete();
-                        console.log('🗑️ Income removed for deleted booking:', id);
+                    incomeSnap.forEach(doc => {
+                        if (!doc.data().hotelId || doc.data().hotelId === hotelId) incomeRefs.set(doc.ref.path, doc.ref);
                     });
                     
                     // FREE THE ROOM
                     const room = rooms.find(r => r.roomNumber === booking.roomNumber);
                     if (room && room.status === 'Reserved') {
-                        await db.collection('rooms').doc(room.id).update({ status: 'Available' });
-                        room.status = 'Available';
+                        batch.update(db.collection('rooms').doc(room.id), { status: 'Available' });
                     }
                 }
-                await db.collection('bookings').doc(id).delete();
+                incomeRefs.forEach(ref => batch.delete(ref));
+                batch.delete(db.collection('bookings').doc(id));
+                await batch.commit();
+                const room = booking && rooms.find(r => r.roomNumber === booking.roomNumber);
+                if (room && room.status === 'Reserved') room.status = 'Available';
                 await loadBookings();
                 await loadRooms();
                 updateStats();
@@ -2492,6 +2538,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             document.getElementById('editBookingCheckOutTime').value = b.checkOutTime || '11:00';
             document.getElementById('editBookingStatus').value = b.status || 'upcoming';
             document.getElementById('editBookingPaymentStatus').value = b.paymentStatus || 'pending';
+            const currencyInput = document.getElementById('editBookingCurrency');
+            if (currencyInput) currencyInput.value = b.currency || 'LKR';
+            const channelInput = document.getElementById('editBookingChannel');
+            if (channelInput) channelInput.value = b.bookingChannel || '';
             
             // Set guest count
             document.getElementById('editBookingGuestCount').value = b.guestCount || 1;
@@ -2531,6 +2581,13 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const checkOutTime = document.getElementById('editBookingCheckOutTime').value || '11:00';
                 const status = document.getElementById('editBookingStatus').value;
                 const paymentStatus = document.getElementById('editBookingPaymentStatus').value;
+                const existingBooking = bookings.find(booking => booking.id === id);
+                const currency = (document.getElementById('editBookingCurrency')?.value || document.getElementById('bookingCurrency')?.value || existingBooking?.currency || 'LKR').toUpperCase();
+                const bookingChannelSelect = document.getElementById('editBookingChannel');
+                const bookingChannelCustom = document.getElementById('editBookingChannelCustom');
+                const bookingChannel = bookingChannelSelect
+                    ? (bookingChannelSelect.value === 'Custom' ? bookingChannelCustom?.value.trim() : bookingChannelSelect.value)
+                    : (existingBooking?.bookingChannel || '');
                 const manualAmount = parseFloat(document.getElementById('editBookingManualAmount').value) || 0;
                 const notes = document.getElementById('editBookingNotes').value.trim();
                 
@@ -2547,7 +2604,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 btn.disabled = true;
 
                 try {
-                    const oldBooking = bookings.find(bk => bk.id === id);
+                    const oldBooking = existingBooking;
 
                     // Calculate total amount based on status
                     let newTotalAmount = 0;
@@ -2572,82 +2629,60 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         newTotalAmount = roomTotal + mealTotal;
                     }
 
-                    await db.collection('bookings').doc(id).update({
+                    const bookingUpdate = {
                         guestName, nic: nic || '', phone: phone || '', roomNumber,
                         checkIn, checkInTime, checkOut, checkOutTime,
                         status, paymentStatus,
                         guestCount: guestCount,
-                        mealPackage: mealPackage || '',
+                        mealPackage: mealPackage || '', currency, bookingChannel,
                         totalAmount: newTotalAmount,
                         manualAmount: status === 'checked_out_early' ? manualAmount : 0,
-                        notes: notes || ''
+                        notes: notes || '',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    const updatedBooking = { ...oldBooking, ...bookingUpdate, hotelId };
+                    const linkedIncomeSnapshot = await db.collection('income').where('bookingId', '==', id).get();
+                    const canonicalIncomeRef = db.collection('income').doc(FinanceUtils.bookingIncomeDocumentId(id));
+                    const now = firebase.firestore.FieldValue.serverTimestamp();
+                    const batch = db.batch();
+                    batch.update(db.collection('bookings').doc(id), bookingUpdate);
+
+                    const linkedIncomeRefs = new Map([[canonicalIncomeRef.path, canonicalIncomeRef]]);
+                    let canonicalIncomeSnapshot = null;
+                    linkedIncomeSnapshot.forEach(doc => {
+                        if (!doc.data().hotelId || doc.data().hotelId === hotelId) {
+                            linkedIncomeRefs.set(doc.ref.path, doc.ref);
+                            if (doc.ref.path === canonicalIncomeRef.path) canonicalIncomeSnapshot = doc;
+                        }
                     });
 
-                    // 🔥 FIX: Handle income updates
-                    if (oldPaymentStatus !== paymentStatus) {
-                        // Status changed
-                        if (paymentStatus === 'paid') {
-                            // ✅ ADD income record with NEW amount
-                            const incomeAmount = newTotalAmount;
-                            await db.collection('income').add({
-                                hotelId,
-                                date: checkIn,
-                                source: 'Room Revenue - Booking',
-                                amount: incomeAmount,
-                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | PAID (updated)${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`,
-                                bookingId: id,
-                                isAutoGenerated: true,
-                                createdAt: new Date()
-                            });
-                            console.log('✅ Income added for booking:', id, 'Amount:', incomeAmount);
-                        } else {
-                            // ❌ REMOVE income record
-                            const incomeSnap = await db.collection('income')
-                                .where('bookingId', '==', id)
-                                .get();
-                            incomeSnap.forEach(async (doc) => {
-                                await db.collection('income').doc(doc.id).delete();
-                                console.log('🗑️ Income removed for booking:', id);
-                            });
-                        }
-                    } else if (paymentStatus === 'paid' && oldBooking && oldBooking.totalAmount !== newTotalAmount) {
-                        // 🔥 FIX: Status is still 'paid' but total amount changed - UPDATE income record
-                        const incomeSnap = await db.collection('income')
-                            .where('bookingId', '==', id)
-                            .get();
-                        
-                        incomeSnap.forEach(async (doc) => {
-                            await db.collection('income').doc(doc.id).update({
-                                amount: newTotalAmount,
-                                date: checkIn,
-                                description: `Booking: ${guestName} | Room ${roomNumber} | ${checkIn} to ${checkOut} | ${guestCount} guests | ${mealPackage || 'No Package'} | PAID (updated)${status === 'checked_out_early' ? ' | EARLY CHECK-OUT' : ''}`
-                            });
-                            console.log('✅ Income UPDATED for booking:', id, 'New Amount:', newTotalAmount);
+                    const income = FinanceUtils.buildBookingIncome(id, updatedBooking);
+                    if (income) {
+                        linkedIncomeRefs.forEach((ref, path) => {
+                            if (path !== canonicalIncomeRef.path) batch.delete(ref);
                         });
+                        batch.set(canonicalIncomeRef, {
+                            ...income,
+                            createdAt: canonicalIncomeSnapshot?.data().createdAt || now,
+                            updatedAt: now
+                        }, { merge: true });
+                    } else {
+                        linkedIncomeRefs.forEach(ref => batch.delete(ref));
                     }
 
-                    // UPDATE ROOM STATUS BASED ON NEW BOOKING STATUS
-                    await updateRoomStatusForBooking({ roomNumber, status });
-
-                    // If room changed, update old and new room statuses
-                    if (oldBooking && oldBooking.roomNumber !== roomNumber) {
-                        // Free old room - set to Available
-                        const oldRoom = rooms.find(r => r.roomNumber === oldBooking.roomNumber);
-                        if (oldRoom) {
-                            await db.collection('rooms').doc(oldRoom.id).update({ status: 'Available' });
-                            oldRoom.status = 'Available';
-                        }
-                        // Update new room based on booking status
-                        const newRoom = rooms.find(r => r.roomNumber === roomNumber);
-                        if (newRoom) {
-                            let newRoomStatus = 'Available';
-                            if (status === 'upcoming') newRoomStatus = 'Reserved';
-                            else if (status === 'active') newRoomStatus = 'Occupied';
-                            else if (status === 'past' || status === 'checked_out_early' || status === 'cancelled') newRoomStatus = 'Available';
-                            await db.collection('rooms').doc(newRoom.id).update({ status: newRoomStatus });
-                            newRoom.status = newRoomStatus;
-                        }
+                    const oldRoom = oldBooking && rooms.find(r => r.roomNumber === oldBooking.roomNumber);
+                    const newRoom = rooms.find(r => r.roomNumber === roomNumber);
+                    const newRoomStatus = roomStatusForBookingStatus(status);
+                    if (oldRoom && oldRoom.roomNumber !== roomNumber) {
+                        batch.update(db.collection('rooms').doc(oldRoom.id), { status: 'Available' });
                     }
+                    if (newRoom && newRoomStatus) {
+                        batch.update(db.collection('rooms').doc(newRoom.id), { status: newRoomStatus });
+                    }
+
+                    await batch.commit();
+                    if (oldRoom && oldRoom.roomNumber !== roomNumber) oldRoom.status = 'Available';
+                    if (newRoom && newRoomStatus) newRoom.status = newRoomStatus;
 
                     alert('✅ Booking updated!');
                     closeEditBookingModal();
@@ -2683,6 +2718,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 renderBookings();
             });
         });
+        document.getElementById('bookingCurrencyFilter').addEventListener('change', renderBookings);
+        document.getElementById('bookingDisplayCurrency').addEventListener('change', function() {
+            bookingDisplayCurrency = FinanceUtils.normalizeCurrency(this.value);
+            renderBookings();
+        });
 
         // --- TYPE / BED TOGGLES ---
         const roomTypeSelect = document.getElementById('roomTypeSelect');
@@ -2705,7 +2745,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         if (downloadBookingBtn) {
             downloadBookingBtn.addEventListener('click', function() {
                 const { jsPDF } = window.jspdf;
-                const filtered = bookings.filter(b => b.status !== 'cancelled');
+                const currencyFilter = document.getElementById('bookingCurrencyFilter').value;
+                const filtered = bookings.filter(b => b.status !== 'cancelled' && FinanceUtils.matchesOriginalCurrency(b, currencyFilter));
                 if (!filtered.length) { alert('No bookings to export.'); return; }
                 const doc = new jsPDF('p', 'mm', 'a4');
                 const pageWidth = doc.internal.pageSize.getWidth();
@@ -2717,21 +2758,23 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 doc.setTextColor(100, 100, 100);
                 doc.text(`Hotel: ${currentUserData?.businessName || 'N/A'}`, margin, 30);
                 doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 36);
-                const totalRevenue = filtered.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+                const totalRevenue = filtered.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + bookingReportAmount(b), 0);
                 doc.setFontSize(11);
                 doc.setTextColor(60, 60, 60);
-                doc.text(`Total Revenue: LKR ${totalRevenue.toLocaleString()} (${filtered.length} bookings)`, margin, 46);
-                const headers = ['#', 'Guest', 'NIC', 'Phone', 'Room', 'Check-In', 'Check-Out', 'Total (LKR)', 'Payment', 'Status'];
+                doc.text(`Total Revenue: ${FinanceUtils.formatMoney(totalRevenue, bookingDisplayCurrency)} (${filtered.length} bookings)`, margin, 46);
+                doc.text(ExchangeRateService.describeRate(bookingExchangeRate), margin, 51);
+                const headers = ['#', 'Guest', 'NIC', 'Phone', 'Room', 'Check-In', 'Check-Out', 'Paid Currency', `Total (${bookingDisplayCurrency})`, 'Payment', 'Status'];
                 const rows = filtered.map((b, i) => [
                     i + 1, b.guestName || 'N/A', b.nic || '-', b.phone || '-', b.roomNumber || 'N/A',
                     b.checkIn + (b.checkInTime ? ' ' + b.checkInTime : ''),
                     b.checkOut + (b.checkOutTime ? ' ' + b.checkOutTime : ''),
-                    Number(b.totalAmount || 0).toLocaleString(),
+                    FinanceUtils.normalizeCurrency(b.currency),
+                    FinanceUtils.formatAmountNumber(bookingReportAmount(b), bookingDisplayCurrency),
                     b.paymentStatus || 'pending',
                     b.status || 'N/A'
                 ]);
                 doc.autoTable({
-                    startY: 52, head: [headers], body: rows, theme: 'striped',
+                    startY: 57, head: [headers], body: rows, theme: 'striped',
                     headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
                     styles: { fontSize: 7 }, margin: { left: margin, right: margin }
                 });

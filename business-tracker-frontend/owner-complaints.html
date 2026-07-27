@@ -826,6 +826,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
             <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
             <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-restaurant.html'">Restaurant</span>
             <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
             <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
             <span class="nav-item active">Complaints</span>
@@ -958,8 +959,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
             <!-- Chat Input -->
             <div class="chat-input-area">
-                <textarea id="replyInput" placeholder="Type your reply here..." rows="1"></textarea>
-                <button class="send-btn" id="sendReplyBtn">Send</button>
+                <span>Owner access is read-only. Replies are managed by hotel operations staff.</span>
             </div>
         </div>
     </div>
@@ -1278,10 +1278,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             // Render chat messages
             renderChatMessages(complaint.replies || []);
 
-            // Clear and focus input
-            document.getElementById('replyInput').value = '';
-            document.getElementById('replyInput').focus();
-
             // Show modal
             document.getElementById('complaintModal').classList.add('show');
             document.body.style.overflow = 'hidden';
@@ -1330,65 +1326,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             // Scroll to bottom
             container.scrollTop = container.scrollHeight;
         }
-
-        // --- SEND REPLY ---
-        document.getElementById('sendReplyBtn').addEventListener('click', async function() {
-            const input = document.getElementById('replyInput');
-            const msg = input.value.trim();
-
-            if (!msg) {
-                alert('Please type a reply.');
-                return;
-            }
-
-            if (!currentComplaintId) {
-                alert('No complaint selected.');
-                return;
-            }
-
-            this.disabled = true;
-            this.textContent = 'Sending...';
-
-            try {
-                const complaint = complaintsData.find(c => c.id === currentComplaintId);
-                if (!complaint) throw new Error('Complaint not found.');
-
-                const replies = complaint.replies || [];
-                replies.push({
-                    user: 'Owner',
-                    message: msg,
-                    time: new Date().toLocaleString()
-                });
-
-                await db.collection('complaints').doc(currentComplaintId).update({
-                    replies: replies,
-                    updatedAt: new Date()
-                });
-
-                // Reload data and refresh
-                await loadComplaints();
-
-                // Re-open modal with updated data
-                openComplaintModal(currentComplaintId);
-
-                alert('✅ Reply sent successfully!');
-
-            } catch (error) {
-                console.error('Error sending reply:', error);
-                alert('Error sending reply: ' + error.message);
-            }
-
-            this.disabled = false;
-            this.textContent = 'Send';
-        });
-
-        // --- Enter key to send ---
-        document.getElementById('replyInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                document.getElementById('sendReplyBtn').click();
-            }
-        });
 
         // --- CLOSE COMPLAINT MODAL ---
         function closeComplaintModal() {

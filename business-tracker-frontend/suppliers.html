@@ -374,7 +374,7 @@
         }
         .matrix-header-row {
             display: grid;
-            grid-template-columns: 50px 1.5fr 1fr 1fr 1fr 120px 130px;
+            grid-template-columns: 50px 1.5fr 1fr 1fr 1fr 1fr 120px 130px;
             padding: 18px 30px;
             background-color: rgba(85,115,115,0.03);
             border-bottom: 1px solid rgba(85,115,115,0.1);
@@ -395,7 +395,7 @@
 
         .strip-core-fields {
             display: grid;
-            grid-template-columns: 50px 1.5fr 1fr 1fr 1fr 120px 130px;
+            grid-template-columns: 50px 1.5fr 1fr 1fr 1fr 1fr 120px 130px;
             padding: 14px 30px;
             align-items: center;
         }
@@ -789,7 +789,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     aspect-ratio: auto !important;
     height: auto !important;
     width: 100% !important;
-    max-width: 900px !important;
+    max-width: none !important;
+    width: calc(min(1440px, calc(100vw - var(--sb-w))) - 12%) !important;
     margin: 30px auto 50px auto !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -902,7 +903,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 .modal .form-actions .btn-submit:hover { background: #3f5858 !important; }
 
 @media (max-width: 768px) {
-    .cinematic-environment-container { margin: 20px 12px 30px 12px !important; }
+    .cinematic-environment-container { margin: 20px auto 30px !important; }
     .right-side-form-panel { padding: 24px 18px !important; }
     .two-column-row { grid-template-columns: 1fr !important; }
 }
@@ -922,6 +923,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="expenses.html" >Expenses</a>
             <a href="rooms.html" >Rooms &amp; Bookings</a>
             <a href="meals.html" >Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html" class="active">Suppliers</a>
             <a href="inventory.html" >Inventory</a>
             <a href="maintenance.html" >Maintenance</a>
@@ -975,6 +977,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 <div class="input-block-node">
                     <textarea id="address" class="screenshot-input" placeholder="Address" rows="2"></textarea>
                     <span class="bottom-descriptor-label">Address</span>
+                </div>
+                <div class="input-block-node">
+                    <input type="text" id="tax" class="screenshot-input" placeholder="VAT, TIN, or tax details">
+                    <span class="bottom-descriptor-label">Tax</span>
                 </div>
                 <div class="input-block-node">
                     <select id="category" class="screenshot-input">
@@ -1034,6 +1040,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 <div>Category</div>
                 <div>Contact Person</div>
                 <div>Phone</div>
+                <div>Tax</div>
                 <div>Status</div>
                 <div style="text-align:right;">Actions</div>
             </div>
@@ -1068,6 +1075,10 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 <div class="form-group">
                     <label>Address</label>
                     <textarea id="editAddress" placeholder="Address"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tax</label>
+                    <input type="text" id="editTax" placeholder="VAT, TIN, or tax details">
                 </div>
                 <div class="form-group">
                     <label>Category</label>
@@ -1126,6 +1137,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         let currentUserData = null;
         let hotelId = null;
         let supplierData = [];
+        const escapeHtml = value => String(value == null ? '' : value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
         let activeStatusFilter = 'all';
 
         // --- AUTH ---
@@ -1246,6 +1258,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         <div><span class="category-badge">${item.category || '—'}</span></div>
                         <div style="font-size:0.85rem; color:var(--color-espresso);">${item.contactPerson || '—'}</div>
                         <div style="font-size:0.85rem; color:var(--color-espresso);">${item.phone || '—'}</div>
+                        <div style="font-size:0.85rem; color:var(--color-espresso);">${escapeHtml(item.tax || '—')}</div>
                         <div>
                             <span class="status-badge ${item.status || 'active'}">${item.status || 'active'}</span>
                         </div>
@@ -1276,6 +1289,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const categorySelect = document.getElementById('category').value;
                 const categoryCustom = document.getElementById('categoryCustom').value.trim();
                 const finalCategory = categorySelect === 'Custom' ? categoryCustom : categorySelect;
+                if (!finalCategory) { alert('Select or enter a supplier category.'); return; }
 
                 const data = {
                     hotelId,
@@ -1284,6 +1298,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     phone: document.getElementById('phone').value.trim(),
                     email: document.getElementById('email').value.trim(),
                     address: document.getElementById('address').value.trim(),
+                    tax: document.getElementById('tax').value.trim(),
                     category: finalCategory,
                     notes: document.getElementById('notes').value.trim(),
                     status: document.getElementById('status').value || 'active',
@@ -1334,6 +1349,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             document.getElementById('editPhone').value = item.phone || '';
             document.getElementById('editEmail').value = item.email || '';
             document.getElementById('editAddress').value = item.address || '';
+            document.getElementById('editTax').value = item.tax || '';
             document.getElementById('editNotes').value = item.notes || '';
             document.getElementById('editStatus').value = item.status || 'active';
 
@@ -1370,6 +1386,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const catSelect = document.getElementById('editCategory').value;
                 const catCustom = document.getElementById('editCategoryCustom').value.trim();
                 const finalCategory = catSelect === 'Custom' ? catCustom : catSelect;
+                if (!finalCategory) { alert('Select or enter a supplier category.'); return; }
 
                 const data = {
                     supplierName: document.getElementById('editSupplierName').value.trim(),
@@ -1377,6 +1394,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     phone: document.getElementById('editPhone').value.trim(),
                     email: document.getElementById('editEmail').value.trim(),
                     address: document.getElementById('editAddress').value.trim(),
+                    tax: document.getElementById('editTax').value.trim(),
                     category: finalCategory,
                     notes: document.getElementById('editNotes').value.trim(),
                     status: document.getElementById('editStatus').value,
@@ -1432,13 +1450,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 doc.text(`Status Filter: ${activeStatusFilter.charAt(0).toUpperCase() + activeStatusFilter.slice(1)}`, margin, 42);
                 doc.text(`Total Suppliers: ${filtered.length}`, margin, 48);
 
-                const headers = ['#', 'Supplier Name', 'Category', 'Contact Person', 'Phone', 'Status'];
+                const headers = ['#', 'Supplier Name', 'Category', 'Contact Person', 'Phone', 'Tax', 'Status'];
                 const rows = filtered.map((item, i) => [
                     i + 1,
                     item.supplierName || '—',
                     item.category || '—',
                     item.contactPerson || '—',
                     item.phone || '—',
+                    item.tax || '—',
                     (item.status || 'active').toUpperCase()
                 ]);
 

@@ -933,6 +933,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="expenses.html" >Expenses</a>
             <a href="rooms.html" >Rooms &amp; Bookings</a>
             <a href="meals.html" >Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html" >Suppliers</a>
             <a href="inventory.html" >Inventory</a>
             <a href="maintenance.html" class="active">Maintenance</a>
@@ -1365,6 +1366,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const catSelect = document.getElementById('maintCategory').value;
                 const catCustom = document.getElementById('maintCategoryCustom').value.trim();
                 const finalCategory = catSelect === 'Custom' ? catCustom : catSelect;
+                if (!finalCategory) { alert('Select or enter a maintenance category.'); return; }
 
                 const data = {
                     hotelId,
@@ -1461,6 +1463,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const catSelect = document.getElementById('editCategory').value;
                 const catCustom = document.getElementById('editCategoryCustom').value.trim();
                 const finalCategory = catSelect === 'Custom' ? catCustom : catSelect;
+                if (!finalCategory) { alert('Select or enter a maintenance category.'); return; }
 
                 const data = {
                     location: document.getElementById('editLocation').value.trim(),

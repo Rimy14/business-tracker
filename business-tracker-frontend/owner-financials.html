@@ -639,6 +639,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <span class="nav-item active">Financials</span>
             <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
             <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-restaurant.html'">Restaurant</span>
             <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
             <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
             <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
@@ -653,6 +654,11 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         <div class="hotel-header animated-element delay-1">
             <h1 id="current-hotel-name">Loading Hotel...</h1>
             <p id="hotel-location">📍 Loading location...</p>
+            <p id="exchangeRateLabel" style="margin-top:10px;color:#557373;font-weight:600;">Loading USD/LKR exchange rate...</p>
+            <div class="table-filters" style="margin-top:12px;justify-content:flex-start;">
+                <label for="displayCurrency">Display Currency</label>
+                <select id="displayCurrency"><option value="LKR">LKR</option><option value="USD">USD</option></select>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -707,9 +713,13 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                         <option value="all">All Streams</option>
                         <option value="Room Revenue">Room Revenue</option>
                         <option value="Restaurant">Restaurant</option>
-                        <option value="Bar">Bar Lounge</option>
-                        <option value="Spa">Spa &amp; Beauty</option>
                         <option value="Other">Other Income</option>
+                    </select>
+                    <select id="incomeCurrencyFilter">
+                        <option value="all">All Paid Currencies</option><option value="LKR">LKR Paid</option><option value="USD">USD Paid</option>
+                    </select>
+                    <select id="bookingChannelFilter">
+                        <option value="all">All Booking Channels</option><option value="Direct booking">Direct booking</option><option value="Booking.com">Booking.com</option><option value="Agoda">Agoda</option><option value="Travel agency booking">Travel agency</option><option value="Custom">Custom</option><option value="legacy">Legacy / Unknown</option>
                     </select>
                     <select id="incomeDateFilter">
                         <option value="all" selected>All</option>
@@ -731,7 +741,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                             <th>#</th>
                             <th>Date</th>
                             <th>Source</th>
-                            <th>Amount (LKR)</th>
+                            <th id="incomeAmountHeading">Amount (LKR)</th>
                             <th>Description</th>
                             <th>Created By</th>
                         </tr>
@@ -780,7 +790,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                             <th>#</th>
                             <th>Date</th>
                             <th>Category</th>
-                            <th>Amount (LKR)</th>
+                            <th id="expenseAmountHeading">Amount (LKR)</th>
                             <th>Description</th>
                             <th>Created By</th>
                         </tr>
@@ -842,6 +852,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/finance-utils.js"></script>
+    <script src="js/exchange-rate.js"></script>
 
     <script>
         // --- FIREBASE CONFIG ---
@@ -864,8 +876,11 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         let hotelCity = null;
         let allIncome = [];
         let allExpenses = [];
+        let allBookings = [];
         let chartInstance = null;
         let profitChartInstance = null;
+        let displayCurrency = 'LKR';
+        let exchangeRate = null;
 
         // --- AUTH CHECK ---
         auth.onAuthStateChanged(async (user) => {
@@ -905,7 +920,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                     document.getElementById('hotel-location').textContent = '📍 ' + hotelCity;
                 }
 
-                await loadData();
+                await Promise.all([loadData(), loadExchangeRate()]);
 
             } catch (error) {
                 console.error('Error loading page:', error);
@@ -913,16 +928,42 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             }
         });
 
+        async function loadExchangeRate() {
+            const label = document.getElementById('exchangeRateLabel');
+            try {
+                exchangeRate = await ExchangeRateService.loadUsdToLkrRate(db);
+                if (label) label.textContent = ExchangeRateService.describeRate(exchangeRate);
+            } catch (error) {
+                exchangeRate = null;
+                if (label) label.textContent = 'Exchange rate unavailable: ' + error.message;
+            }
+            renderAll();
+        }
+
         // --- LOAD DATA ---
         async function loadData() {
             try {
-                const [incomeSnap, expenseSnap] = await Promise.all([
+                const [incomeSnap, expenseSnap, bookingsSnap] = await Promise.all([
                     db.collection('income').where('hotelId', '==', hotelId).get(),
-                    db.collection('expenses').where('hotelId', '==', hotelId).get()
+                    db.collection('expenses').where('hotelId', '==', hotelId).get(),
+                    db.collection('bookings').where('hotelId', '==', hotelId).get()
                 ]);
 
+                allBookings = [];
+                bookingsSnap.forEach(doc => allBookings.push({ id: doc.id, ...doc.data() }));
+                const bookingMap = new Map(allBookings.map(booking => [booking.id, booking]));
+
                 allIncome = [];
-                incomeSnap.forEach(doc => allIncome.push({ id: doc.id, ...doc.data() }));
+                incomeSnap.forEach(doc => {
+                    const data = doc.data();
+                    const booking = data.bookingId ? bookingMap.get(data.bookingId) : null;
+                    allIncome.push({
+                        id: doc.id,
+                        ...data,
+                        currency: data.currency || (booking && booking.currency) || 'LKR',
+                        bookingChannel: data.bookingChannel || (booking && (booking.bookingChannelCustom || booking.bookingChannel)) || ''
+                    });
+                });
                 allIncome.sort((a, b) => (a.date || '').localeCompare(b.date || '') * -1);
 
                 allExpenses = [];
@@ -937,6 +978,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
         // --- RENDER ALL ---
         function renderAll() {
+            document.getElementById('incomeAmountHeading').textContent = `Amount (${displayCurrency})`;
+            document.getElementById('expenseAmountHeading').textContent = `Amount (${displayCurrency})`;
             renderSummary();
             renderChart();
             renderIncomeTable();
@@ -944,16 +987,60 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             renderProfitSection();
         }
 
+        function incomeAmount(item) {
+            const original = FinanceUtils.normalizeCurrency(item.currency);
+            return FinanceUtils.convertAmountOrUnavailable(
+                item.amount,
+                original,
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
+        }
+
+        function expenseAmount(item) {
+            return FinanceUtils.convertAmountOrUnavailable(
+                item.amount,
+                'LKR',
+                displayCurrency,
+                exchangeRate && exchangeRate.rate
+            );
+        }
+
+        function formatIncomeAmount(item) {
+            const original = FinanceUtils.normalizeCurrency(item.currency);
+            if (!exchangeRate && original !== displayCurrency) return FinanceUtils.formatMoney(item.amount, original);
+            return FinanceUtils.formatMoney(incomeAmount(item), displayCurrency);
+        }
+
+        function filterIncomeDimensions(data) {
+            const stream = document.getElementById('incomeStreamFilter').value;
+            const currency = document.getElementById('incomeCurrencyFilter').value;
+            const channel = document.getElementById('bookingChannelFilter').value;
+            return data.filter(item => {
+                if (stream !== 'all' && FinanceUtils.normalizeIncomeSource(item.source) !== stream) return false;
+                if (!FinanceUtils.matchesOriginalCurrency(item, currency)) return false;
+                if (channel !== 'all') {
+                    if (FinanceUtils.normalizeIncomeSource(item.source) !== 'Room Revenue') return false;
+                    const actualChannel = item.bookingChannel || 'legacy';
+                    if (channel === 'Custom') {
+                        const standard = ['Direct booking', 'Booking.com', 'Agoda', 'Travel agency booking'];
+                        if (!actualChannel || actualChannel === 'legacy' || standard.includes(actualChannel)) return false;
+                    } else if (actualChannel !== channel) return false;
+                }
+                return true;
+            });
+        }
+
         // --- RENDER SUMMARY ---
         function renderSummary() {
-            const income = allIncome.reduce((sum, i) => sum + (i.amount || 0), 0);
-            const expenses = allExpenses.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const income = allIncome.reduce((sum, i) => sum + incomeAmount(i), 0);
+            const expenses = allExpenses.reduce((sum, i) => sum + expenseAmount(i), 0);
             const profit = income - expenses;
 
-            document.getElementById('totalIncome').textContent = 'LKR ' + income.toLocaleString();
-            document.getElementById('totalExpenses').textContent = 'LKR ' + expenses.toLocaleString();
+            document.getElementById('totalIncome').textContent = FinanceUtils.formatMoney(income, displayCurrency);
+            document.getElementById('totalExpenses').textContent = FinanceUtils.formatMoney(expenses, displayCurrency);
             const profitEl = document.getElementById('netProfit');
-            profitEl.textContent = 'LKR ' + profit.toLocaleString();
+            profitEl.textContent = FinanceUtils.formatMoney(profit, displayCurrency);
             profitEl.className = 'metric-value ' + (profit >= 0 ? 'positive' : 'negative');
         }
 
@@ -1025,12 +1112,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 const inc = filteredIncome.filter(item => {
                     if (!item.date) return false;
                     return item.date.startsWith(monthKey);
-                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+                }).reduce((sum, item) => sum + incomeAmount(item), 0);
 
                 const exp = filteredExpenses.filter(item => {
                     if (!item.date) return false;
                     return item.date.startsWith(monthKey);
-                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+                }).reduce((sum, item) => sum + expenseAmount(item), 0);
 
                 months.push(monthLabel);
                 incomeData.push(inc);
@@ -1084,7 +1171,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                             ticks: {
                                 color: '#8e96a3',
                                 font: { size: 9 },
-                                callback: function(value) { return 'LKR ' + value.toLocaleString(); }
+                                callback: function(value) { return FinanceUtils.formatMoney(value, displayCurrency); }
                             }
                         }
                     }
@@ -1106,10 +1193,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
             let filtered = filterByDate(allIncome, start, end);
 
-            // 🔥 FIX: Use includes() so both "Room Revenue" and "Room Revenue - Booking" show
-            if (streamFilter !== 'all') {
-                filtered = filtered.filter(item => item.source && item.source.includes(streamFilter));
-            }
+            filtered = filterIncomeDimensions(filtered);
 
             if (!filtered.length) {
                 tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No income records found.</td></tr>`;
@@ -1117,15 +1201,15 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             }
 
             tbody.innerHTML = filtered.map((item, i) => {
-                const sourceDisplay = item.source || 'N/A';
+                const sourceDisplay = FinanceUtils.escapeHtml(item.source || 'N/A');
                 return `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${item.date || 'N/A'}</td>
+                        <td>${FinanceUtils.escapeHtml(item.date || 'N/A')}</td>
                         <td><span class="source-badge">${sourceDisplay}</span></td>
-                        <td class="amount-positive">LKR ${(item.amount || 0).toLocaleString()}</td>
-                        <td>${item.description || '-'}</td>
-                        <td>${item.createdBy || '-'}</td>
+                        <td class="amount-positive">${formatIncomeAmount(item)} <small>(${FinanceUtils.normalizeCurrency(item.currency)} paid)</small></td>
+                        <td>${FinanceUtils.escapeHtml(item.description || '-')}</td>
+                        <td>${FinanceUtils.escapeHtml(item.createdBy || '-')}</td>
                     </tr>
                 `;
             }).join('');
@@ -1155,15 +1239,15 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             }
 
             tbody.innerHTML = filtered.map((item, i) => {
-                const categoryDisplay = item.category || 'N/A';
+                const categoryDisplay = FinanceUtils.escapeHtml(item.category || 'N/A');
                 return `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${item.date || 'N/A'}</td>
+                        <td>${FinanceUtils.escapeHtml(item.date || 'N/A')}</td>
                         <td><span class="category-badge">${categoryDisplay}</span></td>
-                        <td class="amount-negative">LKR ${(item.amount || 0).toLocaleString()}</td>
-                        <td>${item.description || '-'}</td>
-                        <td>${item.createdBy || '-'}</td>
+                        <td class="amount-negative">${FinanceUtils.formatMoney(expenseAmount(item), displayCurrency)}</td>
+                        <td>${FinanceUtils.escapeHtml(item.description || '-')}</td>
+                        <td>${FinanceUtils.escapeHtml(item.createdBy || '-')}</td>
                     </tr>
                 `;
             }).join('');
@@ -1180,15 +1264,15 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             let filteredIncome = filterByDate(allIncome, start, end);
             let filteredExpenses = filterByDate(allExpenses, start, end);
 
-            const totalIncome = filteredIncome.reduce((sum, i) => sum + (i.amount || 0), 0);
-            const totalExpenses = filteredExpenses.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const totalIncome = filteredIncome.reduce((sum, i) => sum + incomeAmount(i), 0);
+            const totalExpenses = filteredExpenses.reduce((sum, i) => sum + expenseAmount(i), 0);
             const netProfit = totalIncome - totalExpenses;
             const totalEntries = filteredIncome.length + filteredExpenses.length;
 
-            document.getElementById('profitIncome').textContent = 'LKR ' + totalIncome.toLocaleString();
-            document.getElementById('profitExpenses').textContent = 'LKR ' + totalExpenses.toLocaleString();
+            document.getElementById('profitIncome').textContent = FinanceUtils.formatMoney(totalIncome, displayCurrency);
+            document.getElementById('profitExpenses').textContent = FinanceUtils.formatMoney(totalExpenses, displayCurrency);
             const profitEl = document.getElementById('profitNet');
-            profitEl.textContent = 'LKR ' + netProfit.toLocaleString();
+            profitEl.textContent = FinanceUtils.formatMoney(netProfit, displayCurrency);
             profitEl.className = 'value ' + (netProfit >= 0 ? 'profit-positive' : 'profit-negative');
             document.getElementById('profitCount').textContent = totalEntries + ' entries';
 
@@ -1229,6 +1313,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
         // --- FILTER EVENT LISTENERS ---
         document.getElementById('incomeStreamFilter').addEventListener('change', renderIncomeTable);
+        document.getElementById('incomeCurrencyFilter').addEventListener('change', renderIncomeTable);
+        document.getElementById('bookingChannelFilter').addEventListener('change', renderIncomeTable);
+        document.getElementById('displayCurrency').addEventListener('change', function() {
+            displayCurrency = FinanceUtils.normalizeCurrency(this.value);
+            renderAll();
+        });
         document.getElementById('incomeDateFilter').addEventListener('change', function() {
             const customInputs = document.querySelectorAll('#incomeStartDate, #incomeEndDate');
             if (this.value === 'custom') {
@@ -1307,9 +1397,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             );
 
             let filtered = filterByDate(allIncome, start, end);
-            if (streamFilter !== 'all') {
-                filtered = filtered.filter(item => item.source && item.source.includes(streamFilter));
-            }
+            filtered = filterIncomeDimensions(filtered);
 
             if (!filtered.length) {
                 alert('No income data to export.');
@@ -1330,23 +1418,25 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             const periodLabel = document.getElementById('incomeDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
             doc.text(`Period: ${periodLabel}`, margin, 36);
             doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
-            const total = filtered.reduce((sum, i) => sum + (i.amount || 0), 0);
+            doc.text(ExchangeRateService.describeRate(exchangeRate), margin, 47);
+            const total = filtered.reduce((sum, i) => sum + incomeAmount(i), 0);
             doc.setFontSize(11);
             doc.setTextColor(60, 60, 60);
-            doc.text(`Total Income: LKR ${total.toLocaleString()} (${filtered.length} entries)`, margin, 52);
+            doc.text(`Total Income: ${FinanceUtils.formatMoney(total, displayCurrency)} (${filtered.length} entries)`, margin, 52);
 
-            const headers = ['#', 'Date', 'Source', 'Amount (LKR)', 'Description', 'Created By'];
+            const headers = ['#', 'Date', 'Source', 'Paid Currency', `Amount (${displayCurrency})`, 'Description', 'Created By'];
             const rows = filtered.map((item, i) => [
                 i + 1,
                 item.date || 'N/A',
                 item.source || 'N/A',
-                Number(item.amount || 0).toLocaleString(),
+                FinanceUtils.normalizeCurrency(item.currency),
+                FinanceUtils.formatAmountNumber(incomeAmount(item), displayCurrency),
                 item.description || '-',
                 item.createdBy || '-'
             ]);
 
             doc.autoTable({
-                startY: 58,
+                startY: 63,
                 head: [headers],
                 body: rows,
                 theme: 'striped',
@@ -1392,23 +1482,24 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             const periodLabel = document.getElementById('expenseDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
             doc.text(`Period: ${periodLabel}`, margin, 36);
             doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
-            const total = filtered.reduce((sum, i) => sum + (i.amount || 0), 0);
+            doc.text(ExchangeRateService.describeRate(exchangeRate), margin, 47);
+            const total = filtered.reduce((sum, i) => sum + expenseAmount(i), 0);
             doc.setFontSize(11);
             doc.setTextColor(60, 60, 60);
-            doc.text(`Total Expenses: LKR ${total.toLocaleString()} (${filtered.length} entries)`, margin, 52);
+            doc.text(`Total Expenses: ${FinanceUtils.formatMoney(total, displayCurrency)} (${filtered.length} entries)`, margin, 52);
 
-            const headers = ['#', 'Date', 'Category', 'Amount (LKR)', 'Description', 'Created By'];
+            const headers = ['#', 'Date', 'Category', `Amount (${displayCurrency})`, 'Description', 'Created By'];
             const rows = filtered.map((item, i) => [
                 i + 1,
                 item.date || 'N/A',
                 item.category || 'N/A',
-                Number(item.amount || 0).toLocaleString(),
+                FinanceUtils.formatAmountNumber(expenseAmount(item), displayCurrency),
                 item.description || '-',
                 item.createdBy || '-'
             ]);
 
             doc.autoTable({
-                startY: 58,
+                startY: 63,
                 head: [headers],
                 body: rows,
                 theme: 'striped',
@@ -1446,12 +1537,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 const inc = filteredIncome.filter(item => {
                     if (!item.date) return false;
                     return item.date.startsWith(monthKey);
-                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+                }).reduce((sum, item) => sum + incomeAmount(item), 0);
 
                 const exp = filteredExpenses.filter(item => {
                     if (!item.date) return false;
                     return item.date.startsWith(monthKey);
-                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+                }).reduce((sum, item) => sum + expenseAmount(item), 0);
 
                 monthData.push({ month: monthLabel, income: inc, expenses: exp });
                 totalIncome += inc;
@@ -1474,13 +1565,14 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             const periodLabel = document.getElementById('chartDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
             doc.text(`Period: ${periodLabel}`, margin, 36);
             doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+            doc.text(ExchangeRateService.describeRate(exchangeRate), margin, 47);
 
             // Monthly breakdown
             doc.setFontSize(11);
             doc.setTextColor(60, 60, 60);
             doc.text('Monthly Breakdown', margin, 52);
 
-            const headers = ['Month', 'Income (LKR)', 'Expenses (LKR)', 'Profit (LKR)'];
+            const headers = ['Month', `Income (${displayCurrency})`, `Expenses (${displayCurrency})`, `Profit (${displayCurrency})`];
             const rows = monthData.map(m => [
                 m.month,
                 m.income.toLocaleString(),
@@ -1502,9 +1594,9 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             const finalY = doc.lastAutoTable.finalY + 10;
             doc.setFontSize(12);
             doc.setTextColor(60, 60, 60);
-            doc.text(`TOTAL INCOME: LKR ${totalIncome.toLocaleString()}`, margin, finalY);
-            doc.text(`TOTAL EXPENSES: LKR ${totalExpenses.toLocaleString()}`, margin, finalY + 8);
-            doc.text(`NET PROFIT: LKR ${netProfit.toLocaleString()}`, margin, finalY + 16);
+            doc.text(`TOTAL INCOME: ${FinanceUtils.formatMoney(totalIncome, displayCurrency)}`, margin, finalY);
+            doc.text(`TOTAL EXPENSES: ${FinanceUtils.formatMoney(totalExpenses, displayCurrency)}`, margin, finalY + 8);
+            doc.text(`NET PROFIT: ${FinanceUtils.formatMoney(netProfit, displayCurrency)}`, margin, finalY + 16);
 
             doc.save(`chart-report-${new Date().toISOString().slice(0,10)}.pdf`);
         });
@@ -1529,13 +1621,13 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 if (!item.date) return;
                 const monthKey = item.date.substring(0, 7);
                 if (!monthMap[monthKey]) monthMap[monthKey] = { income: 0, expenses: 0 };
-                monthMap[monthKey].income += item.amount || 0;
+                monthMap[monthKey].income += incomeAmount(item);
             });
             filteredExpenses.forEach(item => {
                 if (!item.date) return;
                 const monthKey = item.date.substring(0, 7);
                 if (!monthMap[monthKey]) monthMap[monthKey] = { income: 0, expenses: 0 };
-                monthMap[monthKey].expenses += item.amount || 0;
+                monthMap[monthKey].expenses += expenseAmount(item);
             });
 
             const sortedMonths = Object.keys(monthMap).sort();
@@ -1551,8 +1643,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 ];
             });
 
-            const totalIncome = filteredIncome.reduce((sum, i) => sum + (i.amount || 0), 0);
-            const totalExpenses = filteredExpenses.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const totalIncome = filteredIncome.reduce((sum, i) => sum + incomeAmount(i), 0);
+            const totalExpenses = filteredExpenses.reduce((sum, i) => sum + expenseAmount(i), 0);
             const netProfit = totalIncome - totalExpenses;
 
             const doc = new jsPDF('p', 'mm', 'a4');
@@ -1568,13 +1660,14 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
             doc.text(`Period: ${periodLabel}`, margin, 36);
             doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+            doc.text(ExchangeRateService.describeRate(exchangeRate), margin, 47);
 
             // Monthly breakdown
             doc.setFontSize(11);
             doc.setTextColor(60, 60, 60);
             doc.text('Monthly Breakdown', margin, 52);
 
-            const headers = ['Month', 'Income (LKR)', 'Expenses (LKR)', 'Profit (LKR)'];
+            const headers = ['Month', `Income (${displayCurrency})`, `Expenses (${displayCurrency})`, `Profit (${displayCurrency})`];
             const allRows = rows.length ? rows : [['No Data', '0', '0', '0']];
 
             doc.autoTable({
@@ -1591,9 +1684,9 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             const finalY = doc.lastAutoTable.finalY + 10;
             doc.setFontSize(12);
             doc.setTextColor(60, 60, 60);
-            doc.text(`TOTAL INCOME: LKR ${totalIncome.toLocaleString()}`, margin, finalY);
-            doc.text(`TOTAL EXPENSES: LKR ${totalExpenses.toLocaleString()}`, margin, finalY + 8);
-            doc.text(`NET PROFIT: LKR ${netProfit.toLocaleString()}`, margin, finalY + 16);
+            doc.text(`TOTAL INCOME: ${FinanceUtils.formatMoney(totalIncome, displayCurrency)}`, margin, finalY);
+            doc.text(`TOTAL EXPENSES: ${FinanceUtils.formatMoney(totalExpenses, displayCurrency)}`, margin, finalY + 8);
+            doc.text(`NET PROFIT: ${FinanceUtils.formatMoney(netProfit, displayCurrency)}`, margin, finalY + 16);
 
             doc.save(`profit-report-${new Date().toISOString().slice(0,10)}.pdf`);
         });
