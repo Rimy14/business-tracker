@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Management Workspace | Packages</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* 🎨 THE CINEMATIC GRADIENT DESIGN SYSTEM */
+        :root {
+            --bg-gradient-start: #1b2e2a;
+            --bg-gradient-end: #0f1115;
+            --card-charcoal: #14171d;
+            --emerald-light: #10b981;
+            --antique-gold: #c2a66b;
+            --text-light: #ffffff;
+            --text-muted: #8e96a3;
+            --alert-red: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.04);
+            --transition-premium: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* Entrance Animations */
+        @keyframes premiumFadeUp {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: premiumFadeUp 1.2s var(--transition-premium) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.30s; }
+        .delay-3 { animation-delay: 0.45s; }
+        .delay-4 { animation-delay: 0.60s; }
+
+        /* Sidebar Override */
+        :root { --sb-w: 230px; }
+        .navbar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: var(--sb-w) !important;
+            height: 100vh !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+            padding: 30px 0 !important;
+            border-bottom: none !important;
+            border-right: 1px solid var(--border-color) !important;
+            overflow-y: auto !important;
+            z-index: 1000 !important;
+            box-sizing: border-box !important;
+            background-color: rgba(15, 17, 21, 0.2);
+            backdrop-filter: blur(25px);
+            display: flex;
+        }
+        .navbar-brand {
+            padding: 0 26px 20px 26px !important;
+            text-align: left !important;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--antique-gold);
+        }
+        .nav-links {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 2px !important;
+            flex: 1 1 auto !important;
+            width: 100% !important;
+            display: flex;
+        }
+        .nav-links .nav-item {
+            padding: 13px 26px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            text-align: left !important;
+            border-left: 3px solid transparent !important;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: color 0.4s var(--transition-premium);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+        .nav-links .nav-item.active { 
+            border-left-color: var(--antique-gold) !important; 
+            color: var(--text-light);
+        }
+        .nav-links .nav-item:hover {
+            color: var(--text-light);
+        }
+        .nav-links .nav-item.back-btn {
+            margin-top: auto !important;
+            margin-left: 20px !important;
+            margin-right: 20px !important;
+            margin-bottom: 6px !important;
+            text-align: center !important;
+            width: auto !important;
+            color: var(--antique-gold);
+            border: 1px solid rgba(194, 166, 107, 0.2);
+            padding: 8px 18px;
+            border-radius: 4px;
+            transition: all 0.4s var(--transition-premium);
+            background: transparent;
+        }
+        .nav-links .nav-item.back-btn:hover {
+            background-color: var(--antique-gold);
+            color: #000000;
+            border-color: var(--antique-gold);
+        }
+        body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; }
+
+        @media (max-width: 1024px) {
+            :root { --sb-w: 190px; }
+            .navbar { padding: 24px 0 !important; }
+            .nav-links { justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 2px !important; }
+            .nav-links .nav-item { padding: 12px 18px !important; }
+        }
+        @media (max-width: 768px) {
+            :root { --sb-w: 200px; }
+            .navbar { padding: 20px 0 !important; gap: 0 !important; }
+            .nav-links { flex-wrap: nowrap !important; justify-content: flex-start !important; gap: 2px !important; }
+            .nav-links .nav-item { font-size: 0.7rem !important; padding: 12px 16px !important; }
+            .dashboard-container { padding-left: 20px !important; padding-right: 20px !important; }
+        }
+
+        /* Main structure */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 40px 100px 40px;
+        }
+
+        .hotel-header {
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .hotel-header h1 {
+            font-weight: 300;
+            font-size: 2.4rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin: 0 0 8px 0;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .hotel-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 1.5px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            padding: 22px 18px;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.4s var(--transition-premium), border-color 0.4s var(--transition-premium);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(194, 166, 107, 0.2);
+        }
+
+        .metric-title {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 300;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        .table-section {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 25px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-header h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .download-btn {
+            padding: 7px 16px;
+            background: var(--antique-gold);
+            color: #000000;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(194,166,107,0.3);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            padding: 0 25px 18px 25px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 16px 12px;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .data-table td {
+            padding: 18px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.95);
+        }
+
+        .data-table tr:hover td {
+            color: #fff;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Actions strip */
+        .strip-link-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .edit-strip-btn { 
+            background: rgba(194,166,107,0.1); 
+            color: var(--antique-gold); 
+            border-color: rgba(194,166,107,0.15); 
+        }
+        .edit-strip-btn:hover { 
+            background: var(--antique-gold); 
+            color: #000000; 
+            transform: translateY(-1px);
+        }
+        .delete-strip-btn { 
+            background: rgba(239,68,68,0.08); 
+            color: var(--alert-red); 
+            border-color: rgba(239,68,68,0.12); 
+        }
+        .delete-strip-btn:hover { 
+            background: var(--alert-red); 
+            color: #ffffff; 
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. NAVIGATION BAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">Vance.Hub</div>
+        <div class="nav-links">
+            <span class="nav-item" onclick="window.location.href='owner-dashboard.html'">Dashboard</span>
+            <span class="nav-item" onclick="window.location.href='owner-staff.html'">Staff</span>
+            <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
+            <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
+            <span class="nav-item active">Packages</span>
+            <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
+            <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
+            <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
+            <button class="nav-item back-btn" onclick="goBackToSelection()">← Properties</button>
+        </div>
+    </nav>
+
+    <!-- 2. DASHBOARD BODY -->
+    <div class="dashboard-container">
+
+        <!-- Hotel Header -->
+        <div class="hotel-header animated-element delay-1">
+            <h1 id="current-hotel-name">Loading Hotel...</h1>
+            <p id="hotel-location">📍 Loading location...</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="metrics-grid animated-element delay-2" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-title">Total Packages</div>
+                <div class="metric-value" id="totalPackages">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Avg Package Price</div>
+                <div class="metric-value" id="avgPackagePrice">LKR --</div>
+            </div>
+        </div>
+
+        <!-- ADD PACKAGE FORM -->
+        <div class="table-section animated-element delay-3">
+            <div class="table-header">
+                <h3>📦 Add Package</h3>
+            </div>
+            <div style="padding: 25px;">
+                <form id="packageForm" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 5px;">
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Package Name</label>
+                            <select id="packageNameSelect" required style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-light); outline: none;">
+                                <option value="">Select Package</option>
+                                <option value="Breakfast">Breakfast</option>
+                                <option value="Lunch">Lunch</option>
+                                <option value="Dinner">Dinner</option>
+                                <option value="Half-Board">Half-Board</option>
+                                <option value="Full-Board">Full-Board</option>
+                                <option value="Custom">-- Custom --</option>
+                            </select>
+                            <input type="text" id="packageNameCustom" placeholder="Enter custom package name" style="display: none; margin-top: 5px; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-light); outline: none;">
+                        </div>
+                        <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 5px;">
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Price (LKR)</label>
+                            <input type="number" id="packagePrice" placeholder="Price (LKR)" required style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-light); outline: none;">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Description</label>
+                        <input type="text" id="packageDescription" placeholder="Description (Optional)" style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-light); outline: none;">
+                    </div>
+                    <div>
+                        <button type="submit" id="submitPackageBtn" class="download-btn" style="background: var(--antique-gold); color: #000; font-weight: bold; width: fit-content;">Add Package</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- PACKAGES TABLE -->
+        <div class="table-section animated-element delay-3">
+            <div class="table-header">
+                <h3>Package Inventory</h3>
+                <div class="table-filters">
+                    <button class="download-btn" id="downloadReportBtn">Download PDF</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Package</th>
+                            <th>Price (LKR)</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="packageTableBody">
+                        <tr><td colspan="5" class="empty-state">Loading packages...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT PACKAGE MODAL -->
+    <div class="modal-overlay" id="editPackageModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
+        <div style="background: var(--card-charcoal); border: 1px solid var(--border-color); border-radius: 8px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <h3 style="color: var(--antique-gold); text-transform: uppercase; letter-spacing: 2px; margin-top: 0; margin-bottom: 20px; font-size: 1rem;">✏️ Edit Package</h3>
+            <form id="editPackageForm" style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="hidden" id="editPackageId">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Package Name</label>
+                    <input type="text" id="editPackageName" required style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-light); outline: none;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Price (LKR)</label>
+                    <input type="number" id="editPackagePrice" required style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-light); outline: none;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Description</label>
+                    <input type="text" id="editPackageDescription" style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; color: var(--text-light); outline: none;">
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" onclick="closeEditPackageModal()" style="padding: 8px 16px; background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button type="submit" style="padding: 8px 16px; background: var(--antique-gold); border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- GLOBALS ---
+        let hotelId = null;
+        let hotelName = null;
+        let hotelCity = null;
+        let allPackages = [];
+
+        // --- AUTH CHECK ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            hotelId = localStorage.getItem('selectedHotelId');
+            hotelName = localStorage.getItem('selectedHotelName');
+
+            if (!hotelId) {
+                window.location.href = 'owner-select-hotel.html';
+                return;
+            }
+
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) {
+                    await auth.signOut();
+                    window.location.href = '/';
+                    return;
+                }
+
+                const userData = userDoc.data();
+                if (userData.role !== 'owner') {
+                    window.location.href = '/manager-dashboard.html';
+                    return;
+                }
+
+                // Get hotel details
+                const hotelDoc = await db.collection('users').doc(hotelId).get();
+                if (hotelDoc.exists) {
+                    const data = hotelDoc.data();
+                    hotelCity = data.city || 'Location not specified';
+                    document.getElementById('current-hotel-name').textContent = hotelName || data.businessName || 'Unnamed Hotel';
+                    document.getElementById('hotel-location').textContent = '📍 ' + hotelCity;
+                }
+
+                await loadData();
+
+            } catch (error) {
+                console.error('Error loading page:', error);
+                alert('Error loading page. Please refresh.');
+            }
+        });
+
+        // --- LOAD DATA ---
+        async function loadData() {
+            try {
+                const snap = await db.collection('packages').where('hotelId', '==', hotelId).orderBy('name', 'asc').get();
+                allPackages = [];
+                snap.forEach(doc => allPackages.push({ id: doc.id, ...doc.data() }));
+                renderPackagesTable();
+                updateMetrics();
+            } catch (error) {
+                console.error('Error loading packages:', error);
+                const tbody = document.getElementById('packageTableBody');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Error loading packages.</td></tr>`;
+            }
+        }
+
+        // --- RENDER PACKAGES TABLE ---
+        function renderPackagesTable() {
+            const tbody = document.getElementById('packageTableBody');
+            if (!tbody) return;
+
+            if (!allPackages.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No packages found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = allPackages.map((p, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${p.name || 'N/A'}</strong></td>
+                    <td>LKR ${Number(p.price || 0).toLocaleString()}</td>
+                    <td>${p.description || '-'}</td>
+                    <td>
+                        <button class="strip-link-btn edit-strip-btn" onclick="openEditPackageModal('${p.id}')">✏️</button>
+                        <button class="strip-link-btn delete-strip-btn" onclick="deletePackage('${p.id}')">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // --- UPDATE METRICS ---
+        function updateMetrics() {
+            const total = allPackages.length;
+            const totalPrice = allPackages.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
+            const avg = total > 0 ? Math.round(totalPrice / total) : 0;
+
+            document.getElementById('totalPackages').textContent = total;
+            document.getElementById('avgPackagePrice').textContent = 'LKR ' + avg.toLocaleString();
+        }
+
+        // --- CUSTOM DROPDOWN TOGGLE ---
+        const packageNameSelect = document.getElementById('packageNameSelect');
+        if (packageNameSelect) {
+            packageNameSelect.addEventListener('change', function() {
+                const custom = document.getElementById('packageNameCustom');
+                if (this.value === 'Custom') {
+                    custom.style.display = 'block';
+                    custom.required = true;
+                } else {
+                    custom.style.display = 'none';
+                    custom.required = false;
+                    custom.value = '';
+                }
+            });
+        }
+
+        // --- ADD PACKAGE ---
+        const packageForm = document.getElementById('packageForm');
+        if (packageForm) {
+            packageForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const nameSelect = document.getElementById('packageNameSelect');
+                const nameCustom = document.getElementById('packageNameCustom');
+                let name = nameSelect.value;
+                if (name === 'Custom' && nameCustom.value.trim()) {
+                    name = nameCustom.value.trim();
+                } else if (name === 'Custom' || !name) {
+                    alert('Please select or enter a package name.');
+                    return;
+                }
+
+                const price = parseFloat(document.getElementById('packagePrice').value);
+                const description = document.getElementById('packageDescription').value.trim();
+
+                if (!name || isNaN(price)) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+
+                const btn = document.getElementById('submitPackageBtn');
+                btn.textContent = 'Adding...';
+                btn.disabled = true;
+
+                try {
+                    await db.collection('packages').add({
+                        hotelId,
+                        name,
+                        price,
+                        description: description || '',
+                        createdAt: new Date()
+                    });
+
+                    packageForm.reset();
+                    const customInput = document.getElementById('packageNameCustom');
+                    if (customInput) {
+                        customInput.style.display = 'none';
+                        customInput.value = '';
+                    }
+                    alert('✅ Package added successfully!');
+                    await loadData();
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+
+                btn.textContent = 'Add Package';
+                btn.disabled = false;
+            });
+        }
+
+        // --- DELETE PACKAGE ---
+        async function deletePackage(id) {
+            if (!confirm('Delete this package?')) return;
+            try {
+                await db.collection('packages').doc(id).delete();
+                await loadData();
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        // --- EDIT PACKAGE MODAL ---
+        let editPackageId = null;
+
+        function openEditPackageModal(id) {
+            const p = allPackages.find(pkg => pkg.id === id);
+            if (!p) { alert('Package not found.'); return; }
+            editPackageId = id;
+            document.getElementById('editPackageId').value = id;
+            document.getElementById('editPackageName').value = p.name || '';
+            document.getElementById('editPackagePrice').value = p.price || '';
+            document.getElementById('editPackageDescription').value = p.description || '';
+            const modal = document.getElementById('editPackageModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeEditPackageModal() {
+            const modal = document.getElementById('editPackageModal');
+            modal.style.display = 'none';
+            editPackageId = null;
+        }
+
+        const editPackageForm = document.getElementById('editPackageForm');
+        if (editPackageForm) {
+            editPackageForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('editPackageId').value;
+                const name = document.getElementById('editPackageName').value.trim();
+                const price = parseFloat(document.getElementById('editPackagePrice').value);
+                const description = document.getElementById('editPackageDescription').value.trim();
+
+                if (!name || isNaN(price)) {
+                    alert('Please fill in all fields.');
+                    return;
+                }
+
+                try {
+                    await db.collection('packages').doc(id).update({
+                        name, price, description: description || ''
+                    });
+                    alert('✅ Package updated!');
+                    closeEditPackageModal();
+                    await loadData();
+                } catch (e) { alert('Error: ' + e.message); }
+            });
+        }
+
+        // Close modal when clicking outside form
+        const editPackageModal = document.getElementById('editPackageModal');
+        if (editPackageModal) {
+            editPackageModal.addEventListener('click', function(e) {
+                if (e.target === this) closeEditPackageModal();
+            });
+        }
+
+        // --- DOWNLOAD REPORT ---
+        const downloadReportBtn = document.getElementById('downloadReportBtn');
+        if (downloadReportBtn) {
+            downloadReportBtn.addEventListener('click', function() {
+                const { jsPDF } = window.jspdf;
+                if (!allPackages.length) { alert('No packages to export.'); return; }
+
+                const doc = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const margin = 15;
+
+                doc.setFontSize(18);
+                doc.setTextColor(40, 40, 40);
+                doc.text('Packages Report', pageWidth / 2, 20, { align: 'center' });
+
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+                doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 36);
+
+                const headers = ['#', 'Package', 'Price (LKR)', 'Description'];
+                const rows = allPackages.map((p, i) => [
+                    i + 1,
+                    p.name || 'N/A',
+                    Number(p.price || 0).toLocaleString(),
+                    p.description || '-'
+                ]);
+
+                doc.autoTable({
+                    startY: 44,
+                    head: [headers],
+                    body: rows,
+                    theme: 'striped',
+                    headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                    styles: { fontSize: 7 },
+                    margin: { left: margin, right: margin },
+                });
+
+                doc.save(`packages-${new Date().toISOString().slice(0,10)}.pdf`);
+            });
+        }
+
+        // --- BACK NAVIGATION ---
+        function goBackToSelection() {
+            window.location.href = 'owner-select-hotel.html';
+        }
+    </script>
+</body>
+</html>

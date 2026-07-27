@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vance.Hub Operations | Packages & Buffet</title>
+    <title>Vance.Hub Operations | Packages</title>
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -309,24 +309,24 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.8rem;
+            font-size: 0.95rem;
         }
         .data-table th {
             text-align: left;
-            padding: 8px 8px;
+            padding: 14px 18px;
             color: var(--color-sage);
-            font-weight: 600;
-            font-size: 0.6rem;
+            font-weight: 700;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(85,115,115,0.1);
+            letter-spacing: 0.8px;
+            border-bottom: 1px solid rgba(85,115,115,0.12);
         }
         .data-table td {
-            padding: 8px 8px;
-            border-bottom: 1px solid rgba(85,115,115,0.05);
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(85,115,115,0.08);
             vertical-align: middle;
         }
-        .data-table tr:hover { background: rgba(223,229,243,0.08); }
+        .data-table tr:hover { background: rgba(85,115,115,0.04); }
 
         .empty-state {
             text-align: center;
@@ -353,19 +353,37 @@
         }
 
         .strip-link-btn {
-            background: transparent;
-            border: none;
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border: 1px solid transparent;
             cursor: pointer;
-            transition: color 0.2s ease;
+            transition: all 0.2s ease;
         }
-        .edit-strip-btn { color: var(--color-sage); }
-        .edit-strip-btn:hover { color: var(--color-espresso); }
-        .delete-strip-btn { color: rgba(39,36,1,0.3); }
-        .delete-strip-btn:hover { color: #b14d2a; }
+        .edit-strip-btn { 
+            background: rgba(85,115,115,0.08); 
+            color: var(--color-sage); 
+            border-color: rgba(85,115,115,0.12); 
+        }
+        .edit-strip-btn:hover { 
+            background: var(--color-sage); 
+            color: #fff; 
+            transform: translateY(-1px);
+        }
+        .delete-strip-btn { 
+            background: rgba(198,40,40,0.06); 
+            color: #c62828; 
+            border-color: rgba(198,40,40,0.1); 
+        }
+        .delete-strip-btn:hover { 
+            background: #c62828; 
+            color: #fff; 
+            transform: translateY(-1px);
+        }
 
         /* --- TODAY'S MENU --- */
         /* ===== TODAY'S MENU — NEW PROFESSIONAL DESIGN ===== */
@@ -1270,8 +1288,9 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="staff.html" >Staff</a>
             <a href="income.html" >Income</a>
             <a href="expenses.html" >Expenses</a>
-            <a href="rooms.html" >Rooms &amp; Bookings</a>
-            <a href="meals.html" class="active">Packages &amp; Buffet</a>
+            <a href="rooms.html" >Rooms</a>
+            <a href="bookings.html" >Bookings</a>
+            <a href="packages.html" class="active">Packages</a>
             <a href="suppliers.html" >Suppliers</a>
             <a href="inventory.html" >Inventory</a>
             <a href="maintenance.html" >Maintenance</a>
@@ -1294,93 +1313,15 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
     </header>
 
     <div class="utility-download-control-row">
-        <h2>Packages &amp; Buffet Console</h2>
+        <h2>Packages Console</h2>
     </div>
 
     <main class="dashboard-telemetry-section">
 
-        <!-- TODAY'S MENU -->
-        <div class="today-menu-section" id="todayMenuSection">
-            <div class="today-menu-header">
-                <div class="today-menu-header-left">
-                    <span class="today-menu-kicker">Culinary Program</span>
-                    <h4>Today's Menu</h4>
-                </div>
-                <span class="date-badge" id="todayDateBadge">Loading date...</span>
-            </div>
-            <div id="todayMenuContent">
-                <div class="no-menu-message">Loading today's menu...</div>
-            </div>
-        </div>
 
-        <!-- BUFFET FORM -->
-        <div class="cinematic-environment-container">
-            <div class="right-side-form-panel">
-                <form id="buffetForm" class="vertical-input-stack">
-                    <h4 style="color:#fff; font-weight:600; font-size:0.9rem; margin-bottom:2px;">🍽️ Add Buffet Items</h4>
-                    <div class="input-block-node">
-                        <input type="date" id="buffetDate" class="screenshot-input" required>
-                        <span class="bottom-descriptor-label">Date</span>
-                    </div>
-                    <div class="input-block-node">
-                        <div class="dropdown-with-custom" id="buffetMealTypeWrapper">
-                            <select id="buffetMealTypeSelect" required>
-                                <option value="">Select Meal Type</option>
-                                <option value="Breakfast">Breakfast</option>
-                                <option value="Lunch">Lunch</option>
-                                <option value="Evening Snack">Evening Snack</option>
-                                <option value="Dinner">Dinner</option>
-                                <option value="Custom">-- Custom --</option>
-                            </select>
-                            <input type="text" id="buffetMealTypeCustom" placeholder="Enter custom meal type">
-                        </div>
-                        <span class="bottom-descriptor-label">Meal Type</span>
-                    </div>
-                    <div id="buffetItemsContainer">
-                        <div class="item-row" data-index="0">
-                            <input type="text" class="buffet-item-name" placeholder="Item name" required>
-                            <input type="number" class="buffet-item-qty" placeholder="Qty" value="1" min="1" required>
-                            <button type="button" class="remove-item-btn" onclick="removeBuffetItem(this)" style="display:none;">✕</button>
-                        </div>
-                    </div>
-                    <button type="button" class="add-more-btn" onclick="addBuffetItemRow()">➕ Add More Item</button>
-                    <div class="form-actions-row">
-                        <button type="reset" class="screenshot-btn clear-btn-node">Clear</button>
-                        <button type="submit" class="screenshot-btn submit-btn-node" id="submitBuffetBtn">Add Items</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- BUFFET ITEMS LIST -->
-        <div class="section-card">
-            <div class="section-header">
-                <h4>📋 Buffet Items</h4>
-                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <div class="ledger-header-right" style="background:transparent; padding:0; border:none;">
-                        <label>Period</label>
-                        <select id="reportPeriodFilter">
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month" selected>This Month</option>
-                            <option value="year">This Year</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                        <input type="date" id="reportStartDate" style="display:none; width:140px;">
-                        <input type="date" id="reportEndDate" style="display:none; width:140px;">
-                    </div>
-                    <button class="btn-primary-small" id="downloadBuffetReportBtn">📥 Report</button>
-                </div>
-            </div>
-            <div class="section-body">
-                <div id="buffetDisplayContainer">
-                    <div class="empty-state">Loading buffet items...</div>
-                </div>
-            </div>
-        </div>
 
         <!-- PACKAGES FORM -->
-        <div class="cinematic-environment-container">
+        <div class="cinematic-environment-container" data-requires="manager">
             <div class="right-side-form-panel">
                 <form id="packageForm" class="vertical-input-stack">
                     <h4 style="color:#fff; font-weight:600; font-size:0.9rem; margin-bottom:2px;">📦 Add Package</h4>
@@ -1430,7 +1371,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                                 <th>Package Name</th>
                                 <th>Price (LKR)</th>
                                 <th>Description</th>
-                                <th>Actions</th>
+                                <th data-requires="manager">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="packageTableBody">
@@ -1443,38 +1384,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 
     </main>
 
-    <!-- EDIT BUFFET MODAL -->
-    <div class="modal-overlay" id="editBuffetModal">
-        <div class="modal">
-            <h2>✏️ Edit Buffet Items</h2>
-            <form id="editBuffetForm">
-                <input type="hidden" id="editBuffetId">
-                <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" id="editBuffetDate" required>
-                </div>
-                <div class="form-group">
-                    <label>Meal Type</label>
-                    <input type="text" id="editBuffetMealType" required placeholder="e.g. Breakfast, Lunch">
-                </div>
-                <div class="form-group">
-                    <label>Items</label>
-                    <div id="editBuffetItemsContainer">
-                        <div class="item-row" data-index="0">
-                            <input type="text" class="edit-buffet-item-name" placeholder="Item name" required>
-                            <input type="number" class="edit-buffet-item-qty" placeholder="Qty" value="1" min="1" required>
-                            <button type="button" class="remove-item-btn" onclick="removeEditBuffetItem(this)" style="display:none;">✕</button>
-                        </div>
-                    </div>
-                    <button type="button" class="add-more-btn" onclick="addEditBuffetItemRow()">➕ Add More Item</button>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" onclick="closeEditBuffetModal()">Cancel</button>
-                    <button type="submit" class="btn-submit">Update Items</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <!-- EDIT PACKAGE MODAL -->
     <div class="modal-overlay" id="editPackageModal">
@@ -1521,30 +1431,13 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- GLOBALS ---
         let currentUser = null;
         let currentUserData = null;
         let hotelId = null;
-        let buffetItems = [];
         let packages = [];
-        let currentFilter = 'month';
-        let startDate, endDate;
 
         // --- DROPDOWN + CUSTOM TOGGLES ---
-        const mealTypeSelect = document.getElementById('buffetMealTypeSelect');
-        if (mealTypeSelect) {
-            mealTypeSelect.addEventListener('change', function() {
-                const custom = document.getElementById('buffetMealTypeCustom');
-                if (this.value === 'Custom') {
-                    if (custom) custom.classList.add('show');
-                    if (custom) custom.required = true;
-                } else {
-                    if (custom) custom.classList.remove('show');
-                    if (custom) custom.required = false;
-                    if (custom) custom.value = '';
-                }
-            });
-        }
+
 
         const packageNameSelect = document.getElementById('packageNameSelect');
         if (packageNameSelect) {
@@ -1561,61 +1454,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             });
         }
 
-        // --- BUFFET ITEM ROWS (Add Form) ---
-        let buffetItemIndex = 1;
 
-        function addBuffetItemRow() {
-            const container = document.getElementById('buffetItemsContainer');
-            if (!container) return;
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.dataset.index = buffetItemIndex++;
-            row.innerHTML = `
-                <input type="text" class="buffet-item-name" placeholder="Item name" required>
-                <input type="number" class="buffet-item-qty" placeholder="Qty" value="1" min="1" required>
-                <button type="button" class="remove-item-btn" onclick="removeBuffetItem(this)">✕</button>
-            `;
-            container.appendChild(row);
-        }
-
-        function removeBuffetItem(btn) {
-            const row = btn.closest('.item-row');
-            const container = document.getElementById('buffetItemsContainer');
-            if (!container) return;
-            if (container.children.length <= 1) {
-                alert('You need at least one item.');
-                return;
-            }
-            row.remove();
-        }
-
-        // --- EDIT BUFFET ITEM ROWS ---
-        let editBuffetItemIndex = 0;
-
-        function addEditBuffetItemRow() {
-            const container = document.getElementById('editBuffetItemsContainer');
-            if (!container) return;
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.dataset.index = editBuffetItemIndex++;
-            row.innerHTML = `
-                <input type="text" class="edit-buffet-item-name" placeholder="Item name" required>
-                <input type="number" class="edit-buffet-item-qty" placeholder="Qty" value="1" min="1" required>
-                <button type="button" class="remove-item-btn" onclick="removeEditBuffetItem(this)">✕</button>
-            `;
-            container.appendChild(row);
-        }
-
-        function removeEditBuffetItem(btn) {
-            const row = btn.closest('.item-row');
-            const container = document.getElementById('editBuffetItemsContainer');
-            if (!container) return;
-            if (container.children.length <= 1) {
-                alert('You need at least one item.');
-                return;
-            }
-            row.remove();
-        }
 
         // --- AUTH ---
         auth.onAuthStateChanged(async (user) => {
@@ -1640,36 +1479,19 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     initialsElement.textContent = initials || 'U';
                 }
 
-                const today = new Date().toISOString().split('T')[0];
-                const dateBadge = document.getElementById('todayDateBadge');
-                if (dateBadge) {
-                    dateBadge.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                // Apply role gating
+                const role = currentUserData.role || 'staff';
+                if (role === 'staff') {
+                    document.querySelectorAll('[data-requires="manager"]').forEach(el => {
+                        el.style.display = 'none';
+                    });
                 }
-                const buffetDateInput = document.getElementById('buffetDate');
-                if (buffetDateInput) buffetDateInput.value = today;
 
-                await loadBuffetItems();
                 await loadPackages();
-                renderTodayMenu();
-                applyFilter('month');
             } catch (e) { console.error(e); }
         });
 
-        // --- LOAD BUFFET ITEMS ---
-        async function loadBuffetItems() {
-            try {
-                const snap = await db.collection('buffetItems').where('hotelId', '==', hotelId).get();
-                buffetItems = [];
-                snap.forEach(d => buffetItems.push({ id: d.id, ...d.data() }));
-                buffetItems.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-                renderBuffetDisplay();
-                renderTodayMenu();
-            } catch (e) {
-                console.error('Error loading buffet items:', e);
-                const container = document.getElementById('buffetDisplayContainer');
-                if (container) container.innerHTML = `<div class="empty-state">Error loading buffet items.</div>`;
-            }
-        }
+
 
         // --- LOAD PACKAGES ---
         async function loadPackages() {
@@ -1685,189 +1507,32 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             }
         }
 
-        // --- RENDER TODAY'S MENU ---
-        function renderTodayMenu() {
-            const container = document.getElementById('todayMenuContent');
-            if (!container) return;
-            const today = new Date().toISOString().split('T')[0];
-            const todayItems = buffetItems.filter(item => item.date === today);
 
-            if (!todayItems.length) {
-                container.innerHTML = `<div class="no-menu-message">No menu items set for today. Add items below.</div>`;
-                return;
-            }
-
-            const grouped = {};
-            todayItems.forEach(item => {
-                const type = item.mealType || 'Other';
-                if (!grouped[type]) grouped[type] = [];
-                if (item.items && Array.isArray(item.items)) {
-                    item.items.forEach(i => {
-                        grouped[type].push(i);
-                    });
-                }
-            });
-
-            let html = '<div class="today-menu-grid">';
-            for (const [mealType, items] of Object.entries(grouped)) {
-                const mtClass = mealType.toLowerCase().includes('breakfast') ? 'mt-breakfast' :
-                                mealType.toLowerCase().includes('lunch') ? 'mt-lunch' :
-                                mealType.toLowerCase().includes('dinner') ? 'mt-dinner' :
-                                mealType.toLowerCase().includes('snack') ? 'mt-snack' : 'mt-other';
-                const initial = (mealType || 'M').charAt(0).toUpperCase();
-                html += `
-                    <div class="today-menu-item ${mtClass}">
-                        <div class="meal-type">
-                            <span class="meal-type-mark">${initial}</span>
-                            <span class="meal-type-name">${mealType}</span>
-                            <span class="meal-type-count">${items.length} item${items.length === 1 ? '' : 's'}</span>
-                        </div>
-                        <div class="meal-items">
-                            ${items.map(i => `<span>${i.name}<span class="qty">${i.quantity || 1}</span></span>`).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // --- FILTER LOGIC (EXACTLY LIKE EXPENSES) ---
-        function applyFilter(period) {
-            currentFilter = period;
-            const now = new Date();
-            let start, end;
-
-            if (period === 'today') {
-                start = now.toISOString().split('T')[0];
-                end = start;
-            } else if (period === 'week') {
-                const s = new Date(now);
-                s.setDate(now.getDate() - now.getDay());
-                start = s.toISOString().split('T')[0];
-                const e = new Date(s);
-                e.setDate(s.getDate() + 6);
-                end = e.toISOString().split('T')[0];
-            } else if (period === 'month') {
-                start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-                end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-            } else if (period === 'year') {
-                start = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
-                end = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
-            } else {
-                start = document.getElementById('reportStartDate').value;
-                end = document.getElementById('reportEndDate').value;
-                if (!start || !end) { alert('Select both dates for custom period.'); return; }
-            }
-
-            startDate = start;
-            endDate = end;
-            renderBuffetDisplay();
-        }
-
-        // --- RENDER BUFFET DISPLAY ---
-        function renderBuffetDisplay() {
-            const container = document.getElementById('buffetDisplayContainer');
-            if (!container) return;
-
-            let filtered = buffetItems;
-            if (startDate && endDate) {
-                filtered = buffetItems.filter(item => {
-                    if (!item.date) return false;
-                    return item.date >= startDate && item.date <= endDate;
-                });
-            }
-
-            if (!filtered.length) {
-                container.innerHTML = `<div class="empty-state">No buffet items found for the selected period.</div>`;
-                return;
-            }
-
-            const groupedByDate = {};
-            filtered.forEach(item => {
-                const date = item.date || 'Unknown';
-                if (!groupedByDate[date]) groupedByDate[date] = [];
-                groupedByDate[date].push(item);
-            });
-
-            const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
-
-            let html = '';
-            sortedDates.forEach(date => {
-                const items = groupedByDate[date];
-                const displayDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-
-                const groupedByMeal = {};
-                items.forEach(item => {
-                    const mealType = item.mealType || 'Other';
-                    if (!groupedByMeal[mealType]) groupedByMeal[mealType] = [];
-                    if (item.items && Array.isArray(item.items)) {
-                        item.items.forEach(i => {
-                            groupedByMeal[mealType].push(i);
-                        });
-                    }
-                });
-
-                const dateId = items[0]?.id;
-
-                html += `<div class="buffet-date-group" data-date="${date}" data-id="${dateId}">`;
-                html += `<div class="date-title">`;
-                html += `<span>📅 ${displayDate}</span>`;
-                html += `<button class="delete-day-btn" onclick="deleteEntireDay('${date}')">🗑️ Delete Day</button>`;
-                html += `</div>`;
-
-                for (const [mealType, mealItems] of Object.entries(groupedByMeal)) {
-                    const mealItem = items.find(item => item.mealType === mealType);
-                    html += `<div class="buffet-meal-row" data-meal-id="${mealItem?.id || ''}">`;
-                    html += `<span class="meal-label">${mealType}</span>`;
-                    html += `<span class="items-list">`;
-                    html += mealItems.map(i => `<span>${i.name} <span class="qty">(×${i.quantity || 1})</span></span>`).join(', ');
-                    html += `</span>`;
-                    html += `<div class="meal-actions">`;
-                    html += `<button class="edit-btn" onclick="openEditBuffetModal('${mealItem?.id || ''}')">✏️ Edit</button>`;
-                    html += `<button class="delete-btn" onclick="deleteBuffetItem('${mealItem?.id || ''}')">🗑️ Delete</button>`;
-                    html += `</div>`;
-                    html += `</div>`;
-                }
-
-                html += `</div>`;
-            });
-
-            container.innerHTML = html;
-        }
-
-        // --- DELETE ENTIRE DAY ---
-        async function deleteEntireDay(date) {
-            if (!confirm(`Delete ALL buffet items for ${date}?`)) return;
-            try {
-                const itemsToDelete = buffetItems.filter(item => item.date === date);
-                for (const item of itemsToDelete) {
-                    await db.collection('buffetItems').doc(item.id).delete();
-                }
-                await loadBuffetItems();
-                renderTodayMenu();
-                renderBuffetDisplay();
-            } catch (e) { alert('Error: ' + e.message); }
-        }
 
         // --- RENDER PACKAGE TABLE ---
         function renderPackageTable() {
             const tbody = document.getElementById('packageTableBody');
             if (!tbody) return;
+            
+            const role = currentUserData?.role || 'staff';
+            const isManager = (role === 'manager' || role === 'owner');
+
             if (!packages.length) {
-                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No packages added yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${isManager ? 5 : 4}" class="empty-state">No packages added yet.</td></tr>`;
                 return;
             }
+
             tbody.innerHTML = packages.map((p, i) => `
                 <tr>
                     <td>${i + 1}</td>
                     <td><strong>${p.name || 'N/A'}</strong></td>
                     <td>LKR ${Number(p.price || 0).toLocaleString()}</td>
                     <td>${p.description || '-'}</td>
+                    ${isManager ? `
                     <td>
                         <button class="strip-link-btn edit-strip-btn" onclick="openEditPackageModal('${p.id}')">✏️</button>
                         <button class="strip-link-btn delete-strip-btn" onclick="deletePackage('${p.id}')">🗑️</button>
-                    </td>
+                    </td>` : ''}
                 </tr>
             `).join('');
         }
@@ -2054,18 +1719,15 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             });
         }
 
-        const editBuffetModal = document.getElementById('editBuffetModal');
-        if (editBuffetModal) {
-            editBuffetModal.addEventListener('click', function(e) {
-                if (e.target === this) closeEditBuffetModal();
-            });
-        }
+
 
         // --- ADD PACKAGE ---
         const packageForm = document.getElementById('packageForm');
         if (packageForm) {
             packageForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const role = currentUserData?.role || 'staff';
+                if (role === 'staff') { alert('Access Denied'); return; }
 
                 const nameSelect = document.getElementById('packageNameSelect');
                 const nameCustom = document.getElementById('packageNameCustom');
@@ -2117,6 +1779,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 
         // --- DELETE PACKAGE ---
         async function deletePackage(id) {
+            const role = currentUserData?.role || 'staff';
+            if (role === 'staff') { alert('Access Denied'); return; }
             if (!confirm('Delete this package?')) return;
             try {
                 await db.collection('packages').doc(id).delete();
@@ -2128,6 +1792,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         let editPackageId = null;
 
         function openEditPackageModal(id) {
+            const role = currentUserData?.role || 'staff';
+            if (role === 'staff') { alert('Access Denied'); return; }
             const p = packages.find(pkg => pkg.id === id);
             if (!p) { alert('Package not found.'); return; }
             editPackageId = id;
@@ -2149,6 +1815,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         if (editPackageForm) {
             editPackageForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const role = currentUserData?.role || 'staff';
+                if (role === 'staff') { alert('Access Denied'); return; }
                 const id = document.getElementById('editPackageId').value;
                 const name = document.getElementById('editPackageName').value.trim();
                 const price = parseFloat(document.getElementById('editPackagePrice').value);
@@ -2177,60 +1845,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             });
         }
 
-        // --- DOWNLOAD BUFFET REPORT ---
-        const downloadBuffetBtn = document.getElementById('downloadBuffetReportBtn');
-        if (downloadBuffetBtn) {
-            downloadBuffetBtn.addEventListener('click', function() {
-                const { jsPDF } = window.jspdf;
-                let filtered = buffetItems;
-                if (startDate && endDate) {
-                    filtered = buffetItems.filter(item => {
-                        if (!item.date) return false;
-                        return item.date >= startDate && item.date <= endDate;
-                    });
-                }
-                if (!filtered.length) { alert('No buffet items to export for the selected period.'); return; }
 
-                const doc = new jsPDF('p', 'mm', 'a4');
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const margin = 15;
-
-                doc.setFontSize(18);
-                doc.setTextColor(40, 40, 40);
-                doc.text('Buffet Items Report', pageWidth / 2, 20, { align: 'center' });
-
-                doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text(`Hotel: ${currentUserData?.businessName || 'N/A'}`, margin, 30);
-                doc.text(`Period: ${startDate || 'All'} to ${endDate || 'All'}`, margin, 36);
-                doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
-
-                const headers = ['#', 'Date', 'Meal Type', 'Items (Qty)'];
-                const rows = filtered.map((item, i) => {
-                    const itemsDisplay = item.items && Array.isArray(item.items) 
-                        ? item.items.map(i => `${i.name} (${i.quantity || 1})`).join(', ')
-                        : 'N/A';
-                    return [
-                        i + 1,
-                        item.date || 'N/A',
-                        item.mealType || 'N/A',
-                        itemsDisplay
-                    ];
-                });
-
-                doc.autoTable({
-                    startY: 50,
-                    head: [headers],
-                    body: rows,
-                    theme: 'striped',
-                    headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
-                    styles: { fontSize: 7 },
-                    margin: { left: margin, right: margin },
-                });
-
-                doc.save(`buffet-items-${new Date().toISOString().slice(0,10)}.pdf`);
-            });
-        }
 
         // --- DOWNLOAD PACKAGE REPORT ---
         const downloadPackageBtn = document.getElementById('downloadPackageReportBtn');
@@ -2274,39 +1889,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             });
         }
 
-        // --- PERIOD FILTER CHANGE (EXACTLY LIKE EXPENSES) ---
-        const periodFilter = document.getElementById('reportPeriodFilter');
-        if (periodFilter) {
-            periodFilter.addEventListener('change', function() {
-                const customInputs = document.querySelectorAll('#reportStartDate, #reportEndDate');
-                if (this.value === 'custom') {
-                    customInputs.forEach(inp => { if (inp) inp.style.display = 'inline-block'; });
-                    const val = document.getElementById('reportStartDate').value;
-                    const val2 = document.getElementById('reportEndDate').value;
-                    if (val && val2) applyFilter('custom');
-                } else {
-                    customInputs.forEach(inp => { if (inp) inp.style.display = 'none'; });
-                    applyFilter(this.value);
-                }
-            });
-        }
 
-        const startDateInput = document.getElementById('reportStartDate');
-        const endDateInput = document.getElementById('reportEndDate');
-        if (startDateInput) {
-            startDateInput.addEventListener('change', function() {
-                if (document.getElementById('reportEndDate').value) {
-                    applyFilter('custom');
-                }
-            });
-        }
-        if (endDateInput) {
-            endDateInput.addEventListener('change', function() {
-                if (document.getElementById('reportStartDate').value) {
-                    applyFilter('custom');
-                }
-            });
-        }
 
         // --- LOGOUT ---
         const logoutBtn = document.getElementById('logoutBtn');
@@ -2325,18 +1908,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         });
 
         // --- AUTO RESET TODAY'S MENU AT MIDNIGHT ---
-        function checkMidnightReset() {
-            const now = new Date();
-            const tomorrow = new Date(now);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(0, 0, 0, 0);
-            const msUntilMidnight = tomorrow - now;
-            setTimeout(() => {
-                renderTodayMenu();
-                setInterval(renderTodayMenu, 86400000);
-            }, msUntilMidnight);
-        }
-        checkMidnightReset();
+
     </script>
 
     <!-- --- EDIT PROFILE MODAL --- -->

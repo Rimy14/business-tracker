@@ -1,0 +1,29 @@
+# Package 2 - Step-by-Step Task Checklist
+
+- [x] **Step 1: Split `rooms.html` into Rooms & Bookings (P2.1)**
+  - Create `bookings.html` as a copy of `rooms.html` with bookings UI.
+  - Remove bookings UI from `rooms.html` (calendar, booking form, bookings list, edit booking modal).
+  - Remove rooms UI from `bookings.html` (add room form, rooms list, edit room modal).
+  - Update sidebar navigation in `rooms.html` and `bookings.html`.
+- [x] **Step 2: Remove room price/rate (P2.2)**
+  - Remove room rate/price inputs from forms and column headers in `rooms.html`.
+  - Remove "Rate (LKR)" column from `owner-rooms.html`.
+- [x] **Step 3: Rename `meals.html` to `packages.html` & Remove Buffet (P2.3)**
+  - Duplicate `meals.html` to `packages.html` and remove all buffet sections (forms, listings, modals).
+  - Implement gating so managers and owners can edit packages, while staff are restricted (using `data-requires="manager"` class/attribute).
+  - Delete `meals.html`.
+  - Create owner-side `owner-packages.html` and enable packages editing for the owner role.
+- [x] **Step 4: Update Sidebar Navigation globally (P2.1)**
+  - Update sidebars in all manager-side files to refer to Rooms, Bookings, and Packages.
+  - Update sidebars in all owner-side files to include Packages.
+- [x] **Step 5: Booking Form Changes (P2.4)**
+  - Update booking room dropdowns to display rooms without rates.
+  - Populate packages dropdown from Firestore `packages` collection.
+  - Add Discount inputs (type and value) to booking forms and modals.
+  - Add Booking Channel inputs to booking forms and modals.
+  - Add Currency dropdown to booking forms and modals.
+- [x] **Step 6: Price Calculation & Status Flows (P2.5 & P2.6)**
+  - Implement `Base Total = package price * guestCount * nights` (without room rates).
+  - Implement `Grand Total = Base Total - Discount`.
+  - Implement manual amount logic for checked-out-early bookings.
+  - Update auto-income generation to reflect the currency and new total amount.
