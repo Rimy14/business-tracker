@@ -1,0 +1,23 @@
+# ---- dependencies ----
+node_modules/
+**/node_modules/
+
+# ---- secrets / config (share privately, not via Git) ----
+backend/serviceAccountKey.json
+**/serviceAccountKey.json
+.env
+**/.env
+
+# ---- documentation & preview/temp files (not part of the app) ----
+Business-Tracker-Update-Spec.docx
+~$*.docx
+*.tmp
+_preview_tmp/
+_pv2/
+_pv3/
+_pv4/
+
+# ---- OS / editor junk ----
+.DS_Store
+Thumbs.db
+*.log

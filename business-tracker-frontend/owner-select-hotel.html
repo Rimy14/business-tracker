@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Management Platform</title>
+    <style>
+        /* 🎨 THE PERFECT CINEMATIC GRADIENT PALETTE SYSTEM */
+        :root {
+            /* The perfect mid-tone canvas background mix */
+            --bg-gradient-start: #1b2e2a;  /* Muted Velvet Forest Teal */
+            --bg-gradient-end: #0f1115;    /* Luxury Slate Charcoal */
+            
+            --card-charcoal: #161920;     /* Deep Crisp Black for clean contrast */
+            --emerald-light: #10b981;     /* Luminous Mint/Emerald for interactive pops */
+            --antique-gold: #c2a66b;      /* Elegant Antique Gold Accent */
+            --text-light: #ffffff;        /* Pure Crisp White for headings */
+            --text-muted: #a0a7b5;        /* Soft Cool Gray for body copy */
+            --transition-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ========================================== */
+        /* 💎 EMBALMED LUXURY PRELOADER LAYER         */
+        /* ========================================== */
+        #luxury-preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: transform 0.8s var(--transition-smooth), opacity 0.8s var(--transition-smooth);
+        }
+
+        .brand-emblem {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--antique-gold);
+            transform: rotate(45deg);
+            margin-bottom: 40px;
+            position: relative;
+            animation: pulse-border 3s ease-in-out infinite;
+        }
+
+        .brand-emblem::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: spin-inner 6s linear infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--antique-gold); transform: rotate(45deg) scale(1); }
+            50% { border-color: var(--emerald-light); transform: rotate(45deg) scale(1.05); }
+        }
+        @keyframes spin-inner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-title {
+            font-size: 1.1rem;
+            font-weight: 400;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            color: var(--text-light);
+        }
+
+        .progress-container {
+            width: 240px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            position: relative;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0; left: 0; height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--antique-gold), var(--emerald-light));
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .counter-text {
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            color: var(--antique-gold);
+            font-weight: 600;
+        }
+
+        /* ========================================== */
+        /* 🏢 PROPERTY SELECTION SHOW PAGE LAYER      */
+        /* ========================================== */
+        #hotel-selection-page {
+            display: none; 
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s var(--transition-smooth), transform 1s var(--transition-smooth);
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 50px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background-color: rgba(20, 25, 30, 0.3);
+            backdrop-filter: blur(20px);
+        }
+
+        .navbar-brand {
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--antique-gold);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-name {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .user-name strong {
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-light);
+            padding: 10px 24px;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--text-light);
+            color: #000000;
+            border-color: var(--text-light);
+        }
+
+        .main-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 80px 40px;
+        }
+
+        .page-intro {
+            text-align: center;
+            margin-bottom: 70px;
+        }
+
+        .page-intro h1 {
+            font-weight: 300;
+            font-size: 2.4rem;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .page-intro p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            max-width: 630px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .hotels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 35px;
+            margin-top: 20px;
+        }
+
+        /* 👑 CHARCOAL CARDS FLOATING OVER THE GRADIENT MATTE CANVAS */
+        .hotel-card {
+            background-color: var(--card-charcoal);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-left: 4px solid var(--antique-gold); 
+            border-radius: 6px;
+            padding: 45px 40px;
+            box-sizing: border-box;
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.4s var(--transition-smooth), transform 0.4s var(--transition-smooth), box-shadow 0.4s var(--transition-smooth);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
+        }
+
+        .hotel-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(16, 185, 129, 0.25);
+            border-left-color: var(--emerald-light); 
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.05);
+        }
+
+        .property-meta-tag {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--antique-gold);
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+
+        .hotel-card h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+            margin: 0 0 14px 0;
+            text-transform: uppercase;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .hotel-card:hover h2 {
+            color: var(--emerald-light);
+        }
+
+        .hotel-location {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: 45px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .entry-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 25px;
+            transition: color 0.3s ease;
+        }
+
+        .hotel-card:hover .entry-trigger {
+            color: var(--text-light);
+        }
+
+        .entry-trigger .arrow-icon {
+            color: var(--antique-gold);
+            font-weight: bold;
+            transition: transform 0.3s var(--transition-smooth);
+        }
+
+        .hotel-card:hover .entry-trigger .arrow-icon {
+            transform: translateX(8px);
+            color: var(--emerald-light);
+        }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 40px;
+            background-color: var(--card-charcoal);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-weight: 300;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            color: var(--text-light);
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 18px 24px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .user-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .main-container {
+                padding: 40px 20px;
+            }
+
+            .page-intro h1 {
+                font-size: 1.6rem;
+                letter-spacing: 2px;
+            }
+
+            .hotels-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .hotel-card {
+                padding: 30px 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 0.7rem;
+                letter-spacing: 2px;
+            }
+
+            .user-name {
+                font-size: 0.75rem;
+            }
+
+            .logout-btn {
+                padding: 8px 16px;
+                font-size: 0.65rem;
+            }
+
+            .page-intro h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. GRADIENT CINEMATIC PRELOADER SCREEN -->
+    <div id="luxury-preloader">
+        <div class="brand-emblem"></div>
+        <div class="loader-title">Hotel System Portal</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="load-bar"></div>
+        </div>
+        <div class="counter-text" id="load-text">00%</div>
+    </div>
+
+    <!-- 2. MAIN PROPERTY SELECTION DASHBOARD -->
+    <div id="hotel-selection-page">
+        
+        <nav class="navbar">
+            <div class="navbar-brand">Control Panel</div>
+            <div class="user-info">
+                <button class="logout-btn" id="logoutBtn">Log Out</button>
+            </div>
+        </nav>
+
+        <div class="main-container">
+            <div class="page-intro">
+                <h1>Select Hotel Property</h1>
+                <p id="pageDescription">Welcome to your central administration hub. Select a hotel below to manage operations, room bookings, and analytics details.</p>
+            </div>
+
+            <div class="hotels-grid" id="hotelsGrid">
+                <!-- Hotels will be rendered here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- GLOBALS ---
+        let currentUser = null;
+        let currentUserData = null;
+
+        // --- PRELOADER CONTROLS ---
+        let preloaderComplete = false;
+        let dataLoaded = false;
+
+        function completePreloader() {
+            const preloader = document.getElementById("luxury-preloader");
+            const selectionPage = document.getElementById("hotel-selection-page");
+            
+            preloader.style.opacity = "0";
+            preloader.style.transform = "translateY(-40px)";
+            selectionPage.style.display = "block";
+            
+            setTimeout(() => {
+                preloader.style.display = "none";
+                selectionPage.style.opacity = "1";
+                selectionPage.style.transform = "translateY(0)";
+            }, 50);
+        }
+
+        // --- PRELOADER ANIMATION ---
+        function runPreloader() {
+            const loadBar = document.getElementById("load-bar");
+            const loadText = document.getElementById("load-text");
+
+            const totalDuration = 6000;
+            const clockTick = 30;
+            const totalFrames = totalDuration / clockTick;
+            let currentFrame = 0;
+
+            const animationEngine = setInterval(() => {
+                currentFrame++;
+                let rawProgress = currentFrame / totalFrames;
+                let smoothedProgress = Math.pow(rawProgress, 1.4);
+                let percentage = Math.floor(smoothedProgress * 100);
+                
+                if (percentage >= 100) {
+                    percentage = 100;
+                    clearInterval(animationEngine);
+                }
+                
+                loadText.textContent = (percentage < 10 ? '0' : '') + percentage + "%";
+                loadBar.style.width = percentage + "%";
+
+                // If data loads early, complete preloader
+                if (dataLoaded && percentage >= 100) {
+                    completePreloader();
+                }
+            }, clockTick);
+
+            // Fallback: if data takes too long, complete anyway
+            setTimeout(() => {
+                if (!preloaderComplete) {
+                    completePreloader();
+                    preloaderComplete = true;
+                }
+            }, totalDuration + 1000);
+        }
+
+        // --- AUTH ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            currentUser = user;
+
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) {
+                    alert('User data not found!');
+                    await auth.signOut();
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentUserData = userDoc.data();
+
+                // Check if user is owner
+                if (currentUserData.role !== 'owner') {
+                    alert('Access Denied. Owner privileges required.');
+                    await auth.signOut();
+                    window.location.href = '/';
+                    return;
+                }
+
+                // Update owner name
+                const nameElement = document.getElementById('ownerName');
+                if (nameElement) {
+                    nameElement.textContent = currentUserData.username || 'Owner';
+                }
+
+                // Load hotels
+                await loadHotels();
+                dataLoaded = true;
+
+                // If preloader is still running, complete it
+                if (!preloaderComplete) {
+                    completePreloader();
+                    preloaderComplete = true;
+                }
+
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                alert('Error loading page. Please refresh.');
+                dataLoaded = true;
+            }
+        });
+
+        // --- LOAD HOTELS ---
+        async function loadHotels() {
+            const grid = document.getElementById('hotelsGrid');
+            
+            try {
+                // Query all managers (hotels)
+                const snapshot = await db.collection('users')
+                    .where('role', '==', 'manager')
+                    .get();
+
+                const hotels = [];
+                snapshot.forEach(doc => {
+                    hotels.push({
+                        id: doc.id, // This is the hotelId (manager's UID)
+                        ...doc.data()
+                    });
+                });
+
+                console.log('🏨 Found hotels:', hotels.length);
+
+                if (hotels.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🏨</div>
+                            <h3>No Hotels Found</h3>
+                            <p>There are no registered hotels in the system yet. Contact your administrator to add hotels.</p>
+                        </div>
+                    `;
+                    document.getElementById('pageDescription').textContent = 'No hotels are currently registered in the system.';
+                    return;
+                }
+
+                // Update page description with count
+                document.getElementById('pageDescription').textContent = 
+                    `Welcome to your central administration hub. ${hotels.length} hotel${hotels.length > 1 ? 's are' : ' is'} connected to your account. Select a hotel below to manage operations, room bookings, and analytics details.`;
+
+                // Render hotel cards
+                grid.innerHTML = hotels.map((hotel, index) => `
+                    <div class="hotel-card" data-hotelid="${hotel.id}" data-hotelname="${hotel.businessName || 'Unnamed Hotel'}">
+                        <div class="property-meta-tag">${index === 0 ? 'Active Portfolio Node' : 'Portfolio Node'}</div>
+                        <h2>${hotel.businessName || 'Unnamed Hotel'}</h2>
+                        <div class="hotel-location">📍 ${hotel.city || 'Location not specified'}</div>
+                        <div class="entry-trigger">
+                            <span>Open Property Dashboard</span>
+                            <span class="arrow-icon">→</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click handlers to cards
+                document.querySelectorAll('.hotel-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const hotelId = this.dataset.hotelid;
+                        const hotelName = this.dataset.hotelname;
+                        selectHotel(hotelId, hotelName);
+                    });
+                });
+
+            } catch (error) {
+                console.error('❌ Error loading hotels:', error);
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <h3>Error Loading Hotels</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // --- SELECT HOTEL ---
+        function selectHotel(hotelId, hotelName) {
+            // Save to localStorage
+            localStorage.setItem('selectedHotelId', hotelId);
+            localStorage.setItem('selectedHotelName', hotelName);
+            
+            console.log('🏨 Selected hotel:', hotelName, 'ID:', hotelId);
+            
+            // Redirect to owner dashboard
+            window.location.href = 'owner-dashboard.html';
+        }
+
+        // --- LOGOUT ---
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                // Clear selected hotel from localStorage
+                localStorage.removeItem('selectedHotelId');
+                localStorage.removeItem('selectedHotelName');
+                window.location.href = '/';
+            } catch (error) {
+                alert('Logout failed: ' + error.message);
+            }
+        });
+
+        // --- START PRELOADER ---
+        document.addEventListener("DOMContentLoaded", () => {
+            runPreloader();
+
+            // If auth loads fast, this will complete early
+            // Fallback: if data not loaded after 7 seconds, show page anyway
+            setTimeout(() => {
+                if (!dataLoaded) {
+                    console.warn('⚠️ Data still loading, showing page anyway...');
+                    if (!preloaderComplete) {
+                        completePreloader();
+                        preloaderComplete = true;
+                    }
+                }
+            }, 7000);
+        });
+    </script>
+
+</body>
+</html>

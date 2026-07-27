@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Management Workspace</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 🎨 THE CINEMATIC GRADIENT DESIGN SYSTEM */
+        :root {
+            --bg-gradient-start: #1b2e2a;
+            --bg-gradient-end: #0f1115;
+            --card-charcoal: #14171d;
+            --emerald-light: #10b981;
+            --antique-gold: #c2a66b;
+            --text-light: #ffffff;
+            --text-muted: #8e96a3;
+            --alert-red: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.04);
+            --transition-premium: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ========================================== */
+        /* ✨ HIGH-END ENTRANCE ANIMATIONS            */
+        /* ========================================== */
+        @keyframes premiumFadeUp {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: premiumFadeUp 1.2s var(--transition-premium) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.30s; }
+        .delay-3 { animation-delay: 0.45s; }
+        .delay-4 { animation-delay: 0.60s; }
+
+        /* ========================================== */
+        /* 🗺️ NAVIGATION SYSTEM STYLING               */
+        /* ========================================== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 60px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(15, 17, 21, 0.2);
+            backdrop-filter: blur(25px);
+        }
+
+        .navbar-brand {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--antique-gold);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: color 0.4s var(--transition-premium);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-light);
+        }
+
+        .nav-item.back-btn {
+            color: var(--antique-gold);
+            border: 1px solid rgba(194, 166, 107, 0.2);
+            padding: 8px 18px;
+            border-radius: 4px;
+            transition: all 0.4s var(--transition-premium);
+            background: transparent;
+        }
+
+        .nav-item.back-btn:hover {
+            background-color: var(--antique-gold);
+            color: #000000;
+            border-color: var(--antique-gold);
+        }
+
+        /* ========================================== */
+        /* 📈 MAIN WORKSPACE STRUCTURE CONTAINER       */
+        /* ========================================== */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 40px 100px 40px;
+        }
+
+        .hotel-header {
+            margin-bottom: 60px;
+            text-align: left;
+        }
+
+        .hotel-header h1 {
+            font-weight: 300;
+            font-size: 2.4rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin: 0 0 8px 0;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .hotel-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 1.5px;
+        }
+
+        /* Clean Metrics Strip */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+
+        .metric-card {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            padding: 30px 25px;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.4s var(--transition-premium), border-color 0.4s var(--transition-premium);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(194, 166, 107, 0.2);
+        }
+
+        .metric-title {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.7rem;
+            font-weight: 300;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value.positive { color: var(--emerald-light); }
+        .metric-value.negative { color: var(--alert-red); }
+
+        /* Visual Chart Windows Grid Split */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1.8fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        @media (max-width: 900px) {
+            .charts-row { grid-template-columns: 1fr; gap: 30px; }
+        }
+
+        .chart-box {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 35px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            height: 340px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .chart-box h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0 0 25px 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: calc(100% - 40px) !important;
+        }
+
+        /* Content Rows Segment Architecture */
+        .data-split-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .data-split-row { grid-template-columns: 1fr; gap: 30px; }
+        }
+
+        .panel-box {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 35px;
+            box-sizing: border-box;
+        }
+
+        .panel-header-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .panel-box h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .btn-create-new {
+            padding: 6px 14px;
+            background: var(--antique-gold);
+            color: #000000;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-create-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(194,166,107,0.3);
+        }
+
+        /* Minimal Activity Module Tracks */
+        .activity-item {
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .activity-item:last-child { border-bottom: none; }
+        .activity-user { font-weight: 400; color: var(--text-light); letter-spacing: 0.5px; }
+        .activity-room { color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px; }
+        .activity-price { color: var(--emerald-light); font-weight: 500; letter-spacing: 0.5px; }
+
+        /* Elegant Alerts System */
+        .alerts-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 16px 20px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            background-color: rgba(255, 255, 255, 0.01);
+            border-left: 2px solid var(--antique-gold);
+            color: var(--text-muted);
+        }
+
+        .alert-item strong { color: var(--text-light); font-weight: 500; }
+
+        .alert-item.emergency {
+            border-left-color: var(--alert-red);
+            background-color: rgba(239, 68, 68, 0.02);
+        }
+
+        .alert-time {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.25);
+            display: block;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 20px 0;
+            text-align: center;
+            opacity: 0.5;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* --- YOUR DESIGN: ALERT FORM TOGGLE --- */
+        .alert-form-drawer {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.5s var(--transition-premium), opacity 0.5s var(--transition-premium), margin-top 0.5s var(--transition-premium);
+        }
+
+        .alert-form-drawer.open {
+            max-height: 150px;
+            opacity: 1;
+            margin-top: 25px;
+            border-top: 1px solid rgba(255,255,255,0.03);
+            padding-top: 20px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .text-input {
+            flex: 1;
+            background-color: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            padding: 12px 16px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+            min-width: 150px;
+        }
+
+        .text-input:focus { border-color: var(--antique-gold); }
+
+        .select-input {
+            background-color: #151821;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            padding: 12px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            background-color: transparent;
+            border: 1px solid var(--emerald-light);
+            color: var(--emerald-light);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--emerald-light);
+            color: #000000;
+        }
+
+        .toggle-form-btn {
+            background: transparent;
+            border: 1px solid rgba(194, 166, 107, 0.3);
+            color: var(--antique-gold);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .toggle-form-btn:hover {
+            border-color: var(--antique-gold);
+            background-color: rgba(194, 166, 107, 0.05);
+        }
+
+        /* Scrollbar Styling */
+        .alerts-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .alerts-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .alerts-container::-webkit-scrollbar-thumb {
+            background: var(--antique-gold);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 20px 24px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+            .dashboard-container {
+                padding: 40px 20px 60px 20px;
+            }
+            .hotel-header h1 {
+                font-size: 1.6rem;
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .metric-card {
+                padding: 20px;
+            }
+            .metric-value {
+                font-size: 1.3rem;
+            }
+            .data-split-row {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .metric-card {
+                padding: 15px;
+            }
+            .metric-value {
+                font-size: 1.1rem;
+            }
+            .chart-box {
+                padding: 20px;
+                height: 280px;
+            }
+            .panel-box {
+                padding: 20px;
+            }
+            .nav-links {
+                gap: 12px;
+            }
+            .nav-item {
+                font-size: 0.65rem;
+            }
+        }
+    
+/* ================= SIDEBAR OVERRIDE (added) ================= */
+:root { --sb-w: 230px; }
+.navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: var(--sb-w) !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 30px 0 !important;
+    border-bottom: none !important;
+    border-right: 1px solid var(--border-color) !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-sizing: border-box !important;
+}
+.navbar-brand {
+    padding: 0 26px 20px 26px !important;
+    text-align: left !important;
+}
+.nav-links {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+}
+.nav-links .nav-item {
+    padding: 13px 26px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    border-left: 3px solid transparent !important;
+}
+.nav-links .nav-item.active { border-left-color: var(--antique-gold) !important; }
+/* back / Properties button pinned to bottom */
+.nav-links .nav-item.back-btn {
+    margin-top: auto !important;
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+    margin-bottom: 6px !important;
+    text-align: center !important;
+    width: auto !important;
+}
+/* shift page content right */
+body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; }
+
+@media (max-width: 1024px) {
+    :root { --sb-w: 190px; }
+    .navbar { padding: 24px 0 !important; flex-direction: column !important; }
+    .nav-links { justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 2px !important; }
+    .nav-links .nav-item { padding: 12px 18px !important; }
+}
+@media (max-width: 768px) {
+    :root { --sb-w: 200px; }
+    .navbar { padding: 20px 0 !important; flex-direction: column !important; gap: 0 !important; }
+    .nav-links { flex-wrap: nowrap !important; justify-content: flex-start !important; gap: 2px !important; }
+    .nav-links .nav-item { font-size: 0.7rem !important; padding: 12px 16px !important; }
+    .dashboard-container { padding-left: 20px !important; padding-right: 20px !important; }
+}
+/* =============== END SIDEBAR OVERRIDE =============== */
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. NAVIGATION BAR -->
+<nav class="navbar">
+        <div class="navbar-brand"></div>
+        <div class="nav-links">
+            <span class="nav-item active">Dashboard</span>
+            <span class="nav-item" onclick="window.location.href='owner-staff.html'">Staff</span>
+            <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
+            <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
+            <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
+            <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
+            <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
+            <button class="nav-item back-btn" onclick="goBackToSelection()">← Properties</button>
+        </div>
+    </nav>
+
+    <!-- 2. DASHBOARD BODY -->
+    <div class="dashboard-container">
+
+        <!-- Hotel Header -->
+        <div class="hotel-header animated-element delay-1">
+            <h1 id="current-hotel-name">Loading Hotel...</h1>
+            <p id="hotel-location">Loading location...</p>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="metrics-grid animated-element delay-2" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-title">Occupancy Rate</div>
+                <div class="metric-value" id="occupancyRate">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Total Rooms</div>
+                <div class="metric-value" id="totalRooms">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Booked Rooms</div>
+                <div class="metric-value" id="bookedRooms">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Revenue (Today)</div>
+                <div class="metric-value positive" id="todayRevenue">LKR --</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row animated-element delay-3">
+            <div class="chart-box">
+                <h3>📊 Income vs Expenses (Last Month)</h3>
+                <canvas id="lineChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>🏨 Occupancy Distribution</h3>
+                <canvas id="donutChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Activity & Alerts Row -->
+        <div class="data-split-row animated-element delay-4">
+            
+            <!-- Recent Bookings Panel -->
+            <div class="panel-box">
+                <div class="panel-header-wrapper">
+                    <h3>🕒 Recent Bookings</h3>
+                </div>
+                <div id="bookingsContainer">
+                    <div class="loading-text">Loading bookings...</div>
+                </div>
+            </div>
+
+            <!-- Alerts & Announcements Panel -->
+            <div class="panel-box">
+                <div class="panel-header-wrapper">
+                    <h3>🔔 Alerts & Announcements</h3>
+                    <button class="toggle-form-btn" onclick="toggleFormDrawer()">+ New</button>
+                </div>
+                <div class="alerts-container" id="alertsContainer">
+                    <div class="loading-text">Loading alerts...</div>
+                </div>
+
+                <!-- Alert Input Form Drawer (YOUR DESIGN) -->
+                <div class="alert-form-drawer" id="formDrawer">
+                    <form onsubmit="postSystemAlert(event)">
+                        <div class="input-row">
+                            <input type="text" id="alertText" class="text-input" placeholder="Compose new announcement..." required>
+                            <select id="alertType" class="select-input">
+                                <option value="announcement">Announcement</option>
+                                <option value="emergency">Emergency</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="submit-btn">Post Alert</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- GLOBALS ---
+        let hotelId = null;
+        let hotelName = null;
+        let hotelCity = null;
+        let lineChartInstance = null;
+        let donutChartInstance = null;
+
+        // --- AUTH CHECK ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            // Check if hotel is selected
+            hotelId = localStorage.getItem('selectedHotelId');
+            hotelName = localStorage.getItem('selectedHotelName');
+
+            if (!hotelId) {
+                window.location.href = 'owner-select-hotel.html';
+                return;
+            }
+
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) {
+                    await auth.signOut();
+                    window.location.href = '/';
+                    return;
+                }
+
+                const userData = userDoc.data();
+                if (userData.role !== 'owner') {
+                    window.location.href = '/manager-dashboard.html';
+                    return;
+                }
+
+                await loadHotelData();
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert('Error loading dashboard. Please refresh.');
+            }
+        });
+
+        // --- LOAD HOTEL DATA ---
+        async function loadHotelData() {
+            try {
+                // Get hotel details
+                const hotelDoc = await db.collection('users').doc(hotelId).get();
+                if (hotelDoc.exists) {
+                    const data = hotelDoc.data();
+                    hotelCity = data.city || 'Location not specified';
+                    document.getElementById('current-hotel-name').textContent = hotelName || data.businessName || 'Unnamed Hotel';
+                    document.getElementById('hotel-location').textContent = '📍 ' + hotelCity;
+                }
+
+                // Fetch all data
+                const [roomsSnap, incomeSnap, expensesSnap, bookingsSnap, alertsSnap, announcementsSnap] = await Promise.all([
+                    db.collection('rooms').where('hotelId', '==', hotelId).get(),
+                    db.collection('income').where('hotelId', '==', hotelId).get(),
+                    db.collection('expenses').where('hotelId', '==', hotelId).get(),
+                    db.collection('bookings').where('hotelId', '==', hotelId).orderBy('createdAt', 'desc').limit(5).get(),
+                    db.collection('alerts').where('hotelId', '==', hotelId).where('status', '==', 'active').orderBy('createdAt', 'desc').get(),
+                    db.collection('announcements').where('hotelId', '==', hotelId).orderBy('createdAt', 'desc').get()
+                ]);
+
+                // --- Process Rooms ---
+                let totalRooms = 0;
+                let bookedRooms = 0;
+
+                roomsSnap.forEach(doc => {
+                    const data = doc.data();
+                    totalRooms++;
+                    const status = data.status || 'Available';
+                    if (status === 'Occupied' || status === 'occupied') {
+                        bookedRooms++;
+                    }
+                });
+
+                const occupancyRate = totalRooms > 0 ? Math.round((bookedRooms / totalRooms) * 100) : 0;
+
+                document.getElementById('totalRooms').textContent = totalRooms;
+                document.getElementById('bookedRooms').textContent = bookedRooms;
+                document.getElementById('occupancyRate').textContent = occupancyRate + '%';
+
+                // --- Process Income & Expenses ---
+                const now = new Date();
+                const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+                let lastMonthIncome = 0;
+                let lastMonthExpenses = 0;
+                let todayRevenue = 0;
+                const today = new Date().toISOString().split('T')[0];
+
+                incomeSnap.forEach(doc => {
+                    const data = doc.data();
+                    const amount = data.amount || 0;
+                    if (data.date) {
+                        const date = data.date.toDate ? data.date.toDate() : new Date(data.date);
+                        const dateStr = date.toISOString().split('T')[0];
+                        if (date >= lastMonth && date <= lastMonthEnd) {
+                            lastMonthIncome += amount;
+                        }
+                        if (dateStr === today) {
+                            todayRevenue += amount;
+                        }
+                    }
+                });
+
+                expensesSnap.forEach(doc => {
+                    const data = doc.data();
+                    const amount = data.amount || 0;
+                    if (data.date) {
+                        const date = data.date.toDate ? data.date.toDate() : new Date(data.date);
+                        if (date >= lastMonth && date <= lastMonthEnd) {
+                            lastMonthExpenses += amount;
+                        }
+                    }
+                });
+
+                // Format revenue - show in K format
+                const formattedRevenue = formatCurrency(todayRevenue);
+                document.getElementById('todayRevenue').textContent = 'LKR ' + formattedRevenue;
+
+                // --- Initialize Charts ---
+                const monthLabels = [lastMonth.toLocaleString('default', { month: 'short' })];
+                const incomeData = [lastMonthIncome];
+                const expenseData = [lastMonthExpenses];
+
+                initializeCharts(monthLabels, incomeData, expenseData, occupancyRate, bookedRooms, totalRooms);
+
+                // --- Process Bookings ---
+                const bookingsContainer = document.getElementById('bookingsContainer');
+                if (bookingsSnap.empty) {
+                    bookingsContainer.innerHTML = `<div class="empty-state">No recent bookings</div>`;
+                } else {
+                    let bookingsHtml = '';
+                    bookingsSnap.forEach(doc => {
+                        const data = doc.data();
+                        const guestName = data.guestName || data.customerName || 'Guest';
+                        const roomNum = data.roomNumber || data.roomId || 'N/A';
+                        const amount = data.totalAmount || data.amount || 0;
+                        bookingsHtml += `
+                            <div class="activity-item">
+                                <div>
+                                    <span class="activity-user">${guestName}</span>
+                                    <span class="activity-room">Room ${roomNum}</span>
+                                </div>
+                                <span class="activity-price">LKR ${formatCurrency(amount)}</span>
+                            </div>
+                        `;
+                    });
+                    bookingsContainer.innerHTML = bookingsHtml;
+                }
+
+                // --- Process Alerts & Announcements ---
+                const alertsContainer = document.getElementById('alertsContainer');
+                let allAlerts = [];
+
+                alertsSnap.forEach(doc => {
+                    const data = doc.data();
+                    allAlerts.push({
+                        type: 'alert',
+                        title: data.title || 'Alert',
+                        description: data.description || '',
+                        priority: data.priority || 'normal',
+                        createdAt: data.createdAt,
+                        isEmergency: data.priority === 'urgent' || data.priority === 'high'
+                    });
+                });
+
+                announcementsSnap.forEach(doc => {
+                    const data = doc.data();
+                    allAlerts.push({
+                        type: 'announcement',
+                        title: data.title || 'Announcement',
+                        description: data.message || '',
+                        priority: data.priority || 'normal',
+                        createdAt: data.createdAt,
+                        isEmergency: false
+                    });
+                });
+
+                allAlerts.sort((a, b) => {
+                    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                    return dateB - dateA;
+                });
+
+                if (allAlerts.length === 0) {
+                    alertsContainer.innerHTML = `<div class="empty-state">No alerts or announcements</div>`;
+                } else {
+                    let alertsHtml = '';
+                    allAlerts.slice(0, 5).forEach(item => {
+                        const isEmergency = item.isEmergency;
+                        const timeStr = item.createdAt ? 
+                            (item.createdAt.toDate ? item.createdAt.toDate().toLocaleString() : new Date(item.createdAt).toLocaleString()) : 
+                            'Just now';
+                        alertsHtml += `
+                            <div class="alert-item ${isEmergency ? 'emergency' : ''}">
+                                <strong>${isEmergency ? '[EMERGENCY]' : '[ANNOUNCEMENT]'}</strong> 
+                                ${item.title}: ${item.description}
+                                <span class="alert-time">${timeStr}</span>
+                            </div>
+                        `;
+                    });
+                    alertsContainer.innerHTML = alertsHtml;
+                }
+
+            } catch (error) {
+                console.error('Error loading hotel data:', error);
+            }
+        }
+
+        // --- FORMAT CURRENCY ---
+        function formatCurrency(amount) {
+            if (amount >= 1000000) {
+                return (amount / 1000000).toFixed(1) + 'M';
+            } else if (amount >= 1000) {
+                return (amount / 1000).toFixed(0) + 'K';
+            } else {
+                return amount.toString();
+            }
+        }
+
+        // --- INITIALIZE CHARTS ---
+        function initializeCharts(labels, incomeData, expenseData, occupancyRate, bookedRooms, totalRooms) {
+            // Line Chart
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            if (lineChartInstance) lineChartInstance.destroy();
+            
+            lineChartInstance = new Chart(ctxLine, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['No Data'],
+                    datasets: [{
+                        label: 'Income',
+                        data: incomeData.length > 0 ? incomeData : [0],
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }, {
+                        label: 'Expenses',
+                        data: expenseData.length > 0 ? expenseData : [0],
+                        backgroundColor: 'rgba(194, 166, 107, 0.6)',
+                        borderColor: '#c2a66b',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            display: true,
+                            labels: { 
+                                color: '#8e96a3',
+                                font: { size: 10 },
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        } 
+                    },
+                    scales: {
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { color: '#8e96a3', font: { size: 10 } } 
+                        },
+                        y: { 
+                            grid: { color: 'rgba(255,255,255,0.02)' }, 
+                            ticks: { 
+                                color: '#8e96a3', 
+                                font: { size: 10 },
+                                callback: function(value) { return 'LKR ' + formatCurrency(value); }
+                            } 
+                        }
+                    }
+                }
+            });
+
+            // Donut Chart
+            const ctxDonut = document.getElementById('donutChart').getContext('2d');
+            if (donutChartInstance) donutChartInstance.destroy();
+            
+            const availableRooms = totalRooms - bookedRooms;
+            donutChartInstance = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Occupied', 'Available'],
+                    datasets: [{
+                        data: [bookedRooms || 1, availableRooms || 1],
+                        backgroundColor: ['#10b981', 'rgba(255, 255, 255, 0.05)'],
+                        borderColor: ['#14171d', '#14171d'],
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            display: true,
+                            position: 'bottom',
+                            labels: { 
+                                color: '#8e96a3',
+                                font: { size: 11 },
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        } 
+                    },
+                    cutout: '78%'
+                }
+            });
+        }
+
+        // --- YOUR DESIGN: FORM TOGGLE ---
+        function toggleFormDrawer() {
+            const drawer = document.getElementById('formDrawer');
+            drawer.classList.toggle('open');
+        }
+
+        // --- YOUR DESIGN: POST ALERT ---
+        function postSystemAlert(event) {
+            event.preventDefault();
+            const textInput = document.getElementById('alertText');
+            const typeInput = document.getElementById('alertType');
+            const wrapper = document.getElementById('alertsContainer');
+
+            if(!textInput.value.trim()) return;
+
+            // Save to Firebase
+            const data = {
+                hotelId: hotelId,
+                title: textInput.value.trim().split(' ').slice(0, 5).join(' ') || 'Alert',
+                description: textInput.value.trim(),
+                priority: typeInput.value === 'emergency' ? 'urgent' : 'normal',
+                status: 'active',
+                createdAt: new Date()
+            };
+
+            db.collection('alerts').add(data).then(() => {
+                // Reload alerts
+                loadHotelData();
+                textInput.value = '';
+                toggleFormDrawer();
+            }).catch(err => {
+                alert('Error creating alert: ' + err.message);
+            });
+        }
+
+        // --- NAVIGATION ---
+        function goBackToSelection() {
+            localStorage.removeItem('selectedHotelId');
+            localStorage.removeItem('selectedHotelName');
+            window.location.href = 'owner-select-hotel.html';
+        }
+
+        // --- ENTRANCE ---
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏨 Owner Dashboard loaded');
+        });
+    </script>
+
+</body>
+</html>

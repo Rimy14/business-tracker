@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financials | Property Workspace</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* 🎨 THE CINEMATIC GRADIENT DESIGN SYSTEM */
+        :root {
+            --bg-gradient-start: #1b2e2a;
+            --bg-gradient-end: #0f1115;
+            --card-charcoal: #14171d;
+            --emerald-light: #10b981;
+            --antique-gold: #c2a66b;
+            --text-light: #ffffff;
+            --text-muted: #8e96a3;
+            --alert-red: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.04);
+            --transition-premium: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ========================================== */
+        /* ✨ HIGH-END ENTRANCE ANIMATIONS            */
+        /* ========================================== */
+        @keyframes premiumFadeUp {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: premiumFadeUp 1.2s var(--transition-premium) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.30s; }
+        .delay-3 { animation-delay: 0.45s; }
+        .delay-4 { animation-delay: 0.60s; }
+
+        /* ========================================== */
+        /* 🗺️ NAVIGATION SYSTEM STYLING               */
+        /* ========================================== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 60px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(15, 17, 21, 0.2);
+            backdrop-filter: blur(25px);
+        }
+
+        .navbar-brand {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--antique-gold);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: color 0.4s var(--transition-premium);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-light);
+        }
+
+        .nav-item.back-btn {
+            color: var(--antique-gold);
+            border: 1px solid rgba(194, 166, 107, 0.2);
+            padding: 8px 18px;
+            border-radius: 4px;
+            transition: all 0.4s var(--transition-premium);
+            background: transparent;
+        }
+
+        .nav-item.back-btn:hover {
+            background-color: var(--antique-gold);
+            color: #000000;
+            border-color: var(--antique-gold);
+        }
+
+        /* ========================================== */
+        /* 📈 MAIN WORKSPACE STRUCTURE CONTAINER       */
+        /* ========================================== */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 40px 100px 40px;
+        }
+
+        .hotel-header {
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .hotel-header h1 {
+            font-weight: 300;
+            font-size: 2.4rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin: 0 0 8px 0;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .hotel-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 1.5px;
+        }
+
+        /* Clean Metrics Strip */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        .metric-card {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            padding: 25px 20px;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.4s var(--transition-premium), border-color 0.4s var(--transition-premium);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(194, 166, 107, 0.2);
+        }
+
+        .metric-title {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value.positive { color: var(--emerald-light); }
+        .metric-value.negative { color: var(--alert-red); }
+
+        /* --- TABLE SECTIONS --- */
+        .table-section {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-header h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .table-filters select,
+        .table-filters input {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+            min-width: 120px;
+        }
+
+        .table-filters select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .table-filters select:focus,
+        .table-filters input:focus {
+            border-color: var(--antique-gold);
+        }
+
+        .table-filters input[type="date"] {
+            color-scheme: dark;
+            cursor: pointer;
+        }
+
+        .download-btn {
+            padding: 8px 18px;
+            background: var(--antique-gold);
+            color: #000000;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(194,166,107,0.3);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            padding: 0 25px 20px 25px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 12px 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .data-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+            color: var(--text-light);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .data-table .amount-positive {
+            color: var(--emerald-light);
+        }
+        .data-table .amount-negative {
+            color: var(--alert-red);
+        }
+
+        .source-badge,
+        .category-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            background: rgba(194, 166, 107, 0.12);
+            color: var(--antique-gold);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 30px 0;
+            font-weight: 300;
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 30px 0;
+            opacity: 0.6;
+        }
+
+        /* --- CHART SECTION --- */
+        .chart-section {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .chart-header h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .chart-body {
+            padding: 25px;
+            height: 320px;
+            position: relative;
+        }
+
+        .chart-body canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* --- PROFIT SECTION --- */
+        .profit-section {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .profit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .profit-header h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .profit-body {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .profit-body {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        .profit-chart-container {
+            height: 280px;
+            position: relative;
+        }
+
+        .profit-chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .profit-summary {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .profit-summary .profit-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .profit-summary .profit-item:last-child {
+            border-bottom: none;
+        }
+
+        .profit-summary .profit-item .label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .profit-summary .profit-item .value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .profit-summary .profit-item .value.income { color: var(--emerald-light); }
+        .profit-summary .profit-item .value.expense { color: var(--alert-red); }
+        .profit-summary .profit-item .value.profit-positive { color: var(--emerald-light); }
+        .profit-summary .profit-item .value.profit-negative { color: var(--alert-red); }
+
+        /* Scrollbar */
+        .table-wrap::-webkit-scrollbar {
+            height: 4px;
+        }
+        .table-wrap::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: var(--antique-gold);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 20px 24px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+            .dashboard-container {
+                padding: 40px 20px 60px 20px;
+            }
+            .hotel-header h1 {
+                font-size: 1.6rem;
+            }
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .metric-card {
+                padding: 20px;
+            }
+            .metric-value {
+                font-size: 1.3rem;
+            }
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+            .table-filters {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .table-filters select,
+            .table-filters input {
+                width: 100%;
+            }
+            .table-wrap {
+                padding: 0 15px 15px 15px;
+            }
+            .data-table {
+                font-size: 0.7rem;
+            }
+            .data-table td,
+            .data-table th {
+                padding: 8px 6px;
+            }
+            .download-btn {
+                width: 100%;
+                text-align: center;
+            }
+            .chart-body {
+                padding: 15px;
+                height: 250px;
+            }
+            .profit-body {
+                padding: 15px;
+            }
+            .profit-chart-container {
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .data-table {
+                font-size: 0.6rem;
+            }
+            .data-table td,
+            .data-table th {
+                padding: 6px 4px;
+            }
+            .chart-body {
+                height: 200px;
+            }
+            .profit-chart-container {
+                height: 180px;
+            }
+        }
+    
+/* ================= SIDEBAR OVERRIDE (added) ================= */
+:root { --sb-w: 230px; }
+.navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: var(--sb-w) !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 30px 0 !important;
+    border-bottom: none !important;
+    border-right: 1px solid var(--border-color) !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-sizing: border-box !important;
+}
+.navbar-brand {
+    padding: 0 26px 20px 26px !important;
+    text-align: left !important;
+}
+.nav-links {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+}
+.nav-links .nav-item {
+    padding: 13px 26px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    border-left: 3px solid transparent !important;
+}
+.nav-links .nav-item.active { border-left-color: var(--antique-gold) !important; }
+/* back / Properties button pinned to bottom */
+.nav-links .nav-item.back-btn {
+    margin-top: auto !important;
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+    margin-bottom: 6px !important;
+    text-align: center !important;
+    width: auto !important;
+}
+/* shift page content right */
+body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; }
+
+@media (max-width: 1024px) {
+    :root { --sb-w: 190px; }
+    .navbar { padding: 24px 0 !important; flex-direction: column !important; }
+    .nav-links { justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 2px !important; }
+    .nav-links .nav-item { padding: 12px 18px !important; }
+}
+@media (max-width: 768px) {
+    :root { --sb-w: 200px; }
+    .navbar { padding: 20px 0 !important; flex-direction: column !important; gap: 0 !important; }
+    .nav-links { flex-wrap: nowrap !important; justify-content: flex-start !important; gap: 2px !important; }
+    .nav-links .nav-item { font-size: 0.7rem !important; padding: 12px 16px !important; }
+    .dashboard-container { padding-left: 20px !important; padding-right: 20px !important; }
+}
+/* =============== END SIDEBAR OVERRIDE =============== */
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. NAVIGATION BAR -->
+<nav class="navbar">
+        <div class="navbar-brand"></div>
+        <div class="nav-links">
+            <span class="nav-item" onclick="window.location.href='owner-dashboard.html'">Dashboard</span>
+            <span class="nav-item" onclick="window.location.href='owner-staff.html'">Staff</span>
+            <span class="nav-item active">Financials</span>
+            <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
+            <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
+            <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
+            <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
+            <button class="nav-item back-btn" onclick="goBackToSelection()">← Properties</button>
+        </div>
+    </nav>
+
+    <!-- 2. DASHBOARD BODY -->
+    <div class="dashboard-container">
+
+        <!-- Hotel Header -->
+        <div class="hotel-header animated-element delay-1">
+            <h1 id="current-hotel-name">Loading Hotel...</h1>
+            <p id="hotel-location">📍 Loading location...</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="metrics-grid animated-element delay-2" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-title">Total Income</div>
+                <div class="metric-value positive" id="totalIncome">LKR 0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Total Expenses</div>
+                <div class="metric-value negative" id="totalExpenses">LKR 0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Net Profit</div>
+                <div class="metric-value positive" id="netProfit">LKR 0</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CHART SECTION - Income vs Expenses (Last 6 Months)           -->
+        <!-- ============================================================ -->
+        <div class="chart-section animated-element delay-3">
+            <div class="chart-header">
+                <h3>Income vs Expenses (Last 6 Months)</h3>
+                <div class="table-filters">
+                    <select id="chartDateFilter">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="date" id="chartStartDate" style="display:none; min-width:130px;">
+                    <input type="date" id="chartEndDate" style="display:none; min-width:130px;">
+                    <button class="download-btn" id="downloadChartBtn">Download Chart Report</button>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="chartCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TABLE 1: INCOME TRANSACTIONS                                 -->
+        <!-- ============================================================ -->
+        <div class="table-section animated-element delay-3">
+            <div class="table-header">
+                <h3>Income Transactions</h3>
+                <div class="table-filters">
+                    <select id="incomeStreamFilter">
+                        <option value="all">All Streams</option>
+                        <option value="Room Revenue">Room Revenue</option>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="Bar">Bar Lounge</option>
+                        <option value="Spa">Spa &amp; Beauty</option>
+                        <option value="Other">Other Income</option>
+                    </select>
+                    <select id="incomeDateFilter">
+                        <option value="all" selected>All</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="date" id="incomeStartDate" style="display:none; min-width:130px;">
+                    <input type="date" id="incomeEndDate" style="display:none; min-width:130px;">
+                    <button class="download-btn" id="downloadIncomeBtn">Download PDF</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Source</th>
+                            <th>Amount (LKR)</th>
+                            <th>Description</th>
+                            <th>Created By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incomeTableBody">
+                        <tr><td colspan="6" class="loading-text">Loading income data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TABLE 2: EXPENSES TRANSACTIONS                               -->
+        <!-- ============================================================ -->
+        <div class="table-section animated-element delay-4">
+            <div class="table-header">
+                <h3>Expenses Transactions</h3>
+                <div class="table-filters">
+                    <select id="expenseCategoryFilter">
+                        <option value="all">All Categories</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Supplies">Supplies</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Other">Other Expense</option>
+                    </select>
+                    <select id="expenseDateFilter">
+                        <option value="all" selected>All</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="date" id="expenseStartDate" style="display:none; min-width:130px;">
+                    <input type="date" id="expenseEndDate" style="display:none; min-width:130px;">
+                    <button class="download-btn" id="downloadExpenseBtn">Download PDF</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Amount (LKR)</th>
+                            <th>Description</th>
+                            <th>Created By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseTableBody">
+                        <tr><td colspan="6" class="loading-text">Loading expense data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PROFIT SECTION                                               -->
+        <!-- ============================================================ -->
+        <div class="profit-section animated-element delay-4">
+            <div class="profit-header">
+                <h3>Profit Overview</h3>
+                <div class="table-filters">
+                    <select id="profitDateFilter">
+                        <option value="all" selected>All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="date" id="profitStartDate" style="display:none; min-width:130px;">
+                    <input type="date" id="profitEndDate" style="display:none; min-width:130px;">
+                    <button class="download-btn" id="downloadProfitBtn">Download Profit Report</button>
+                </div>
+            </div>
+            <div class="profit-body">
+                <div class="profit-chart-container">
+                    <canvas id="profitChartCanvas"></canvas>
+                </div>
+                <div class="profit-summary" id="profitSummary">
+                    <div class="profit-item">
+                        <span class="label">Total Income</span>
+                        <span class="value income" id="profitIncome">LKR 0</span>
+                    </div>
+                    <div class="profit-item">
+                        <span class="label">Total Expenses</span>
+                        <span class="value expense" id="profitExpenses">LKR 0</span>
+                    </div>
+                    <div class="profit-item">
+                        <span class="label">Net Profit</span>
+                        <span class="value profit-positive" id="profitNet">LKR 0</span>
+                    </div>
+                    <div class="profit-item" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top:15px; margin-top:5px;">
+                        <span class="label">Total Transactions</span>
+                        <span class="value" id="profitCount" style="font-size:0.9rem; color:var(--text-muted);">0 entries</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- GLOBALS ---
+        let hotelId = null;
+        let hotelName = null;
+        let hotelCity = null;
+        let allIncome = [];
+        let allExpenses = [];
+        let chartInstance = null;
+        let profitChartInstance = null;
+
+        // --- AUTH CHECK ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            hotelId = localStorage.getItem('selectedHotelId');
+            hotelName = localStorage.getItem('selectedHotelName');
+
+            if (!hotelId) {
+                window.location.href = 'owner-select-hotel.html';
+                return;
+            }
+
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) {
+                    await auth.signOut();
+                    window.location.href = '/';
+                    return;
+                }
+
+                const userData = userDoc.data();
+                if (userData.role !== 'owner') {
+                    window.location.href = '/manager-dashboard.html';
+                    return;
+                }
+
+                // Get hotel details
+                const hotelDoc = await db.collection('users').doc(hotelId).get();
+                if (hotelDoc.exists) {
+                    const data = hotelDoc.data();
+                    hotelCity = data.city || 'Location not specified';
+                    document.getElementById('current-hotel-name').textContent = hotelName || data.businessName || 'Unnamed Hotel';
+                    document.getElementById('hotel-location').textContent = '📍 ' + hotelCity;
+                }
+
+                await loadData();
+
+            } catch (error) {
+                console.error('Error loading page:', error);
+                alert('Error loading page. Please refresh.');
+            }
+        });
+
+        // --- LOAD DATA ---
+        async function loadData() {
+            try {
+                const [incomeSnap, expenseSnap] = await Promise.all([
+                    db.collection('income').where('hotelId', '==', hotelId).get(),
+                    db.collection('expenses').where('hotelId', '==', hotelId).get()
+                ]);
+
+                allIncome = [];
+                incomeSnap.forEach(doc => allIncome.push({ id: doc.id, ...doc.data() }));
+                allIncome.sort((a, b) => (a.date || '').localeCompare(b.date || '') * -1);
+
+                allExpenses = [];
+                expenseSnap.forEach(doc => allExpenses.push({ id: doc.id, ...doc.data() }));
+                allExpenses.sort((a, b) => (a.date || '').localeCompare(b.date || '') * -1);
+
+                renderAll();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // --- RENDER ALL ---
+        function renderAll() {
+            renderSummary();
+            renderChart();
+            renderIncomeTable();
+            renderExpenseTable();
+            renderProfitSection();
+        }
+
+        // --- RENDER SUMMARY ---
+        function renderSummary() {
+            const income = allIncome.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const expenses = allExpenses.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const profit = income - expenses;
+
+            document.getElementById('totalIncome').textContent = 'LKR ' + income.toLocaleString();
+            document.getElementById('totalExpenses').textContent = 'LKR ' + expenses.toLocaleString();
+            const profitEl = document.getElementById('netProfit');
+            profitEl.textContent = 'LKR ' + profit.toLocaleString();
+            profitEl.className = 'metric-value ' + (profit >= 0 ? 'positive' : 'negative');
+        }
+
+        // --- GET FILTER DATES ---
+        function getFilterDates(filterEl, startEl, endEl) {
+            const period = filterEl.value;
+            const now = new Date();
+            let start, end;
+
+            if (period === 'all') {
+                return { start: null, end: null };
+            } else if (period === 'today') {
+                start = now.toISOString().split('T')[0];
+                end = start;
+            } else if (period === 'week') {
+                const s = new Date(now);
+                s.setDate(now.getDate() - now.getDay());
+                start = s.toISOString().split('T')[0];
+                const e = new Date(s);
+                e.setDate(s.getDate() + 6);
+                end = e.toISOString().split('T')[0];
+            } else if (period === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+            } else if (period === 'year') {
+                start = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                end = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+            } else {
+                start = document.getElementById(startEl).value;
+                end = document.getElementById(endEl).value;
+                if (!start || !end) return { start: null, end: null };
+            }
+            return { start, end };
+        }
+
+        function filterByDate(data, start, end) {
+            if (!start || !end) return data;
+            return data.filter(item => {
+                if (!item.date) return false;
+                return item.date >= start && item.date <= end;
+            });
+        }
+
+        // --- RENDER CHART ---
+        function renderChart() {
+            const filterVal = document.getElementById('chartDateFilter').value;
+            const startEl = 'chartStartDate';
+            const endEl = 'chartEndDate';
+            const { start, end } = getFilterDates(
+                document.getElementById('chartDateFilter'),
+                'chartStartDate',
+                'chartEndDate'
+            );
+
+            let filteredIncome = filterByDate(allIncome, start, end);
+            let filteredExpenses = filterByDate(allExpenses, start, end);
+
+            // Get last 6 months
+            const now = new Date();
+            const months = [];
+            const incomeData = [];
+            const expenseData = [];
+
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                const monthLabel = d.toLocaleString('default', { month: 'short' }) + ' ' + d.getFullYear();
+
+                const inc = filteredIncome.filter(item => {
+                    if (!item.date) return false;
+                    return item.date.startsWith(monthKey);
+                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+
+                const exp = filteredExpenses.filter(item => {
+                    if (!item.date) return false;
+                    return item.date.startsWith(monthKey);
+                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+
+                months.push(monthLabel);
+                incomeData.push(inc);
+                expenseData.push(exp);
+            }
+
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Income',
+                        data: incomeData,
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }, {
+                        label: 'Expenses',
+                        data: expenseData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#8e96a3',
+                                font: { size: 10 },
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8e96a3', font: { size: 9 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.02)' },
+                            ticks: {
+                                color: '#8e96a3',
+                                font: { size: 9 },
+                                callback: function(value) { return 'LKR ' + value.toLocaleString(); }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- RENDER INCOME TABLE ---
+        function renderIncomeTable() {
+            const tbody = document.getElementById('incomeTableBody');
+            if (!tbody) return;
+
+            const streamFilter = document.getElementById('incomeStreamFilter').value;
+            const { start, end } = getFilterDates(
+                document.getElementById('incomeDateFilter'),
+                'incomeStartDate',
+                'incomeEndDate'
+            );
+
+            let filtered = filterByDate(allIncome, start, end);
+
+            // 🔥 FIX: Use includes() so both "Room Revenue" and "Room Revenue - Booking" show
+            if (streamFilter !== 'all') {
+                filtered = filtered.filter(item => item.source && item.source.includes(streamFilter));
+            }
+
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No income records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, i) => {
+                const sourceDisplay = item.source || 'N/A';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${item.date || 'N/A'}</td>
+                        <td><span class="source-badge">${sourceDisplay}</span></td>
+                        <td class="amount-positive">LKR ${(item.amount || 0).toLocaleString()}</td>
+                        <td>${item.description || '-'}</td>
+                        <td>${item.createdBy || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- RENDER EXPENSE TABLE ---
+        function renderExpenseTable() {
+            const tbody = document.getElementById('expenseTableBody');
+            if (!tbody) return;
+
+            const categoryFilter = document.getElementById('expenseCategoryFilter').value;
+            const { start, end } = getFilterDates(
+                document.getElementById('expenseDateFilter'),
+                'expenseStartDate',
+                'expenseEndDate'
+            );
+
+            let filtered = filterByDate(allExpenses, start, end);
+
+            if (categoryFilter !== 'all') {
+                filtered = filtered.filter(item => item.category === categoryFilter);
+            }
+
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No expense records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, i) => {
+                const categoryDisplay = item.category || 'N/A';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${item.date || 'N/A'}</td>
+                        <td><span class="category-badge">${categoryDisplay}</span></td>
+                        <td class="amount-negative">LKR ${(item.amount || 0).toLocaleString()}</td>
+                        <td>${item.description || '-'}</td>
+                        <td>${item.createdBy || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- RENDER PROFIT SECTION ---
+        function renderProfitSection() {
+            const { start, end } = getFilterDates(
+                document.getElementById('profitDateFilter'),
+                'profitStartDate',
+                'profitEndDate'
+            );
+
+            let filteredIncome = filterByDate(allIncome, start, end);
+            let filteredExpenses = filterByDate(allExpenses, start, end);
+
+            const totalIncome = filteredIncome.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const totalExpenses = filteredExpenses.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const netProfit = totalIncome - totalExpenses;
+            const totalEntries = filteredIncome.length + filteredExpenses.length;
+
+            document.getElementById('profitIncome').textContent = 'LKR ' + totalIncome.toLocaleString();
+            document.getElementById('profitExpenses').textContent = 'LKR ' + totalExpenses.toLocaleString();
+            const profitEl = document.getElementById('profitNet');
+            profitEl.textContent = 'LKR ' + netProfit.toLocaleString();
+            profitEl.className = 'value ' + (netProfit >= 0 ? 'profit-positive' : 'profit-negative');
+            document.getElementById('profitCount').textContent = totalEntries + ' entries';
+
+            // Donut Chart
+            const ctx = document.getElementById('profitChartCanvas').getContext('2d');
+            if (profitChartInstance) profitChartInstance.destroy();
+
+            profitChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Income', 'Expenses'],
+                    datasets: [{
+                        data: [totalIncome || 1, totalExpenses || 1],
+                        backgroundColor: ['#10b981', 'rgba(239, 68, 68, 0.6)'],
+                        borderColor: ['#14171d', '#14171d'],
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#8e96a3',
+                                font: { size: 11 },
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    },
+                    cutout: '78%'
+                }
+            });
+        }
+
+        // --- FILTER EVENT LISTENERS ---
+        document.getElementById('incomeStreamFilter').addEventListener('change', renderIncomeTable);
+        document.getElementById('incomeDateFilter').addEventListener('change', function() {
+            const customInputs = document.querySelectorAll('#incomeStartDate, #incomeEndDate');
+            if (this.value === 'custom') {
+                customInputs.forEach(inp => inp.style.display = 'inline-block');
+            } else {
+                customInputs.forEach(inp => inp.style.display = 'none');
+                renderIncomeTable();
+            }
+        });
+        document.getElementById('incomeStartDate').addEventListener('change', function() {
+            if (document.getElementById('incomeEndDate').value) renderIncomeTable();
+        });
+        document.getElementById('incomeEndDate').addEventListener('change', function() {
+            if (document.getElementById('incomeStartDate').value) renderIncomeTable();
+        });
+
+        document.getElementById('expenseCategoryFilter').addEventListener('change', renderExpenseTable);
+        document.getElementById('expenseDateFilter').addEventListener('change', function() {
+            const customInputs = document.querySelectorAll('#expenseStartDate, #expenseEndDate');
+            if (this.value === 'custom') {
+                customInputs.forEach(inp => inp.style.display = 'inline-block');
+            } else {
+                customInputs.forEach(inp => inp.style.display = 'none');
+                renderExpenseTable();
+            }
+        });
+        document.getElementById('expenseStartDate').addEventListener('change', function() {
+            if (document.getElementById('expenseEndDate').value) renderExpenseTable();
+        });
+        document.getElementById('expenseEndDate').addEventListener('change', function() {
+            if (document.getElementById('expenseStartDate').value) renderExpenseTable();
+        });
+
+        document.getElementById('chartDateFilter').addEventListener('change', function() {
+            const customInputs = document.querySelectorAll('#chartStartDate, #chartEndDate');
+            if (this.value === 'custom') {
+                customInputs.forEach(inp => inp.style.display = 'inline-block');
+                renderChart();
+            } else {
+                customInputs.forEach(inp => inp.style.display = 'none');
+                renderChart();
+            }
+        });
+        document.getElementById('chartStartDate').addEventListener('change', function() {
+            if (document.getElementById('chartEndDate').value) renderChart();
+        });
+        document.getElementById('chartEndDate').addEventListener('change', function() {
+            if (document.getElementById('chartStartDate').value) renderChart();
+        });
+
+        document.getElementById('profitDateFilter').addEventListener('change', function() {
+            const customInputs = document.querySelectorAll('#profitStartDate, #profitEndDate');
+            if (this.value === 'custom') {
+                customInputs.forEach(inp => inp.style.display = 'inline-block');
+                renderProfitSection();
+            } else {
+                customInputs.forEach(inp => inp.style.display = 'none');
+                renderProfitSection();
+            }
+        });
+        document.getElementById('profitStartDate').addEventListener('change', function() {
+            if (document.getElementById('profitEndDate').value) renderProfitSection();
+        });
+        document.getElementById('profitEndDate').addEventListener('change', function() {
+            if (document.getElementById('profitStartDate').value) renderProfitSection();
+        });
+
+        // --- DOWNLOAD INCOME PDF ---
+        document.getElementById('downloadIncomeBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const streamFilter = document.getElementById('incomeStreamFilter').value;
+            const { start, end } = getFilterDates(
+                document.getElementById('incomeDateFilter'),
+                'incomeStartDate',
+                'incomeEndDate'
+            );
+
+            let filtered = filterByDate(allIncome, start, end);
+            if (streamFilter !== 'all') {
+                filtered = filtered.filter(item => item.source && item.source.includes(streamFilter));
+            }
+
+            if (!filtered.length) {
+                alert('No income data to export.');
+                return;
+            }
+
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Income Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+            const periodLabel = document.getElementById('incomeDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
+            doc.text(`Period: ${periodLabel}`, margin, 36);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+            const total = filtered.reduce((sum, i) => sum + (i.amount || 0), 0);
+            doc.setFontSize(11);
+            doc.setTextColor(60, 60, 60);
+            doc.text(`Total Income: LKR ${total.toLocaleString()} (${filtered.length} entries)`, margin, 52);
+
+            const headers = ['#', 'Date', 'Source', 'Amount (LKR)', 'Description', 'Created By'];
+            const rows = filtered.map((item, i) => [
+                i + 1,
+                item.date || 'N/A',
+                item.source || 'N/A',
+                Number(item.amount || 0).toLocaleString(),
+                item.description || '-',
+                item.createdBy || '-'
+            ]);
+
+            doc.autoTable({
+                startY: 58,
+                head: [headers],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 7 },
+                margin: { left: margin, right: margin }
+            });
+
+            doc.save(`income-report-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- DOWNLOAD EXPENSE PDF ---
+        document.getElementById('downloadExpenseBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const categoryFilter = document.getElementById('expenseCategoryFilter').value;
+            const { start, end } = getFilterDates(
+                document.getElementById('expenseDateFilter'),
+                'expenseStartDate',
+                'expenseEndDate'
+            );
+
+            let filtered = filterByDate(allExpenses, start, end);
+            if (categoryFilter !== 'all') {
+                filtered = filtered.filter(item => item.category === categoryFilter);
+            }
+
+            if (!filtered.length) {
+                alert('No expense data to export.');
+                return;
+            }
+
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Expense Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+            const periodLabel = document.getElementById('expenseDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
+            doc.text(`Period: ${periodLabel}`, margin, 36);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+            const total = filtered.reduce((sum, i) => sum + (i.amount || 0), 0);
+            doc.setFontSize(11);
+            doc.setTextColor(60, 60, 60);
+            doc.text(`Total Expenses: LKR ${total.toLocaleString()} (${filtered.length} entries)`, margin, 52);
+
+            const headers = ['#', 'Date', 'Category', 'Amount (LKR)', 'Description', 'Created By'];
+            const rows = filtered.map((item, i) => [
+                i + 1,
+                item.date || 'N/A',
+                item.category || 'N/A',
+                Number(item.amount || 0).toLocaleString(),
+                item.description || '-',
+                item.createdBy || '-'
+            ]);
+
+            doc.autoTable({
+                startY: 58,
+                head: [headers],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 7 },
+                margin: { left: margin, right: margin }
+            });
+
+            doc.save(`expense-report-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- DOWNLOAD CHART REPORT ---
+        document.getElementById('downloadChartBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const { start, end } = getFilterDates(
+                document.getElementById('chartDateFilter'),
+                'chartStartDate',
+                'chartEndDate'
+            );
+
+            let filteredIncome = filterByDate(allIncome, start, end);
+            let filteredExpenses = filterByDate(allExpenses, start, end);
+
+            // Get last 6 months
+            const now = new Date();
+            const monthData = [];
+            let totalIncome = 0;
+            let totalExpenses = 0;
+
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                const monthLabel = d.toLocaleString('default', { month: 'short' }) + ' ' + d.getFullYear();
+
+                const inc = filteredIncome.filter(item => {
+                    if (!item.date) return false;
+                    return item.date.startsWith(monthKey);
+                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+
+                const exp = filteredExpenses.filter(item => {
+                    if (!item.date) return false;
+                    return item.date.startsWith(monthKey);
+                }).reduce((sum, item) => sum + (item.amount || 0), 0);
+
+                monthData.push({ month: monthLabel, income: inc, expenses: exp });
+                totalIncome += inc;
+                totalExpenses += exp;
+            }
+
+            const netProfit = totalIncome - totalExpenses;
+
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Income vs Expenses Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+            const periodLabel = document.getElementById('chartDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
+            doc.text(`Period: ${periodLabel}`, margin, 36);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+
+            // Monthly breakdown
+            doc.setFontSize(11);
+            doc.setTextColor(60, 60, 60);
+            doc.text('Monthly Breakdown', margin, 52);
+
+            const headers = ['Month', 'Income (LKR)', 'Expenses (LKR)', 'Profit (LKR)'];
+            const rows = monthData.map(m => [
+                m.month,
+                m.income.toLocaleString(),
+                m.expenses.toLocaleString(),
+                (m.income - m.expenses).toLocaleString()
+            ]);
+
+            doc.autoTable({
+                startY: 58,
+                head: [headers],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 8 },
+                margin: { left: margin, right: margin }
+            });
+
+            // Totals
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.setFontSize(12);
+            doc.setTextColor(60, 60, 60);
+            doc.text(`TOTAL INCOME: LKR ${totalIncome.toLocaleString()}`, margin, finalY);
+            doc.text(`TOTAL EXPENSES: LKR ${totalExpenses.toLocaleString()}`, margin, finalY + 8);
+            doc.text(`NET PROFIT: LKR ${netProfit.toLocaleString()}`, margin, finalY + 16);
+
+            doc.save(`chart-report-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- DOWNLOAD PROFIT REPORT ---
+        document.getElementById('downloadProfitBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const { start, end } = getFilterDates(
+                document.getElementById('profitDateFilter'),
+                'profitStartDate',
+                'profitEndDate'
+            );
+
+            let filteredIncome = filterByDate(allIncome, start, end);
+            let filteredExpenses = filterByDate(allExpenses, start, end);
+
+            const periodLabel = document.getElementById('profitDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
+
+            // Group by month
+            const monthMap = {};
+            filteredIncome.forEach(item => {
+                if (!item.date) return;
+                const monthKey = item.date.substring(0, 7);
+                if (!monthMap[monthKey]) monthMap[monthKey] = { income: 0, expenses: 0 };
+                monthMap[monthKey].income += item.amount || 0;
+            });
+            filteredExpenses.forEach(item => {
+                if (!item.date) return;
+                const monthKey = item.date.substring(0, 7);
+                if (!monthMap[monthKey]) monthMap[monthKey] = { income: 0, expenses: 0 };
+                monthMap[monthKey].expenses += item.amount || 0;
+            });
+
+            const sortedMonths = Object.keys(monthMap).sort();
+            const rows = sortedMonths.map(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'short' });
+                const data = monthMap[monthKey];
+                return [
+                    monthName + ' ' + year,
+                    data.income.toLocaleString(),
+                    data.expenses.toLocaleString(),
+                    (data.income - data.expenses).toLocaleString()
+                ];
+            });
+
+            const totalIncome = filteredIncome.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const totalExpenses = filteredExpenses.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const netProfit = totalIncome - totalExpenses;
+
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Profit Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+            doc.text(`Period: ${periodLabel}`, margin, 36);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+
+            // Monthly breakdown
+            doc.setFontSize(11);
+            doc.setTextColor(60, 60, 60);
+            doc.text('Monthly Breakdown', margin, 52);
+
+            const headers = ['Month', 'Income (LKR)', 'Expenses (LKR)', 'Profit (LKR)'];
+            const allRows = rows.length ? rows : [['No Data', '0', '0', '0']];
+
+            doc.autoTable({
+                startY: 58,
+                head: [headers],
+                body: allRows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 8 },
+                margin: { left: margin, right: margin }
+            });
+
+            // Totals
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.setFontSize(12);
+            doc.setTextColor(60, 60, 60);
+            doc.text(`TOTAL INCOME: LKR ${totalIncome.toLocaleString()}`, margin, finalY);
+            doc.text(`TOTAL EXPENSES: LKR ${totalExpenses.toLocaleString()}`, margin, finalY + 8);
+            doc.text(`NET PROFIT: LKR ${netProfit.toLocaleString()}`, margin, finalY + 16);
+
+            doc.save(`profit-report-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- NAVIGATION ---
+        function goBackToSelection() {
+            localStorage.removeItem('selectedHotelId');
+            localStorage.removeItem('selectedHotelName');
+            window.location.href = 'owner-select-hotel.html';
+        }
+
+        // --- ENTRANCE ---
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('💰 Owner Financials page loaded');
+        });
+    </script>
+
+</body>
+</html>

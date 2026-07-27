@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Gateway | Create Corporate Infrastructure Account</title>
+    <!-- Corporate Typography & Core Sans Fonts -->
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Strict Corporate Palette Adherence ---
+           #dfe5f3 : Accent Focus Tint (Highlights / Glows)
+           #557373 : Sage Slate (Structural Input Borders / Active States)
+           #272401 : Deep Olive Shadow (Underlying Card Ambient Glows)
+           #f2efea : Silk Off-White (Clean Text / Content Fields)
+           #0d0d0d : Obsidian Jet (Primary Enterprise Surface Background)
+        ------------------------------------------- */
+        :root {
+            --palette-ice: #dfe5f3;
+            --palette-sage: #557373;
+            --palette-shadow: #272401;
+            --palette-cream: #f2efea;
+            --palette-obsidian: #0d0d0d;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100%;
+            min-height: 100vh;
+            background-color: var(--palette-obsidian);
+            color: var(--palette-cream);
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Fixed 3D WebGL Structural Network Layer */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Professional Executive Sign Up Card Container */
+        .business-auth-wrapper {
+            position: relative;
+            z-index: 2;
+            width: clamp(340px, 92vw, 520px);
+            background: rgba(13, 13, 13, 0.85);
+            border: 1px solid rgba(85, 115, 115, 0.25);
+            padding: clamp(30px, 5vw, 50px) clamp(20px, 4vw, 45px);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8),
+                        0 0 80px rgba(39, 36, 1, 0.15);
+            margin: 40px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: border-color 0.4s ease;
+        }
+
+        .business-auth-wrapper:hover {
+            border-color: rgba(85, 115, 115, 0.4);
+        }
+
+        /* Institutional Brand Header */
+        .brand-header {
+            margin-bottom: 35px;
+            text-align: left;
+        }
+
+        .brand-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #FFFFFF;
+            margin-bottom: 6px;
+        }
+
+        .brand-header p {
+            font-size: 0.85rem;
+            color: var(--palette-sage);
+            font-weight: 400;
+            letter-spacing: 0.2px;
+        }
+
+        /* Structured Corporate Form Components */
+        .form-block {
+            position: relative;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .form-block label {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            color: var(--palette-sage);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .business-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(13, 13, 13, 0.7);
+            border: 1px solid rgba(85, 115, 115, 0.3);
+            color: var(--palette-cream);
+            font-size: 0.95rem;
+            font-weight: 400;
+            outline: none;
+            border-radius: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Active Business Input Focus States */
+        .business-input:focus {
+            border-color: var(--palette-ice);
+            background: rgba(13, 13, 13, 0.95);
+            box-shadow: 0 0 20px rgba(223, 229, 243, 0.04);
+        }
+
+        /* Corporate Floating Label Mechanics */
+        .business-input:focus ~ label,
+        .business-input:not(:placeholder-shown) ~ label {
+            top: 0;
+            left: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--palette-ice);
+            background-color: #0d0d0d;
+            padding: 0 6px;
+        }
+
+        /* Terms & Agreements Consent Checkbox Section */
+        .terms-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--palette-sage);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .terms-row input {
+            accent-color: var(--palette-sage);
+            width: 16px;
+            height: 16px;
+            margin-top: 1px;
+            cursor: pointer;
+        }
+
+        .terms-row a {
+            color: var(--palette-ice);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .terms-row a:hover {
+            text-decoration: underline;
+        }
+
+        /* High-Converting Executive Action Submit Button */
+        .login-submit-button {
+            width: 100%;
+            padding: 18px;
+            background-color: var(--palette-sage);
+            border: 1px solid rgba(223, 229, 243, 0.15);
+            color: #FFFFFF;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .login-submit-button:hover {
+            background-color: var(--palette-ice);
+            color: var(--palette-obsidian);
+            box-shadow: 0 10px 25px rgba(223, 229, 243, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .login-submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Registration Return Redirect Footer */
+        .registration-footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--palette-sage);
+            font-weight: 400;
+        }
+
+        .registration-footer a {
+            color: var(--palette-ice);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 5px;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .registration-footer a:hover {
+            color: #FFFFFF;
+            border-color: #FFFFFF;
+        }
+
+        /* Corporate Ambient Grid Lining Overlay Background */
+        .corporate-grid-matrix {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: linear-gradient(rgba(85, 115, 115, 0.015) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(85, 115, 115, 0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="corporate-grid-matrix"></div>
+
+    <!-- WebGL Background Viewport Layer -->
+    <div id="canvas-container"></div>
+
+    <!-- Central Infrastructure Sign Up Card Form -->
+    <div class="business-auth-wrapper" id="auth-box">
+        <div class="brand-header">
+            <h1>Create Account</h1>
+            <p>Deploy your organization corporate data profile</p>
+        </div>
+
+        <form autocomplete="off" id="signup-form">
+            <div class="form-block">
+                <input type="text" id="business-name" class="business-input" placeholder=" " required autocomplete="off">
+                <label for="business-name">Business Name</label>
+            </div>
+
+            <div class="form-block">
+                <input type="text" id="city" class="business-input" placeholder=" " required autocomplete="off">
+                <label for="city">City</label>
+            </div>
+
+            <div class="form-block">
+                <input type="text" id="username" class="business-input" placeholder=" " required autocomplete="off">
+                <label for="username">Username</label>
+            </div>
+
+            <div class="form-block">
+                <input type="password" id="password" class="business-input" placeholder=" " required autocomplete="off">
+                <label for="password">Password</label>
+            </div>
+
+            <div class="form-block">
+                <input type="password" id="confirm-password" class="business-input" placeholder=" " required autocomplete="off">
+                <label for="confirm-password">Confirm Password</label>
+            </div>
+
+            <div class="terms-row">
+                <input type="checkbox" id="terms" required />
+                <label for="terms">I acknowledge and authorize the deployment of this platform architecture node according to the <a href="#">Terms of Enterprise Service</a>.</label>
+            </div>
+
+            <div class="error-message" id="error-message"></div>
+
+            <button type="submit" class="login-submit-button" id="signup-btn">Initialize Registration</button>
+        </form>
+
+        <div class="registration-footer">
+            Already have an account?<a href="/">Sign In</a>
+        </div>
+    </div>
+
+    <!-- Production Dependency Framework Assemblies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- AUTO-REDIRECT DISABLED FOR SIGNUP PAGE ---
+        // Users should stay on signup page until they complete registration.
+
+        // --- INITIAL UI ENTRANCE TRANSLATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            gsap.to('#auth-box', {
+                opacity: 1,
+                y: 0,
+                duration: 1.4,
+                ease: "power4.out"
+            });
+        });
+
+        // --- THREE.JS 3D PROFESSIONAL INTERCONNECTED DATA GRID SYSTEM ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2('#0d0d0d', 0.15);
+
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 7.5;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Build a professional structural graph network node grid matrix
+        const nodeCount = 85;
+        const nodeGeometry = new THREE.BufferGeometry();
+        const nodePositions = new Float32Array(nodeCount * 3);
+        const nodeVelocities = [];
+
+        for(let i = 0; i < nodeCount * 3; i += 3) {
+            nodePositions[i] = (Math.random() - 0.5) * 13;
+            nodePositions[i+1] = (Math.random() - 0.5) * 9;
+            nodePositions[i+2] = (Math.random() - 0.5) * 6;
+            nodeVelocities.push(new THREE.Vector3(
+                (Math.random() - 0.5) * 0.003,
+                (Math.random() - 0.5) * 0.003,
+                (Math.random() - 0.5) * 0.003
+            ));
+        }
+
+        nodeGeometry.setAttribute('position', new THREE.BufferAttribute(nodePositions, 3));
+
+        // Code-generated high-contrast vector node particle points
+        const createNodeTexture = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 16; canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            ctx.beginPath();
+            ctx.arc(8, 8, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#557373';
+            ctx.fill();
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        const nodeMaterial = new THREE.PointsMaterial({
+            size: 0.12,
+            map: createNodeTexture(),
+            transparent: true,
+            opacity: 0.6,
+            depthWrite: false
+        });
+
+        const nodePointCloud = new THREE.Points(nodeGeometry, nodeMaterial);
+        scene.add(nodePointCloud);
+
+        // Grid connectivity line elements bridge structures mapping
+        const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0x557373,
+            transparent: true,
+            opacity: 0.08
+        });
+
+        let lineMesh = new THREE.LineSegments(new THREE.BufferGeometry(), lineMaterial);
+        scene.add(lineMesh);
+
+        // --- DYNAMIC FORM FOCUS INPUT EVENT HOOKS ---
+        const inputs = document.querySelectorAll('.business-input');
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('focus', () => {
+                gsap.to(nodeMaterial, { size: 0.16, opacity: 0.85, duration: 0.5 });
+                gsap.to(lineMaterial, { opacity: 0.18, duration: 0.5 });
+                gsap.to(camera.position, { z: 6.8 - (index * 0.1), ease: "power2.out", duration: 1.0 });
+            });
+
+            input.addEventListener('blur', () => {
+                gsap.to(nodeMaterial, { size: 0.12, opacity: 0.6, duration: 0.6 });
+                gsap.to(lineMaterial, { opacity: 0.08, duration: 0.6 });
+                gsap.to(camera.position, { z: 7.5, ease: "power2.out", duration: 1.0 });
+            });
+        });
+
+        // Real-time cursor move tracking handles soft perspective card tilting fields
+        let mouseX = 0, mouseY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            gsap.to('#auth-box', {
+                rotationY: mouseX * 4,
+                rotationX: -mouseY * 4,
+                duration: 0.6,
+                ease: "power1.out"
+            });
+        });
+
+        // --- REAL-TIME CONSTANT RENDER ENGINE LOOP MATRIX ---
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            const positions = nodePointCloud.geometry.attributes.position.array;
+            const linePositions = [];
+
+            // Execute matrix coordinates travel path updates inside render frames
+            for(let i = 0; i < nodeCount; i++) {
+                const i3 = i * 3;
+                positions[i3] += nodeVelocities[i].x;
+                positions[i3+1] += nodeVelocities[i].y;
+                positions[i3+2] += nodeVelocities[i].z;
+
+                // Outer threshold boundaries trigger automated bounce reversals
+                if(Math.abs(positions[i3]) > 6.5) nodeVelocities[i].x *= -1;
+                if(Math.abs(positions[i3+1]) > 4.5) nodeVelocities[i].y *= -1;
+                if(Math.abs(positions[i3+2]) > 3.5) nodeVelocities[i].z *= -1;
+
+                // Trace nearby vectors proximity values to append linking bridge elements meshes
+                for(let j = i + 1; j < nodeCount; j++) {
+                    const j3 = j * 3;
+                    const dx = positions[i3] - positions[j3];
+                    const dy = positions[i3+1] - positions[j3+1];
+                    const dz = positions[i3+2] - positions[j3+2];
+                    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+
+                    if(dist < 2.4) {
+                        linePositions.push(positions[i3], positions[i3+1], positions[i3+2]);
+                        linePositions.push(positions[j3], positions[j3+1], positions[j3+2]);
+                    }
+                }
+            }
+
+            nodePointCloud.geometry.attributes.position.needsUpdate = true;
+
+            // Update line buffers dynamically across WebGL runtime pipeline threads
+            lineMesh.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
+            lineMesh.geometry.computeBoundingSphere();
+
+            // Passive continuous rotation axes drift loop
+            nodePointCloud.rotation.y += 0.0008;
+            lineMesh.rotation.y += 0.0008;
+
+            // Camera moves subtly tracking cursor position metrics
+            camera.position.x += (mouseX * 0.35 - camera.position.x) * 0.05;
+            camera.position.y += (mouseY * 0.35 - camera.position.y) * 0.05;
+
+            renderer.render(scene, camera);
+        };
+
+        animate();
+
+        // Responsive Aspect Auto-Resize Controller Viewports Dimensions
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- FIREBASE SIGNUP LOGIC ---
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const businessName = document.getElementById('business-name').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const termsChecked = document.getElementById('terms').checked;
+            const errorMsg = document.getElementById('error-message');
+            const btn = document.getElementById('signup-btn');
+            
+            // Hide previous error
+            errorMsg.classList.remove('show');
+            errorMsg.textContent = '';
+            
+            // Validation
+            if (!businessName || !city || !username || !password || !confirmPassword) {
+                errorMsg.textContent = 'Please fill in all fields.';
+                errorMsg.classList.add('show');
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorMsg.textContent = 'Password must be at least 6 characters.';
+                errorMsg.classList.add('show');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                errorMsg.textContent = 'Passwords do not match!';
+                errorMsg.classList.add('show');
+                return;
+            }
+            
+            if (!termsChecked) {
+                errorMsg.textContent = 'Please accept the Terms of Service.';
+                errorMsg.classList.add('show');
+                return;
+            }
+            
+            // Show loading state
+            btn.textContent = 'Creating Account...';
+            btn.disabled = true;
+            
+            try {
+                // Create user with Firebase Auth (username + @business.local)
+                const email = username + '@business.local';
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Save user data to Firestore
+                await db.collection('users').doc(user.uid).set({
+                    username: username,
+                    businessName: businessName,
+                    city: city,
+                    email: email,
+                    role: 'manager',
+                    createdAt: new Date()
+                });
+                
+                // ✅ SIGN OUT the user so they can log in fresh
+                await auth.signOut();
+                
+                // ✅ Redirect to login page
+                window.location.href = '/';
+                
+            } catch (error) {
+                let message = 'Signup failed. Please try again.';
+                if (error.code === 'auth/email-already-in-use') {
+                    message = 'Username already taken. Please choose another.';
+                } else if (error.code === 'auth/invalid-email') {
+                    message = 'Invalid username format.';
+                } else if (error.code === 'auth/weak-password') {
+                    message = 'Password is too weak. Use at least 6 characters.';
+                }
+                
+                errorMsg.textContent = message;
+                errorMsg.classList.add('show');
+                btn.textContent = 'Initialize Registration';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

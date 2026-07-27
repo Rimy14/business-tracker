@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rooms & Bookings | Property Workspace</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* 🎨 THE CINEMATIC GRADIENT DESIGN SYSTEM */
+        :root {
+            --bg-gradient-start: #1b2e2a;
+            --bg-gradient-end: #0f1115;
+            --card-charcoal: #14171d;
+            --emerald-light: #10b981;
+            --antique-gold: #c2a66b;
+            --text-light: #ffffff;
+            --text-muted: #8e96a3;
+            --alert-red: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.04);
+            --transition-premium: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ========================================== */
+        /* ✨ HIGH-END ENTRANCE ANIMATIONS            */
+        /* ========================================== */
+        @keyframes premiumFadeUp {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: premiumFadeUp 1.2s var(--transition-premium) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.30s; }
+        .delay-3 { animation-delay: 0.45s; }
+        .delay-4 { animation-delay: 0.60s; }
+
+        /* ========================================== */
+        /* 🗺️ NAVIGATION SYSTEM STYLING               */
+        /* ========================================== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 60px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(15, 17, 21, 0.2);
+            backdrop-filter: blur(25px);
+        }
+
+        .navbar-brand {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--antique-gold);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: color 0.4s var(--transition-premium);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-light);
+        }
+
+        .nav-item.back-btn {
+            color: var(--antique-gold);
+            border: 1px solid rgba(194, 166, 107, 0.2);
+            padding: 8px 18px;
+            border-radius: 4px;
+            transition: all 0.4s var(--transition-premium);
+            background: transparent;
+        }
+
+        .nav-item.back-btn:hover {
+            background-color: var(--antique-gold);
+            color: #000000;
+            border-color: var(--antique-gold);
+        }
+
+        /* ========================================== */
+        /* 📈 MAIN WORKSPACE STRUCTURE CONTAINER       */
+        /* ========================================== */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 40px 100px 40px;
+        }
+
+        .hotel-header {
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .hotel-header h1 {
+            font-weight: 300;
+            font-size: 2.4rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin: 0 0 8px 0;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .hotel-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 1.5px;
+        }
+
+        /* Clean Metrics Strip */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+        }
+
+        .metric-card {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            padding: 22px 18px;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.4s var(--transition-premium), border-color 0.4s var(--transition-premium);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(194, 166, 107, 0.2);
+        }
+
+        .metric-title {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 300;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        /* --- TABLE SECTIONS --- */
+        .table-section {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 25px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-header h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .table-filters select,
+        .table-filters input {
+            padding: 7px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+            min-width: 110px;
+        }
+
+        .table-filters select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .table-filters select:focus,
+        .table-filters input:focus {
+            border-color: var(--antique-gold);
+        }
+
+        .table-filters input[type="date"] {
+            color-scheme: dark;
+            cursor: pointer;
+        }
+
+        .download-btn {
+            padding: 7px 16px;
+            background: var(--antique-gold);
+            color: #000000;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(194,166,107,0.3);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            padding: 0 25px 18px 25px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 10px 8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .data-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+            color: var(--text-light);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.available { background: rgba(46,125,50,0.15); color: #4caf50; }
+        .status-badge.occupied { background: rgba(255,152,0,0.15); color: #ffa726; }
+        .status-badge.reserved { background: rgba(25,118,210,0.15); color: #42a5f5; }
+        .status-badge.maintenance { background: rgba(198,40,40,0.15); color: #ef5350; }
+        .status-badge.cleaning { background: rgba(156,39,176,0.15); color: #ab47bc; }
+
+        .payment-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-badge.paid { background: rgba(46,125,50,0.15); color: #4caf50; }
+        .payment-badge.pending { background: rgba(255,193,7,0.15); color: #ffca28; }
+        .payment-badge.no { background: rgba(198,40,40,0.15); color: #ef5350; }
+
+        .booking-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .booking-badge.upcoming { background: rgba(25,118,210,0.15); color: #42a5f5; }
+        .booking-badge.active { background: rgba(46,125,50,0.15); color: #4caf50; }
+        .booking-badge.past { background: rgba(85,115,115,0.15); color: #8e96a3; }
+        .booking-badge.checked_out_early { background: rgba(255,152,0,0.15); color: #ffa726; }
+        .booking-badge.cancelled { background: rgba(198,40,40,0.15); color: #ef5350; }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 30px 0;
+            font-weight: 300;
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 30px 0;
+            opacity: 0.6;
+        }
+
+        /* --- CHART SECTION --- */
+        .chart-section {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 25px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .chart-header h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .chart-body {
+            padding: 25px;
+            height: 280px;
+            position: relative;
+        }
+
+        .chart-body canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Scrollbar */
+        .table-wrap::-webkit-scrollbar {
+            height: 4px;
+        }
+        .table-wrap::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: var(--antique-gold);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 20px 24px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+            .dashboard-container {
+                padding: 40px 20px 60px 20px;
+            }
+            .hotel-header h1 {
+                font-size: 1.6rem;
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .metric-card {
+                padding: 18px 15px;
+            }
+            .metric-value {
+                font-size: 1.3rem;
+            }
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 18px;
+            }
+            .table-filters {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .table-filters select,
+            .table-filters input {
+                width: 100%;
+            }
+            .table-wrap {
+                padding: 0 15px 15px 15px;
+            }
+            .data-table {
+                font-size: 0.7rem;
+            }
+            .data-table td,
+            .data-table th {
+                padding: 8px 5px;
+            }
+            .download-btn {
+                width: 100%;
+                text-align: center;
+            }
+            .chart-body {
+                padding: 15px;
+                height: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .metric-card {
+                padding: 15px 12px;
+            }
+            .metric-value {
+                font-size: 1.1rem;
+            }
+            .data-table {
+                font-size: 0.6rem;
+            }
+            .data-table td,
+            .data-table th {
+                padding: 6px 4px;
+            }
+            .chart-body {
+                height: 180px;
+            }
+        }
+    
+/* ================= SIDEBAR OVERRIDE (added) ================= */
+:root { --sb-w: 230px; }
+.navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: var(--sb-w) !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 30px 0 !important;
+    border-bottom: none !important;
+    border-right: 1px solid var(--border-color) !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-sizing: border-box !important;
+}
+.navbar-brand {
+    padding: 0 26px 20px 26px !important;
+    text-align: left !important;
+}
+.nav-links {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+}
+.nav-links .nav-item {
+    padding: 13px 26px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    border-left: 3px solid transparent !important;
+}
+.nav-links .nav-item.active { border-left-color: var(--antique-gold) !important; }
+/* back / Properties button pinned to bottom */
+.nav-links .nav-item.back-btn {
+    margin-top: auto !important;
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+    margin-bottom: 6px !important;
+    text-align: center !important;
+    width: auto !important;
+}
+/* shift page content right */
+body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; }
+
+@media (max-width: 1024px) {
+    :root { --sb-w: 190px; }
+    .navbar { padding: 24px 0 !important; flex-direction: column !important; }
+    .nav-links { justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 2px !important; }
+    .nav-links .nav-item { padding: 12px 18px !important; }
+}
+@media (max-width: 768px) {
+    :root { --sb-w: 200px; }
+    .navbar { padding: 20px 0 !important; flex-direction: column !important; gap: 0 !important; }
+    .nav-links { flex-wrap: nowrap !important; justify-content: flex-start !important; gap: 2px !important; }
+    .nav-links .nav-item { font-size: 0.7rem !important; padding: 12px 16px !important; }
+    .dashboard-container { padding-left: 20px !important; padding-right: 20px !important; }
+}
+/* =============== END SIDEBAR OVERRIDE =============== */
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. NAVIGATION BAR -->
+<nav class="navbar">
+        <div class="navbar-brand"></div>
+        <div class="nav-links">
+            <span class="nav-item" onclick="window.location.href='owner-dashboard.html'">Dashboard</span>
+            <span class="nav-item" onclick="window.location.href='owner-staff.html'">Staff</span>
+            <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
+            <span class="nav-item active">Rooms</span>
+            <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
+            <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
+            <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
+            <button class="nav-item back-btn" onclick="goBackToSelection()">← Properties</button>
+        </div>
+    </nav>
+
+    <!-- 2. DASHBOARD BODY -->
+    <div class="dashboard-container">
+
+        <!-- Hotel Header -->
+        <div class="hotel-header animated-element delay-1">
+            <h1 id="current-hotel-name">Loading Hotel...</h1>
+            <p id="hotel-location">📍 Loading location...</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="metrics-grid animated-element delay-2" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-title">Total Rooms</div>
+                <div class="metric-value" id="totalRooms">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Occupied</div>
+                <div class="metric-value" id="occupiedRooms">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Available</div>
+                <div class="metric-value" id="availableRooms">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Occupancy Rate</div>
+                <div class="metric-value" id="occupancyRate">--%</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ROOMS TABLE                                                   -->
+        <!-- ============================================================ -->
+        <div class="table-section animated-element delay-3">
+            <div class="table-header">
+                <h3>Room Inventory</h3>
+                <div class="table-filters">
+                    <select id="roomStatusFilter">
+                        <option value="all">All Status</option>
+                        <option value="Available">Available</option>
+                        <option value="Occupied">Occupied</option>
+                        <option value="Reserved">Reserved</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Cleaning">Cleaning</option>
+                    </select>
+                    <button class="download-btn" id="downloadRoomBtn">Download PDF</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Room</th>
+                            <th>Type</th>
+                            <th>Beds</th>
+                            <th>Rate (LKR)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roomTableBody">
+                        <tr><td colspan="6" class="loading-text">Loading rooms...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- OCCUPANCY CHART                                               -->
+        <!-- ============================================================ -->
+        <div class="chart-section animated-element delay-3">
+            <div class="chart-header">
+                <h3>Occupancy Distribution</h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="occupancyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- BOOKINGS TABLE                                                -->
+        <!-- ============================================================ -->
+        <div class="table-section animated-element delay-4">
+            <div class="table-header">
+                <h3>Bookings</h3>
+                <div class="table-filters">
+                    <select id="bookingDateFilter">
+                        <option value="all" selected>All</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="date" id="bookingStartDate" style="display:none; min-width:130px;">
+                    <input type="date" id="bookingEndDate" style="display:none; min-width:130px;">
+                    <select id="bookingStatusFilter">
+                        <option value="all">All Status</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="active">Active</option>
+                        <option value="past">Past</option>
+                        <option value="checked_out_early">Checked-out Early</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button class="download-btn" id="downloadBookingBtn">Download PDF</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Guest</th>
+                            <th>Room</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Total (LKR)</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingTableBody">
+                        <tr><td colspan="8" class="loading-text">Loading bookings...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- GLOBALS ---
+        let hotelId = null;
+        let hotelName = null;
+        let hotelCity = null;
+        let allRooms = [];
+        let allBookings = [];
+        let occupancyChartInstance = null;
+
+        // --- AUTH CHECK ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            hotelId = localStorage.getItem('selectedHotelId');
+            hotelName = localStorage.getItem('selectedHotelName');
+
+            if (!hotelId) {
+                window.location.href = 'owner-select-hotel.html';
+                return;
+            }
+
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) {
+                    await auth.signOut();
+                    window.location.href = '/';
+                    return;
+                }
+
+                const userData = userDoc.data();
+                if (userData.role !== 'owner') {
+                    window.location.href = '/manager-dashboard.html';
+                    return;
+                }
+
+                // Get hotel details
+                const hotelDoc = await db.collection('users').doc(hotelId).get();
+                if (hotelDoc.exists) {
+                    const data = hotelDoc.data();
+                    hotelCity = data.city || 'Location not specified';
+                    document.getElementById('current-hotel-name').textContent = hotelName || data.businessName || 'Unnamed Hotel';
+                    document.getElementById('hotel-location').textContent = '📍 ' + hotelCity;
+                }
+
+                await loadData();
+
+            } catch (error) {
+                console.error('Error loading page:', error);
+                alert('Error loading page. Please refresh.');
+            }
+        });
+
+        // --- LOAD DATA ---
+        async function loadData() {
+            try {
+                const [roomsSnap, bookingsSnap] = await Promise.all([
+                    db.collection('rooms').where('hotelId', '==', hotelId).get(),
+                    db.collection('bookings').where('hotelId', '==', hotelId).get()
+                ]);
+
+                allRooms = [];
+                roomsSnap.forEach(doc => allRooms.push({ id: doc.id, ...doc.data() }));
+                allRooms.sort((a, b) => (a.roomNumber || '').localeCompare(b.roomNumber || ''));
+
+                allBookings = [];
+                bookingsSnap.forEach(doc => allBookings.push({ id: doc.id, ...doc.data() }));
+                allBookings.sort((a, b) => (a.checkIn || '').localeCompare(b.checkIn || '') * -1);
+
+                renderAll();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // --- RENDER ALL ---
+        function renderAll() {
+            renderSummary();
+            renderRoomsTable();
+            renderBookingsTable();
+            renderOccupancyChart();
+        }
+
+        // --- RENDER SUMMARY ---
+        function renderSummary() {
+            const total = allRooms.length;
+            const occupied = allRooms.filter(r => r.status === 'Occupied').length;
+            const available = allRooms.filter(r => r.status === 'Available' || r.status === 'Cleaning').length;
+            const rate = total > 0 ? Math.round((occupied / total) * 100) : 0;
+
+            document.getElementById('totalRooms').textContent = total;
+            document.getElementById('occupiedRooms').textContent = occupied;
+            document.getElementById('availableRooms').textContent = available;
+            document.getElementById('occupancyRate').textContent = rate + '%';
+        }
+
+        // --- GET FILTER DATES ---
+        function getFilterDates(filterEl, startEl, endEl) {
+            const period = filterEl.value;
+            const now = new Date();
+            let start, end;
+
+            if (period === 'all') {
+                return { start: null, end: null };
+            } else if (period === 'today') {
+                start = now.toISOString().split('T')[0];
+                end = start;
+            } else if (period === 'week') {
+                const s = new Date(now);
+                s.setDate(now.getDate() - now.getDay());
+                start = s.toISOString().split('T')[0];
+                const e = new Date(s);
+                e.setDate(s.getDate() + 6);
+                end = e.toISOString().split('T')[0];
+            } else if (period === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+            } else if (period === 'year') {
+                start = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                end = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+            } else {
+                start = document.getElementById(startEl).value;
+                end = document.getElementById(endEl).value;
+                if (!start || !end) return { start: null, end: null };
+            }
+            return { start, end };
+        }
+
+        function filterByDate(data, start, end) {
+            if (!start || !end) return data;
+            return data.filter(item => {
+                if (!item.checkIn) return false;
+                return item.checkIn >= start && item.checkIn <= end;
+            });
+        }
+
+        // --- RENDER ROOMS TABLE ---
+        function renderRoomsTable() {
+            const tbody = document.getElementById('roomTableBody');
+            if (!tbody) return;
+
+            const statusFilter = document.getElementById('roomStatusFilter').value;
+
+            let filtered = allRooms;
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(r => r.status === statusFilter);
+            }
+
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No rooms found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((r, i) => {
+                const statusClass = (r.status || 'available').toLowerCase();
+                const statusDisplay = r.status || 'Available';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${r.roomNumber || 'N/A'}</strong></td>
+                        <td>${r.roomType || 'N/A'}</td>
+                        <td>${r.bedCount || '0'}</td>
+                        <td>${Number(r.rate || 0).toLocaleString()}</td>
+                        <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- RENDER BOOKINGS TABLE ---
+        function renderBookingsTable() {
+            const tbody = document.getElementById('bookingTableBody');
+            if (!tbody) return;
+
+            const { start, end } = getFilterDates(
+                document.getElementById('bookingDateFilter'),
+                'bookingStartDate',
+                'bookingEndDate'
+            );
+
+            const statusFilter = document.getElementById('bookingStatusFilter').value;
+
+            let filtered = filterByDate(allBookings, start, end);
+
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(b => b.status === statusFilter);
+            }
+
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No bookings found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((b, i) => {
+                const statusClass = b.status || 'upcoming';
+                const paymentClass = b.paymentStatus || 'pending';
+                const checkInDisplay = b.checkIn ? (b.checkIn + (b.checkInTime ? ' ' + b.checkInTime : '')) : 'N/A';
+                const checkOutDisplay = b.checkOut ? (b.checkOut + (b.checkOutTime ? ' ' + b.checkOutTime : '')) : 'N/A';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${b.guestName || 'N/A'}</strong></td>
+                        <td>${b.roomNumber || 'N/A'}</td>
+                        <td>${checkInDisplay}</td>
+                        <td>${checkOutDisplay}</td>
+                        <td>${Number(b.totalAmount || 0).toLocaleString()}</td>
+                        <td><span class="payment-badge ${paymentClass}">${paymentClass.charAt(0).toUpperCase() + paymentClass.slice(1)}</span></td>
+                        <td><span class="booking-badge ${statusClass}">${statusClass === 'checked_out_early' ? 'Early' : statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- RENDER OCCUPANCY CHART ---
+        function renderOccupancyChart() {
+            const total = allRooms.length;
+            const occupied = allRooms.filter(r => r.status === 'Occupied').length;
+            const available = total - occupied;
+
+            const ctx = document.getElementById('occupancyChart').getContext('2d');
+            if (occupancyChartInstance) occupancyChartInstance.destroy();
+
+            occupancyChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Occupied', 'Available'],
+                    datasets: [{
+                        data: [occupied || 1, available || 1],
+                        backgroundColor: ['#10b981', 'rgba(255, 255, 255, 0.05)'],
+                        borderColor: ['#14171d', '#14171d'],
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#8e96a3',
+                                font: { size: 11 },
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    },
+                    cutout: '78%'
+                }
+            });
+        }
+
+        // --- FILTER EVENT LISTENERS ---
+        document.getElementById('roomStatusFilter').addEventListener('change', renderRoomsTable);
+
+        document.getElementById('bookingDateFilter').addEventListener('change', function() {
+            const customInputs = document.querySelectorAll('#bookingStartDate, #bookingEndDate');
+            if (this.value === 'custom') {
+                customInputs.forEach(inp => inp.style.display = 'inline-block');
+            } else {
+                customInputs.forEach(inp => inp.style.display = 'none');
+                renderBookingsTable();
+            }
+        });
+        document.getElementById('bookingStartDate').addEventListener('change', function() {
+            if (document.getElementById('bookingEndDate').value) renderBookingsTable();
+        });
+        document.getElementById('bookingEndDate').addEventListener('change', function() {
+            if (document.getElementById('bookingStartDate').value) renderBookingsTable();
+        });
+
+        document.getElementById('bookingStatusFilter').addEventListener('change', renderBookingsTable);
+
+        // --- DOWNLOAD ROOM REPORT ---
+        document.getElementById('downloadRoomBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const statusFilter = document.getElementById('roomStatusFilter').value;
+
+            let filtered = allRooms;
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(r => r.status === statusFilter);
+            }
+
+            if (!filtered.length) {
+                alert('No room data to export.');
+                return;
+            }
+
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Room Inventory Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 36);
+            const total = filtered.length;
+            const occupied = filtered.filter(r => r.status === 'Occupied').length;
+            const available = filtered.filter(r => r.status === 'Available' || r.status === 'Cleaning').length;
+            doc.text(`Total: ${total} | Occupied: ${occupied} | Available: ${available}`, margin, 42);
+
+            const headers = ['#', 'Room', 'Type', 'Beds', 'Rate (LKR)', 'Status'];
+            const rows = filtered.map((r, i) => [
+                i + 1,
+                r.roomNumber || 'N/A',
+                r.roomType || 'N/A',
+                r.bedCount || '0',
+                Number(r.rate || 0).toLocaleString(),
+                r.status || 'N/A'
+            ]);
+
+            doc.autoTable({
+                startY: 48,
+                head: [headers],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 7 },
+                margin: { left: margin, right: margin }
+            });
+
+            doc.save(`room-inventory-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- DOWNLOAD BOOKING REPORT ---
+        document.getElementById('downloadBookingBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const { start, end } = getFilterDates(
+                document.getElementById('bookingDateFilter'),
+                'bookingStartDate',
+                'bookingEndDate'
+            );
+            const statusFilter = document.getElementById('bookingStatusFilter').value;
+
+            let filtered = filterByDate(allBookings, start, end);
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(b => b.status === statusFilter);
+            }
+
+            if (!filtered.length) {
+                alert('No booking data to export.');
+                return;
+            }
+
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Bookings Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+            const periodLabel = document.getElementById('bookingDateFilter').value === 'all' ? 'All' : (start + ' to ' + end);
+            doc.text(`Period: ${periodLabel}`, margin, 36);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+
+            const totalRevenue = filtered.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+            doc.text(`Total Revenue: LKR ${totalRevenue.toLocaleString()} (${filtered.length} bookings)`, margin, 48);
+
+            const headers = ['#', 'Guest', 'Room', 'Check-In', 'Check-Out', 'Total (LKR)', 'Payment', 'Status'];
+            const rows = filtered.map((b, i) => [
+                i + 1,
+                b.guestName || 'N/A',
+                b.roomNumber || 'N/A',
+                b.checkIn + (b.checkInTime ? ' ' + b.checkInTime : ''),
+                b.checkOut + (b.checkOutTime ? ' ' + b.checkOutTime : ''),
+                Number(b.totalAmount || 0).toLocaleString(),
+                b.paymentStatus || 'N/A',
+                b.status || 'N/A'
+            ]);
+
+            doc.autoTable({
+                startY: 54,
+                head: [headers],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 7 },
+                margin: { left: margin, right: margin }
+            });
+
+            doc.save(`bookings-report-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- NAVIGATION ---
+        function goBackToSelection() {
+            localStorage.removeItem('selectedHotelId');
+            localStorage.removeItem('selectedHotelName');
+            window.location.href = 'owner-select-hotel.html';
+        }
+
+        // --- ENTRANCE ---
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏠 Owner Rooms & Bookings page loaded');
+        });
+    </script>
+
+</body>
+</html>

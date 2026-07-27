@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.log
+
+# Environment / secrets
+.env
+.env.*
+serviceAccountKey.json
+
+# Vercel
+.vercel

@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management | Property Workspace</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* 🎨 THE CINEMATIC GRADIENT DESIGN SYSTEM */
+        :root {
+            --bg-gradient-start: #1b2e2a;
+            --bg-gradient-end: #0f1115;
+            --card-charcoal: #14171d;
+            --emerald-light: #10b981;
+            --antique-gold: #c2a66b;
+            --text-light: #ffffff;
+            --text-muted: #8e96a3;
+            --alert-red: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.04);
+            --transition-premium: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ========================================== */
+        /* ✨ HIGH-END ENTRANCE ANIMATIONS            */
+        /* ========================================== */
+        @keyframes premiumFadeUp {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .animated-element {
+            opacity: 0;
+            animation: premiumFadeUp 1.2s var(--transition-premium) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.30s; }
+        .delay-3 { animation-delay: 0.45s; }
+        .delay-4 { animation-delay: 0.60s; }
+
+        /* ========================================== */
+        /* 🗺️ NAVIGATION SYSTEM STYLING               */
+        /* ========================================== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 60px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(15, 17, 21, 0.2);
+            backdrop-filter: blur(25px);
+        }
+
+        .navbar-brand {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--antique-gold);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: color 0.4s var(--transition-premium);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-light);
+        }
+
+        .nav-item.back-btn {
+            color: var(--antique-gold);
+            border: 1px solid rgba(194, 166, 107, 0.2);
+            padding: 8px 18px;
+            border-radius: 4px;
+            transition: all 0.4s var(--transition-premium);
+            background: transparent;
+        }
+
+        .nav-item.back-btn:hover {
+            background-color: var(--antique-gold);
+            color: #000000;
+            border-color: var(--antique-gold);
+        }
+
+        /* ========================================== */
+        /* 📈 MAIN WORKSPACE STRUCTURE CONTAINER       */
+        /* ========================================== */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 40px 100px 40px;
+        }
+
+        .hotel-header {
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .hotel-header h1 {
+            font-weight: 300;
+            font-size: 2.4rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin: 0 0 8px 0;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .hotel-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 1.5px;
+        }
+
+        /* Clean Metrics Strip */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            padding: 25px 20px;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.4s var(--transition-premium), border-color 0.4s var(--transition-premium);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(194, 166, 107, 0.2);
+        }
+
+        .metric-title {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.7rem;
+            font-weight: 300;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        /* --- TABLE STYLES --- */
+        .table-section {
+            background-color: var(--card-charcoal);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-header h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            color: var(--antique-gold);
+            font-weight: 500;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .table-filters select,
+        .table-filters input {
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+            min-width: 120px;
+        }
+
+        .table-filters select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .table-filters select:focus,
+        .table-filters input:focus {
+            border-color: var(--antique-gold);
+        }
+
+        .table-filters input[type="date"] {
+            color-scheme: dark;
+            cursor: pointer;
+        }
+
+        .download-btn {
+            padding: 8px 20px;
+            background: var(--antique-gold);
+            color: #000000;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(194,166,107,0.3);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            padding: 0 30px 20px 30px;
+        }
+
+        .staff-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .staff-table th {
+            text-align: left;
+            padding: 14px 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .staff-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+            color: var(--text-light);
+        }
+
+        .staff-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .staff-table .dept-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            background: rgba(194, 166, 107, 0.12);
+            color: var(--antique-gold);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .status-badge.active { background: rgba(46,125,50,0.15); color: #4caf50; }
+        .status-badge.leave { background: rgba(255,152,0,0.15); color: #ffa726; }
+        .status-badge.terminated { background: rgba(198,40,40,0.15); color: #ef5350; }
+        .status-badge.present { background: rgba(46,125,50,0.15); color: #4caf50; }
+        .status-badge.absent { background: rgba(198,40,40,0.15); color: #ef5350; }
+        .status-badge.late { background: rgba(255,152,0,0.15); color: #ffa726; }
+        .status-badge.not_marked { background: rgba(158,158,158,0.12); color: #9e9e9e; }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 0;
+            font-weight: 300;
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 30px 0;
+            opacity: 0.6;
+        }
+
+        /* Scrollbar */
+        .table-wrap::-webkit-scrollbar {
+            height: 4px;
+        }
+        .table-wrap::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: var(--antique-gold);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 20px 24px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+            .dashboard-container {
+                padding: 40px 20px 60px 20px;
+            }
+            .hotel-header h1 {
+                font-size: 1.6rem;
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .metric-card {
+                padding: 20px;
+            }
+            .metric-value {
+                font-size: 1.3rem;
+            }
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+            .table-filters {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .table-filters select,
+            .table-filters input {
+                width: 100%;
+            }
+            .table-wrap {
+                padding: 0 15px 15px 15px;
+            }
+            .staff-table {
+                font-size: 0.75rem;
+            }
+            .staff-table th,
+            .staff-table td {
+                padding: 10px 8px;
+            }
+            .download-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .metric-card {
+                padding: 15px;
+            }
+            .metric-value {
+                font-size: 1.1rem;
+            }
+        }
+    
+/* ================= SIDEBAR OVERRIDE (added) ================= */
+:root { --sb-w: 230px; }
+.navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: var(--sb-w) !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 30px 0 !important;
+    border-bottom: none !important;
+    border-right: 1px solid var(--border-color) !important;
+    overflow-y: auto !important;
+    z-index: 1000 !important;
+    box-sizing: border-box !important;
+}
+.navbar-brand {
+    padding: 0 26px 20px 26px !important;
+    text-align: left !important;
+}
+.nav-links {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+}
+.nav-links .nav-item {
+    padding: 13px 26px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    border-left: 3px solid transparent !important;
+}
+.nav-links .nav-item.active { border-left-color: var(--antique-gold) !important; }
+/* back / Properties button pinned to bottom */
+.nav-links .nav-item.back-btn {
+    margin-top: auto !important;
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+    margin-bottom: 6px !important;
+    text-align: center !important;
+    width: auto !important;
+}
+/* shift page content right */
+body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; }
+
+@media (max-width: 1024px) {
+    :root { --sb-w: 190px; }
+    .navbar { padding: 24px 0 !important; flex-direction: column !important; }
+    .nav-links { justify-content: flex-start !important; flex-wrap: nowrap !important; gap: 2px !important; }
+    .nav-links .nav-item { padding: 12px 18px !important; }
+}
+@media (max-width: 768px) {
+    :root { --sb-w: 200px; }
+    .navbar { padding: 20px 0 !important; flex-direction: column !important; gap: 0 !important; }
+    .nav-links { flex-wrap: nowrap !important; justify-content: flex-start !important; gap: 2px !important; }
+    .nav-links .nav-item { font-size: 0.7rem !important; padding: 12px 16px !important; }
+    .dashboard-container { padding-left: 20px !important; padding-right: 20px !important; }
+}
+/* =============== END SIDEBAR OVERRIDE =============== */
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. NAVIGATION BAR -->
+<nav class="navbar">
+        <div class="navbar-brand"></div>
+        <div class="nav-links">
+            <span class="nav-item" onclick="window.location.href='owner-dashboard.html'">Dashboard</span>
+            <span class="nav-item active">Staff</span>
+            <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
+            <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
+            <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
+            <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
+            <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
+            <button class="nav-item back-btn" onclick="goBackToSelection()">← Properties</button>
+        </div>
+    </nav>
+
+    <!-- 2. DASHBOARD BODY -->
+    <div class="dashboard-container">
+
+        <!-- Hotel Header -->
+        <div class="hotel-header animated-element delay-1">
+            <h1 id="current-hotel-name">Loading Hotel...</h1>
+            <p id="hotel-location">Loading location...</p>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="metrics-grid animated-element delay-2" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-title">Total Staff</div>
+                <div class="metric-value" id="totalStaff">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Active Staff</div>
+                <div class="metric-value" id="activeStaff">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">On Leave</div>
+                <div class="metric-value" id="onLeaveStaff">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Monthly Salary</div>
+                <div class="metric-value" id="totalSalary">LKR --</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TABLE 1: STAFF DETAILS                                       -->
+        <!-- ============================================================ -->
+        <div class="table-section animated-element delay-3">
+            <div class="table-header">
+                <h3>👥 Staff Details</h3>
+                <div class="table-filters">
+                    <select id="deptFilter">
+                        <option value="all">All Departments</option>
+                        <option value="front-office">Front Office</option>
+                        <option value="housekeeping">Housekeeping</option>
+                        <option value="food-beverage">Food & Beverage</option>
+                        <option value="kitchen">Kitchen / Culinary</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="security">Security</option>
+                        <option value="sales-marketing">Sales & Marketing</option>
+                        <option value="human-resources">Human Resources</option>
+                        <option value="finance">Finance / Accounts</option>
+                        <option value="spa-wellness">Spa & Wellness</option>
+                        <option value="administration">Administration</option>
+                    </select>
+                    <button class="download-btn" id="downloadStaffBtn">📥 Download Staff PDF</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>NIC</th>
+                            <th>Phone</th>
+                            <th>Department</th>
+                            <th>Salary (LKR)</th>
+                            <th>Status</th>
+                            <th>Joining Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody">
+                        <tr><td colspan="8" class="loading-text">Loading staff records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TABLE 2: ATTENDANCE REPORT                                   -->
+        <!-- ============================================================ -->
+        <div class="table-section animated-element delay-4">
+            <div class="table-header">
+                <h3>📋 Attendance Report</h3>
+                <div class="table-filters">
+                    <select id="attendancePeriodFilter">
+                        <option value="all" selected>All</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="date" id="attStartDate" style="display:none;">
+                    <input type="date" id="attEndDate" style="display:none;">
+                    <button class="download-btn" id="downloadAttendanceBtn">📥 Download Attendance PDF</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Leave</th>
+                            <th>Total Days</th>
+                            <th>Attendance %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody">
+                        <tr><td colspan="7" class="loading-text">Loading attendance data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1eITLVhTB6DbzSKqthVTJdfClRPqtClE",
+            authDomain: "business-tracker-3707a.firebaseapp.com",
+            projectId: "business-tracker-3707a",
+            storageBucket: "business-tracker-3707a.firebasestorage.app",
+            messagingSenderId: "650774120895",
+            appId: "1:650774120895:web:aa8a4875600caabbf6f90a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- GLOBALS ---
+        let hotelId = null;
+        let hotelName = null;
+        let hotelCity = null;
+        let staffData = [];
+        let attendanceData = [];
+
+        // --- AUTH CHECK ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            hotelId = localStorage.getItem('selectedHotelId');
+            hotelName = localStorage.getItem('selectedHotelName');
+
+            if (!hotelId) {
+                window.location.href = 'owner-select-hotel.html';
+                return;
+            }
+
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) {
+                    await auth.signOut();
+                    window.location.href = '/';
+                    return;
+                }
+
+                const userData = userDoc.data();
+                if (userData.role !== 'owner') {
+                    window.location.href = '/manager-dashboard.html';
+                    return;
+                }
+
+                // Get hotel details
+                const hotelDoc = await db.collection('users').doc(hotelId).get();
+                if (hotelDoc.exists) {
+                    const data = hotelDoc.data();
+                    hotelCity = data.city || 'Location not specified';
+                    document.getElementById('current-hotel-name').textContent = hotelName || data.businessName || 'Unnamed Hotel';
+                    document.getElementById('hotel-location').textContent = '📍 ' + hotelCity;
+                }
+
+                await loadData();
+
+            } catch (error) {
+                console.error('Error loading page:', error);
+                alert('Error loading page. Please refresh.');
+            }
+        });
+
+        // --- LOAD DATA ---
+        async function loadData() {
+            try {
+                // Load staff
+                const staffSnap = await db.collection('staff').where('hotelId', '==', hotelId).get();
+                staffData = [];
+                staffSnap.forEach(doc => staffData.push({ id: doc.id, ...doc.data() }));
+
+                // Load attendance
+                const attSnap = await db.collection('attendance').where('hotelId', '==', hotelId).get();
+                attendanceData = [];
+                attSnap.forEach(doc => attendanceData.push({ id: doc.id, ...doc.data() }));
+
+                updateMetrics();
+                renderStaffTable();
+                renderAttendanceTable();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // --- UPDATE METRICS ---
+        function updateMetrics() {
+            const total = staffData.length;
+            const active = staffData.filter(s => s.status === 'active' || !s.status || s.status === '').length;
+            const onLeave = staffData.filter(s => s.status === 'leave' || s.status === 'on-leave').length;
+            const totalSalary = staffData.reduce((sum, s) => sum + (Number(s.salary) || 0), 0);
+
+            document.getElementById('totalStaff').textContent = total;
+            document.getElementById('activeStaff').textContent = active;
+            document.getElementById('onLeaveStaff').textContent = onLeave;
+            document.getElementById('totalSalary').textContent = 'LKR ' + formatCurrency(totalSalary);
+        }
+
+        // --- FORMAT CURRENCY ---
+        function formatCurrency(amount) {
+            if (amount >= 1000000) {
+                return (amount / 1000000).toFixed(1) + 'M';
+            } else if (amount >= 1000) {
+                return (amount / 1000).toFixed(0) + 'K';
+            } else {
+                return amount.toString();
+            }
+        }
+
+        // --- RENDER STAFF TABLE ---
+        function renderStaffTable() {
+            const tbody = document.getElementById('staffTableBody');
+            if (!tbody) return;
+
+            const deptFilter = document.getElementById('deptFilter').value;
+
+            let filtered = staffData;
+            if (deptFilter !== 'all') {
+                filtered = staffData.filter(s => s.department === deptFilter);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No staff members found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((s, i) => {
+                const deptDisplay = s.department ? s.department.replace('-', ' ').toUpperCase() : 'N/A';
+                const status = s.status || 'active';
+                const statusClass = status === 'active' ? 'active' : status === 'leave' ? 'leave' : 'terminated';
+                const statusLabel = status === 'active' ? 'Active' : status === 'leave' ? 'On Leave' : 'Terminated';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${s.name || 'Unnamed'}</strong></td>
+                        <td>${s.nic || 'N/A'}</td>
+                        <td>${s.phone || 'N/A'}</td>
+                        <td><span class="dept-badge">${deptDisplay}</span></td>
+                        <td>${Number(s.salary || 0).toLocaleString()}</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <td>${s.joiningDate || 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- RENDER ATTENDANCE TABLE ---
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            if (!tbody) return;
+
+            const period = document.getElementById('attendancePeriodFilter').value;
+            let startDate, endDate;
+            const now = new Date();
+
+            if (period === 'all') {
+                startDate = null;
+                endDate = null;
+            } else if (period === 'week') {
+                const start = new Date(now);
+                start.setDate(now.getDate() - now.getDay());
+                startDate = start.toISOString().split('T')[0];
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                endDate = end.toISOString().split('T')[0];
+            } else if (period === 'month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+            } else if (period === 'year') {
+                startDate = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                endDate = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+            } else if (period === 'custom') {
+                startDate = document.getElementById('attStartDate').value;
+                endDate = document.getElementById('attEndDate').value;
+                if (!startDate || !endDate) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Please select start and end dates.</td></tr>`;
+                    return;
+                }
+            }
+
+            // Filter attendance by date range
+            let filteredAttendance = attendanceData;
+            if (startDate && endDate) {
+                filteredAttendance = attendanceData.filter(a => {
+                    if (!a.date) return false;
+                    return a.date >= startDate && a.date <= endDate;
+                });
+            }
+
+            if (staffData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No staff members found.</td></tr>`;
+                return;
+            }
+
+            // Build attendance summary per staff
+            const summary = staffData.map(s => {
+                const records = filteredAttendance.filter(a => a.staffId === s.id);
+                const present = records.filter(r => r.status === 'present').length;
+                const absent = records.filter(r => r.status === 'absent').length;
+                const leave = records.filter(r => r.status === 'leave').length;
+                const total = records.length;
+                const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+                return {
+                    id: s.id,
+                    name: s.name || 'Unnamed',
+                    present,
+                    absent,
+                    leave,
+                    total,
+                    percentage
+                };
+            });
+
+            // Sort by name
+            summary.sort((a, b) => a.name.localeCompare(b.name));
+
+            if (summary.every(s => s.total === 0)) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No attendance records found for selected period.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = summary.map((s, i) => {
+                const pctColor = s.percentage >= 80 ? '#4caf50' : s.percentage >= 60 ? '#ffa726' : '#ef5350';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${s.present}</td>
+                        <td>${s.absent}</td>
+                        <td>${s.leave}</td>
+                        <td>${s.total}</td>
+                        <td style="color: ${pctColor}; font-weight: 600;">${s.percentage}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- FILTER EVENTS ---
+        document.getElementById('deptFilter').addEventListener('change', renderStaffTable);
+
+        document.getElementById('attendancePeriodFilter').addEventListener('change', function() {
+            const customInputs = document.querySelectorAll('#attStartDate, #attEndDate');
+            if (this.value === 'custom') {
+                customInputs.forEach(inp => inp.style.display = 'inline-block');
+            } else {
+                customInputs.forEach(inp => inp.style.display = 'none');
+                renderAttendanceTable();
+            }
+        });
+
+        document.getElementById('attStartDate').addEventListener('change', function() {
+            if (document.getElementById('attEndDate').value) {
+                renderAttendanceTable();
+            }
+        });
+
+        document.getElementById('attEndDate').addEventListener('change', function() {
+            if (document.getElementById('attStartDate').value) {
+                renderAttendanceTable();
+            }
+        });
+
+        // --- DOWNLOAD STAFF PDF ---
+        document.getElementById('downloadStaffBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            const deptFilter = document.getElementById('deptFilter').value;
+            let filtered = staffData;
+            if (deptFilter !== 'all') {
+                filtered = staffData.filter(s => s.department === deptFilter);
+            }
+
+            if (filtered.length === 0) {
+                alert('No staff data to export.');
+                return;
+            }
+
+            // Header
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Staff Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            const hotelNameDisplay = hotelName || 'N/A';
+            doc.text(`Hotel: ${hotelNameDisplay}`, margin, 30);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 36);
+            const deptLabel = deptFilter === 'all' ? 'All Departments' : deptFilter.replace('-', ' ').toUpperCase();
+            doc.text(`Department: ${deptLabel}`, margin, 42);
+
+            const headers = ['#', 'Name', 'NIC', 'Phone', 'Department', 'Salary (LKR)', 'Status', 'Joining Date'];
+            const rows = filtered.map((s, i) => [
+                i + 1,
+                s.name || 'N/A',
+                s.nic || 'N/A',
+                s.phone || 'N/A',
+                s.department ? s.department.replace('-', ' ').toUpperCase() : 'N/A',
+                Number(s.salary || 0).toLocaleString(),
+                s.status || 'Active',
+                s.joiningDate || 'N/A'
+            ]);
+
+            doc.autoTable({
+                startY: 48,
+                head: [headers],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 7 },
+                margin: { left: margin, right: margin },
+            });
+
+            doc.save(`staff-report-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- DOWNLOAD ATTENDANCE PDF ---
+        document.getElementById('downloadAttendanceBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+
+            const period = document.getElementById('attendancePeriodFilter').value;
+            let startDate, endDate;
+            const now = new Date();
+
+            if (period === 'all') {
+                startDate = 'All';
+                endDate = 'All';
+            } else if (period === 'week') {
+                const start = new Date(now);
+                start.setDate(now.getDate() - now.getDay());
+                startDate = start.toISOString().split('T')[0];
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                endDate = end.toISOString().split('T')[0];
+            } else if (period === 'month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+            } else if (period === 'year') {
+                startDate = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                endDate = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+            } else {
+                startDate = document.getElementById('attStartDate').value;
+                endDate = document.getElementById('attEndDate').value;
+                if (!startDate || !endDate) {
+                    alert('Please select both start and end dates.');
+                    return;
+                }
+            }
+
+            // Filter attendance
+            let filteredAttendance = attendanceData;
+            if (startDate !== 'All' && endDate !== 'All') {
+                filteredAttendance = attendanceData.filter(a => {
+                    if (!a.date) return false;
+                    return a.date >= startDate && a.date <= endDate;
+                });
+            }
+
+            // Build summary
+            const summary = staffData.map(s => {
+                const records = filteredAttendance.filter(a => a.staffId === s.id);
+                const present = records.filter(r => r.status === 'present').length;
+                const absent = records.filter(r => r.status === 'absent').length;
+                const leave = records.filter(r => r.status === 'leave').length;
+                const total = records.length;
+                const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+                return { name: s.name || 'Unnamed', present, absent, leave, total, percentage };
+            }).filter(s => s.total > 0);
+
+            if (summary.length === 0) {
+                alert('No attendance data to export for selected period.');
+                return;
+            }
+
+            summary.sort((a, b) => a.name.localeCompare(b.name));
+
+            // Header
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Attendance Report', pageWidth / 2, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Hotel: ${hotelName || 'N/A'}`, margin, 30);
+            doc.text(`Period: ${startDate} to ${endDate}`, margin, 36);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
+
+            const headers = ['#', 'Name', 'Present', 'Absent', 'Leave', 'Total Days', 'Attendance %'];
+            const rows = summary.map((s, i) => [
+                i + 1,
+                s.name,
+                s.present,
+                s.absent,
+                s.leave,
+                s.total,
+                s.percentage + '%'
+            ]);
+
+            doc.autoTable({
+                startY: 48,
+                head: [headers],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [85, 115, 115], textColor: [255, 255, 255] },
+                styles: { fontSize: 7 },
+                margin: { left: margin, right: margin },
+            });
+
+            doc.save(`attendance-report-${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        // --- NAVIGATION ---
+        function goBackToSelection() {
+            localStorage.removeItem('selectedHotelId');
+            localStorage.removeItem('selectedHotelName');
+            window.location.href = 'owner-select-hotel.html';
+        }
+
+        // --- ENTRANCE ---
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('👥 Owner Staff page loaded');
+        });
+    </script>
+
+</body>
+</html>
