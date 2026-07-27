@@ -868,6 +868,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <a href="expenses.html">Expenses</a>
             <a href="rooms.html">Rooms &amp; Bookings</a>
             <a href="meals.html">Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html">Suppliers</a>
             <a href="inventory.html">Inventory</a>
             <a href="maintenance.html">Maintenance</a>
@@ -1071,6 +1072,9 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <span class="section-intro-kicker">Overview</span>
             <h3 class="section-intro-title">Operational Snapshot</h3>
             <p class="section-intro-sub">Key performance indicators across your property, updated in real time.</p>
+            <p id="exchangeRateLabel" class="section-intro-sub" style="margin-top:8px;color:#557373;font-weight:600;">Loading USD/LKR exchange rate...</p>
+            <label for="displayCurrency" style="font-size:.75rem;font-weight:700;">Display Currency</label>
+            <select id="displayCurrency" style="margin-left:8px;padding:7px 10px;"><option value="LKR">LKR</option><option value="USD">USD</option></select>
         </div>
         <div class="telemetry-summary-grid">
             <div class="telemetry-metric-card">
@@ -1227,6 +1231,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/finance-utils.js"></script>
+    <script src="js/exchange-rate.js"></script>
 
     <script>
         gsap.registerPlugin(ScrollTrigger);
@@ -1249,6 +1255,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         let currentUser = null;
         let currentUserData = null;
         let hotelId = null;
+        let displayCurrency = 'LKR';
+        let exchangeRate = null;
 
         // --- CHECK AUTH STATE ---
         auth.onAuthStateChanged(async (user) => {
@@ -1269,7 +1277,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 }
 
                 currentUserData = userDoc.data();
-                hotelId = user.uid;
+                hotelId = currentUserData.role === 'staff' ? currentUserData.hotelId : user.uid;
+                if (!hotelId) throw new Error('No hotel is assigned to this account.');
 
                 if (currentUserData.role === 'owner') {
                     window.location.href = '/owner-dashboard.html';
@@ -1290,6 +1299,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 }
 
                 updateUI(currentUserData);
+                await loadExchangeRate();
                 await loadHotelData();
 
             } catch (error) {
@@ -1297,6 +1307,24 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 alert('Error loading dashboard data. Please refresh.');
             }
         });
+
+        async function loadExchangeRate() {
+            const label = document.getElementById('exchangeRateLabel');
+            try {
+                exchangeRate = await ExchangeRateService.loadUsdToLkrRate(db);
+                if (label) label.textContent = ExchangeRateService.describeRate(exchangeRate);
+            } catch (error) {
+                exchangeRate = null;
+                if (label) label.textContent = 'Exchange rate unavailable: ' + error.message;
+            }
+        }
+
+        function dashboardAmount(amount, originalCurrency) {
+            const original = FinanceUtils.normalizeCurrency(originalCurrency);
+            if (original === displayCurrency) return Number(amount || 0);
+            if (!exchangeRate) return Number(amount || 0);
+            return FinanceUtils.convertAmount(amount, original, displayCurrency, exchangeRate.rate);
+        }
 
         // --- UPDATE UI ---
         function updateUI(userData) {
@@ -1338,22 +1366,24 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
                 incomeSnapshot.forEach(doc => {
                     const data = doc.data();
-                    totalIncome += data.amount || 0;
+                    const converted = dashboardAmount(data.amount, data.currency || 'LKR');
+                    totalIncome += converted;
                     recentTransactions.push({
                         type: 'income',
                         description: data.description || 'Income',
-                        amount: data.amount || 0,
+                        amount: converted,
                         date: data.date || new Date()
                     });
                 });
 
                 expenseSnapshot.forEach(doc => {
                     const data = doc.data();
-                    totalExpenses += data.amount || 0;
+                    const converted = dashboardAmount(data.amount, 'LKR');
+                    totalExpenses += converted;
                     recentTransactions.push({
                         type: 'expense',
                         description: data.description || 'Expense',
-                        amount: data.amount || 0,
+                        amount: converted,
                         date: data.date || new Date()
                     });
                 });
@@ -1361,7 +1391,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 const profit = totalIncome - totalExpenses;
                 const profitEl = document.getElementById('netProfit');
                 if (profitEl) {
-                    profitEl.textContent = 'LKR ' + profit.toLocaleString();
+                    profitEl.textContent = FinanceUtils.formatMoney(profit, displayCurrency);
                     profitEl.style.color = profit >= 0 ? '#2e7d32' : '#c62828';
                 }
 
@@ -1413,21 +1443,21 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                         <h5 style="color: #2e7d32;">Total Income</h5>
                         <span>All income transactions</span>
                     </div>
-                    <div class="log-amount-tag positive">+ LKR ${totalIncome.toLocaleString()}</div>
+                    <div class="log-amount-tag positive">+ ${FinanceUtils.formatMoney(totalIncome, displayCurrency)}</div>
                 </div>
                 <div class="log-row-node" style="border-bottom: 1px solid rgba(25,34,49,0.08);">
                     <div class="log-identity">
                         <h5 style="color: #c62828;">Total Expenses</h5>
                         <span>All expense transactions</span>
                     </div>
-                    <div class="log-amount-tag negative">- LKR ${totalExpenses.toLocaleString()}</div>
+                    <div class="log-amount-tag negative">- ${FinanceUtils.formatMoney(totalExpenses, displayCurrency)}</div>
                 </div>
                 <div class="log-row-node">
                     <div class="log-identity">
                         <h5 style="color: ${netProfit >= 0 ? '#2e7d32' : '#c62828'};">Net Profit</h5>
                         <span>${netProfit >= 0 ? 'Positive' : 'Negative'} fiscal position</span>
                     </div>
-                    <div class="log-amount-tag" style="color: ${netProfit >= 0 ? '#2e7d32' : '#c62828'};">${netProfit >= 0 ? '+' : '-'} LKR ${Math.abs(netProfit).toLocaleString()}</div>
+                    <div class="log-amount-tag" style="color: ${netProfit >= 0 ? '#2e7d32' : '#c62828'};">${netProfit >= 0 ? '+' : '-'} ${FinanceUtils.formatMoney(Math.abs(netProfit), displayCurrency)}</div>
                 </div>
                 <div class="log-row-node" style="border-top: 1px solid rgba(25,34,49,0.06); padding-top: 15px; margin-top: 5px;">
                     <div class="log-identity">
@@ -1438,6 +1468,11 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 </div>
             `;
         }
+
+        document.getElementById('displayCurrency').addEventListener('change', async function() {
+            displayCurrency = FinanceUtils.normalizeCurrency(this.value);
+            await loadHotelData();
+        });
 
         // --- ALERT FUNCTIONS ---
         function openAlertModal() {

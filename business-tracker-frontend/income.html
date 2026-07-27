@@ -957,6 +957,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="expenses.html">Expenses</a>
             <a href="rooms.html">Rooms &amp; Bookings</a>
             <a href="meals.html">Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html">Suppliers</a>
             <a href="inventory.html">Inventory</a>
             <a href="maintenance.html">Maintenance</a>
@@ -991,18 +992,20 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 </div>
                 <div class="input-block-node">
                     <select id="incomeSource" class="screenshot-input" required>
-                        <option value="" disabled selected>Select Revenue Stream</option>
-                        <option value="Room Revenue">Room Revenue</option>
-                        <option value="Restaurant">Restaurant</option>
-                        <option value="Bar">Bar Lounge</option>
-                        <option value="Spa">Spa &amp; Beauty</option>
-                        <option value="Other">Other Income</option>
+                        <option value="Other" selected>Other Income</option>
                     </select>
                     <span class="bottom-descriptor-label">Revenue Source</span>
                 </div>
                 <div class="input-block-node">
-                    <input type="number" id="incomeAmount" class="screenshot-input" placeholder="Amount (LKR)" required>
+                    <input type="number" id="incomeAmount" class="screenshot-input" placeholder="Amount in paid currency" required>
                     <span class="bottom-descriptor-label">Transaction Amount</span>
+                </div>
+                <div class="input-block-node">
+                    <select id="incomeCurrency" class="screenshot-input" required>
+                        <option value="LKR">LKR</option>
+                        <option value="USD">USD</option>
+                    </select>
+                    <span class="bottom-descriptor-label">Paid Currency</span>
                 </div>
                 <div class="input-block-node">
                     <input type="text" id="incomeDesc" class="screenshot-input" placeholder="Audit Description (Optional)">
@@ -1027,8 +1030,24 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <div class="ledger-header-left">
                 <h4>Incoming Revenue Matrix Stacks</h4>
                 <p>Consolidated organizational ledger index logs synchronized in real-time.</p>
+                <p id="exchangeRateLabel" style="margin-top:8px;color:#557373;font-weight:600;">Loading USD/LKR exchange rate...</p>
             </div>
             <div class="ledger-header-right">
+                <label>Source</label>
+                <select id="incomeSourceFilter">
+                    <option value="all">All Sources</option>
+                    <option value="Room Revenue">Room Revenue</option>
+                    <option value="Restaurant">Restaurant</option>
+                    <option value="Other">Other</option>
+                </select>
+                <label>Paid Currency</label>
+                <select id="incomeCurrencyFilter">
+                    <option value="all">All</option><option value="LKR">LKR</option><option value="USD">USD</option>
+                </select>
+                <label>Display</label>
+                <select id="displayCurrency">
+                    <option value="LKR">LKR</option><option value="USD">USD</option>
+                </select>
                 <label>Period</label>
                 <select id="reportPeriodFilter">
                     <option value="all" selected>All</option>
@@ -1066,9 +1085,9 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 <div class="stat-sub">Food &amp; beverages</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Bar &amp; Spa</div>
+                <div class="stat-label">Other</div>
                 <div class="stat-value" id="otherIncome">LKR 0</div>
-                <div class="stat-sub">Bar / Spa / Other</div>
+                <div class="stat-sub">Other and legacy sources</div>
             </div>
         </div>
 
@@ -1100,15 +1119,15 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 <div class="form-group">
                     <label>Source</label>
                     <select id="editSource" required>
-                        <option value="Room Revenue">Room Revenue</option>
-                        <option value="Restaurant">Restaurant</option>
-                        <option value="Bar">Bar Lounge</option>
-                        <option value="Spa">Spa &amp; Beauty</option>
                         <option value="Other">Other Income</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Amount (LKR)</label>
+                    <label>Paid Currency</label>
+                    <select id="editCurrency"><option value="LKR">LKR</option><option value="USD">USD</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Amount in paid currency</label>
                     <input type="number" id="editAmount" required>
                 </div>
                 <div class="form-group">
@@ -1127,6 +1146,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/finance-utils.js"></script>
+    <script src="js/exchange-rate.js"></script>
 
     <script>
         // FIREBASE CONFIG
@@ -1148,6 +1169,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         let incomeData = [];
         let currentFilter = 'all';
         let startDate, endDate;
+        let displayCurrency = 'LKR';
+        let exchangeRate = null;
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = '/'; return; }
@@ -1161,7 +1184,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                     return;
                 }
                 currentUserData = doc.data();
-                hotelId = user.uid;
+                hotelId = currentUserData.role === 'staff' ? currentUserData.hotelId : user.uid;
+                if (!hotelId) throw new Error('No hotel is assigned to this account.');
+                if (currentUserData.role === 'staff') {
+                    const formPanel = document.querySelector('.cinematic-environment-container');
+                    if (formPanel) formPanel.style.display = 'none';
+                    const download = document.getElementById('downloadPdfBtn');
+                    if (download) download.style.display = 'none';
+                }
                 
                 // Update profile avatar with initials
                 const initialsElement = document.getElementById('avatarInitials');
@@ -1179,12 +1209,38 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const today = new Date().toISOString().split('T')[0];
                 const dateInput = document.getElementById('incomeDate');
                 if (dateInput) dateInput.value = today;
-                await loadIncomeData();
+                await Promise.all([loadIncomeData(), loadExchangeRate()]);
                 applyFilter('all');
             } catch (e) {
                 console.error('Auth error:', e);
             }
         });
+
+        async function loadExchangeRate() {
+            const label = document.getElementById('exchangeRateLabel');
+            try {
+                exchangeRate = await ExchangeRateService.loadUsdToLkrRate(db);
+                if (label) label.textContent = ExchangeRateService.describeRate(exchangeRate);
+            } catch (error) {
+                exchangeRate = null;
+                if (label) label.textContent = 'Exchange rate unavailable: ' + error.message;
+            }
+            renderIncomeList();
+            updateStats();
+        }
+
+        function convertedAmount(item) {
+            const originalCurrency = FinanceUtils.normalizeCurrency(item.currency);
+            if (originalCurrency === displayCurrency) return Number(item.amount || 0);
+            if (!exchangeRate) return Number(item.amount || 0);
+            return FinanceUtils.convertAmount(item.amount, originalCurrency, displayCurrency, exchangeRate.rate);
+        }
+
+        function formattedAmount(item) {
+            const originalCurrency = FinanceUtils.normalizeCurrency(item.currency);
+            if (!exchangeRate && originalCurrency !== displayCurrency) return FinanceUtils.formatMoney(item.amount, originalCurrency);
+            return FinanceUtils.formatMoney(convertedAmount(item), displayCurrency);
+        }
 
         async function loadIncomeData() {
             try {
@@ -1227,11 +1283,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                             <span>${item.source || 'Unknown'}</span>
                         </div>
                         <div><span class="source-badge">${item.source || 'Unknown'}</span></div>
-                        <div class="salary-column">LKR ${Number(item.amount || 0).toLocaleString()}</div>
+                        <div class="salary-column">${formattedAmount(item)} <small>(${FinanceUtils.normalizeCurrency(item.currency)} paid)</small></div>
                         <div>${item.description || '-'}</div>
                         <div class="actions-column-triggers">
+                            ${item.isAutoGenerated || FinanceUtils.normalizeIncomeSource(item.source) !== 'Other' || currentUserData?.role === 'staff' ? '<span title="Change the linked booking or restaurant order">Read only</span>' : `
                             <button class="strip-link-btn edit-strip-btn" onclick="openEditModal('${item.id}')">✏️</button>
-                            <button class="strip-link-btn delete-strip-btn" onclick="deleteIncome('${item.id}')">🗑️</button>
+                            <button class="strip-link-btn delete-strip-btn" onclick="deleteIncome('${item.id}')">🗑️</button>`}
                         </div>
                     </div>
                     <div class="strip-notes-expanding-tray">
@@ -1245,8 +1302,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         }
 
         function getFilteredData() {
+            const sourceFilter = document.getElementById('incomeSourceFilter').value;
+            const currencyFilter = document.getElementById('incomeCurrencyFilter').value;
             return incomeData.filter(item => {
                 if (!item.date) return false;
+                if (sourceFilter !== 'all' && FinanceUtils.normalizeIncomeSource(item.source) !== sourceFilter) return false;
+                if (!FinanceUtils.matchesOriginalCurrency(item, currencyFilter)) return false;
                 // If 'all' filter, show everything
                 if (currentFilter === 'all') return true;
                 if (item.date < startDate || item.date > endDate) return false;
@@ -1295,12 +1356,12 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
 
         function updateStats() {
             const filtered = getFilteredData();
-            const total = filtered.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const total = filtered.reduce((sum, item) => sum + convertedAmount(item), 0);
             
             // 🔥 FIX: Room Revenue includes ALL income with source containing "Room Revenue" (manual + auto)
-            const roomTotal = filtered.filter(i => i.source && i.source.includes('Room Revenue')).reduce((sum, i) => sum + (i.amount || 0), 0);
-            const restaurantTotal = filtered.filter(i => i.source === 'Restaurant').reduce((sum, i) => sum + (i.amount || 0), 0);
-            const otherTotal = filtered.filter(i => i.source === 'Bar' || i.source === 'Spa' || i.source === 'Other').reduce((sum, i) => sum + (i.amount || 0), 0);
+            const roomTotal = filtered.filter(i => FinanceUtils.normalizeIncomeSource(i.source) === 'Room Revenue').reduce((sum, i) => sum + convertedAmount(i), 0);
+            const restaurantTotal = filtered.filter(i => FinanceUtils.normalizeIncomeSource(i.source) === 'Restaurant').reduce((sum, i) => sum + convertedAmount(i), 0);
+            const otherTotal = filtered.filter(i => FinanceUtils.normalizeIncomeSource(i.source) === 'Other').reduce((sum, i) => sum + convertedAmount(i), 0);
             
             const totalIncomeEl = document.getElementById('totalIncome');
             const totalIncomeCountEl = document.getElementById('totalIncomeCount');
@@ -1308,11 +1369,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const restaurantIncomeEl = document.getElementById('restaurantIncome');
             const otherIncomeEl = document.getElementById('otherIncome');
             
-            if (totalIncomeEl) totalIncomeEl.textContent = 'LKR ' + total.toLocaleString();
+            if (totalIncomeEl) totalIncomeEl.textContent = FinanceUtils.formatMoney(total, displayCurrency);
             if (totalIncomeCountEl) totalIncomeCountEl.textContent = filtered.length + ' entries';
-            if (roomIncomeEl) roomIncomeEl.textContent = 'LKR ' + roomTotal.toLocaleString();
-            if (restaurantIncomeEl) restaurantIncomeEl.textContent = 'LKR ' + restaurantTotal.toLocaleString();
-            if (otherIncomeEl) otherIncomeEl.textContent = 'LKR ' + otherTotal.toLocaleString();
+            if (roomIncomeEl) roomIncomeEl.textContent = FinanceUtils.formatMoney(roomTotal, displayCurrency);
+            if (restaurantIncomeEl) restaurantIncomeEl.textContent = FinanceUtils.formatMoney(restaurantTotal, displayCurrency);
+            if (otherIncomeEl) otherIncomeEl.textContent = FinanceUtils.formatMoney(otherTotal, displayCurrency);
         }
 
         const incomeForm = document.getElementById('incomeForm');
@@ -1322,10 +1383,11 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const date = document.getElementById('incomeDate').value;
                 const source = document.getElementById('incomeSource').value;
                 const amount = parseFloat(document.getElementById('incomeAmount').value);
+                const currency = FinanceUtils.normalizeCurrency(document.getElementById('incomeCurrency').value);
                 const description = document.getElementById('incomeDesc').value.trim();
                 const createdBy = document.getElementById('incomeCreatedBy').value.trim();
-                if (!date || !source || isNaN(amount)) {
-                    alert('Please fill in all required fields.');
+                if (!date || !source || !Number.isFinite(amount) || amount <= 0) {
+                    alert('Please enter a date, source, and an amount greater than zero.');
                     return;
                 }
                 const btn = document.getElementById('submitBtn');
@@ -1337,6 +1399,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                         date,
                         source,
                         amount,
+                        currency,
                         description: description || '',
                         createdBy: createdBy || currentUserData?.username || 'Unknown',
                         createdAt: new Date()
@@ -1358,6 +1421,8 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         }
 
         async function deleteIncome(id) {
+            const item = incomeData.find(i => i.id === id);
+            if (!item || item.isAutoGenerated || FinanceUtils.normalizeIncomeSource(item.source) !== 'Other' || currentUserData?.role === 'staff') { alert('This income record is read only. Change its booking or restaurant order when applicable.'); return; }
             if (!confirm('Delete this income record?')) return;
             try {
                 await db.collection('income').doc(id).delete();
@@ -1373,19 +1438,22 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
         function openEditModal(id) {
             const item = incomeData.find(i => i.id === id);
             if (!item) { alert('Record not found.'); return; }
+            if (item.isAutoGenerated || FinanceUtils.normalizeIncomeSource(item.source) !== 'Other' || currentUserData?.role === 'staff') { alert('This income record is read only. Change its booking or restaurant order when applicable.'); return; }
             editTargetId = id;
             const editIdInput = document.getElementById('editId');
             const editDateInput = document.getElementById('editDate');
             const editSourceInput = document.getElementById('editSource');
             const editAmountInput = document.getElementById('editAmount');
             const editDescInput = document.getElementById('editDesc');
+            const editCurrencyInput = document.getElementById('editCurrency');
             const modal = document.getElementById('editModal');
             
             if (editIdInput) editIdInput.value = id;
             if (editDateInput) editDateInput.value = item.date || '';
-            if (editSourceInput) editSourceInput.value = item.source || 'Room Revenue';
+            if (editSourceInput) editSourceInput.value = FinanceUtils.normalizeIncomeSource(item.source);
             if (editAmountInput) editAmountInput.value = item.amount || '';
             if (editDescInput) editDescInput.value = item.description || '';
+            if (editCurrencyInput) editCurrencyInput.value = FinanceUtils.normalizeCurrency(item.currency);
             if (modal) modal.classList.add('show');
         }
 
@@ -1403,14 +1471,15 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const date = document.getElementById('editDate').value;
                 const source = document.getElementById('editSource').value;
                 const amount = parseFloat(document.getElementById('editAmount').value);
+                const currency = FinanceUtils.normalizeCurrency(document.getElementById('editCurrency').value);
                 const description = document.getElementById('editDesc').value.trim();
-                if (!date || !source || isNaN(amount)) {
-                    alert('Please fill in all fields.');
+                if (!date || !source || !Number.isFinite(amount) || amount <= 0) {
+                    alert('Please enter a date, source, and an amount greater than zero.');
                     return;
                 }
                 try {
                     await db.collection('income').doc(id).update({
-                        date, source, amount,
+                        date, source, amount, currency,
                         description: description || ''
                     });
                     alert('✅ Income updated successfully!');
@@ -1444,21 +1513,23 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const periodLabel = currentFilter === 'all' ? 'All' : startDate + ' to ' + endDate;
                 doc.text(`Period: ${periodLabel}`, margin, 36);
                 doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
-                const total = filtered.reduce((sum, i) => sum + (i.amount || 0), 0);
+                const total = filtered.reduce((sum, i) => sum + convertedAmount(i), 0);
                 doc.setFontSize(11);
                 doc.setTextColor(60, 60, 60);
-                doc.text(`Total Income: LKR ${total.toLocaleString()}`, margin, 52);
-                const headers = ['#', 'Date', 'Source', 'Amount (LKR)', 'Description', 'Created By'];
+                doc.text(`Total Income: ${FinanceUtils.formatMoney(total, displayCurrency)}`, margin, 52);
+                doc.text(ExchangeRateService.describeRate(exchangeRate), margin, 57);
+                const headers = ['#', 'Date', 'Source', 'Paid Currency', `Amount (${displayCurrency})`, 'Description', 'Created By'];
                 const rows = filtered.map((item, i) => [
                     i + 1,
                     item.date || 'N/A',
                     item.source || 'N/A',
-                    Number(item.amount || 0).toLocaleString(),
+                    FinanceUtils.normalizeCurrency(item.currency),
+                    convertedAmount(item).toFixed(displayCurrency === 'USD' ? 2 : 0),
                     item.description || '-',
                     item.createdBy || 'N/A'
                 ]);
                 doc.autoTable({
-                    startY: 58,
+                    startY: 63,
                     head: [headers],
                     body: rows,
                     theme: 'striped',
@@ -1485,6 +1556,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 }
             });
         }
+
+        document.getElementById('incomeSourceFilter').addEventListener('change', () => { renderIncomeList(); updateStats(); });
+        document.getElementById('incomeCurrencyFilter').addEventListener('change', () => { renderIncomeList(); updateStats(); });
+        document.getElementById('displayCurrency').addEventListener('change', function() {
+            displayCurrency = FinanceUtils.normalizeCurrency(this.value);
+            renderIncomeList();
+            updateStats();
+        });
 
         const startDateInput = document.getElementById('reportStartDate');
         const endDateInput = document.getElementById('reportEndDate');

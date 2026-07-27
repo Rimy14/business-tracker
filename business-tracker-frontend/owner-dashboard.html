@@ -572,6 +572,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
             <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
             <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-restaurant.html'">Restaurant</span>
             <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
             <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
             <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
@@ -586,6 +587,9 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         <div class="hotel-header animated-element delay-1">
             <h1 id="current-hotel-name">Loading Hotel...</h1>
             <p id="hotel-location">Loading location...</p>
+            <p id="exchangeRateLabel" style="margin-top:10px;color:#557373;font-weight:600;">Loading USD/LKR exchange rate...</p>
+            <label for="displayCurrency" style="font-size:.75rem;font-weight:700;">Display Currency</label>
+            <select id="displayCurrency" style="margin-left:8px;padding:7px 10px;"><option value="LKR">LKR</option><option value="USD">USD</option></select>
         </div>
 
         <!-- Metrics Row -->
@@ -637,25 +641,11 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <div class="panel-box">
                 <div class="panel-header-wrapper">
                     <h3>🔔 Alerts & Announcements</h3>
-                    <button class="toggle-form-btn" onclick="toggleFormDrawer()">+ New</button>
                 </div>
                 <div class="alerts-container" id="alertsContainer">
                     <div class="loading-text">Loading alerts...</div>
                 </div>
 
-                <!-- Alert Input Form Drawer (YOUR DESIGN) -->
-                <div class="alert-form-drawer" id="formDrawer">
-                    <form onsubmit="postSystemAlert(event)">
-                        <div class="input-row">
-                            <input type="text" id="alertText" class="text-input" placeholder="Compose new announcement..." required>
-                            <select id="alertType" class="select-input">
-                                <option value="announcement">Announcement</option>
-                                <option value="emergency">Emergency</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="submit-btn">Post Alert</button>
-                    </form>
-                </div>
             </div>
         </div>
     </div>
@@ -664,6 +654,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="js/finance-utils.js"></script>
+    <script src="js/exchange-rate.js"></script>
 
     <script>
         // --- FIREBASE CONFIG ---
@@ -686,6 +678,8 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         let hotelCity = null;
         let lineChartInstance = null;
         let donutChartInstance = null;
+        let displayCurrency = 'LKR';
+        let exchangeRate = null;
 
         // --- AUTH CHECK ---
         auth.onAuthStateChanged(async (user) => {
@@ -717,6 +711,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                     return;
                 }
 
+                await loadExchangeRate();
                 await loadHotelData();
 
             } catch (error) {
@@ -724,6 +719,24 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 alert('Error loading dashboard. Please refresh.');
             }
         });
+
+        async function loadExchangeRate() {
+            const label = document.getElementById('exchangeRateLabel');
+            try {
+                exchangeRate = await ExchangeRateService.loadUsdToLkrRate(db);
+                if (label) label.textContent = ExchangeRateService.describeRate(exchangeRate);
+            } catch (error) {
+                exchangeRate = null;
+                if (label) label.textContent = 'Exchange rate unavailable: ' + error.message;
+            }
+        }
+
+        function dashboardAmount(amount, originalCurrency) {
+            const original = FinanceUtils.normalizeCurrency(originalCurrency);
+            if (original === displayCurrency) return Number(amount || 0);
+            if (!exchangeRate) return Number(amount || 0);
+            return FinanceUtils.convertAmount(amount, original, displayCurrency, exchangeRate.rate);
+        }
 
         // --- LOAD HOTEL DATA ---
         async function loadHotelData() {
@@ -778,7 +791,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
                 incomeSnap.forEach(doc => {
                     const data = doc.data();
-                    const amount = data.amount || 0;
+                    const amount = dashboardAmount(data.amount, data.currency || 'LKR');
                     if (data.date) {
                         const date = data.date.toDate ? data.date.toDate() : new Date(data.date);
                         const dateStr = date.toISOString().split('T')[0];
@@ -793,7 +806,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
 
                 expensesSnap.forEach(doc => {
                     const data = doc.data();
-                    const amount = data.amount || 0;
+                    const amount = dashboardAmount(data.amount, 'LKR');
                     if (data.date) {
                         const date = data.date.toDate ? data.date.toDate() : new Date(data.date);
                         if (date >= lastMonth && date <= lastMonthEnd) {
@@ -803,8 +816,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 });
 
                 // Format revenue - show in K format
-                const formattedRevenue = formatCurrency(todayRevenue);
-                document.getElementById('todayRevenue').textContent = 'LKR ' + formattedRevenue;
+                document.getElementById('todayRevenue').textContent = FinanceUtils.formatMoney(todayRevenue, displayCurrency);
 
                 // --- Initialize Charts ---
                 const monthLabels = [lastMonth.toLocaleString('default', { month: 'short' })];
@@ -830,7 +842,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                                     <span class="activity-user">${guestName}</span>
                                     <span class="activity-room">Room ${roomNum}</span>
                                 </div>
-                                <span class="activity-price">LKR ${formatCurrency(amount)}</span>
+                                <span class="activity-price">${FinanceUtils.formatMoney(dashboardAmount(amount, data.currency || 'LKR'), displayCurrency)}</span>
                             </div>
                         `;
                     });
@@ -907,6 +919,11 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             }
         }
 
+        document.getElementById('displayCurrency').addEventListener('change', async function() {
+            displayCurrency = FinanceUtils.normalizeCurrency(this.value);
+            await loadHotelData();
+        });
+
         // --- INITIALIZE CHARTS ---
         function initializeCharts(labels, incomeData, expenseData, occupancyRate, bookedRooms, totalRooms) {
             // Line Chart
@@ -957,7 +974,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                             ticks: { 
                                 color: '#8e96a3', 
                                 font: { size: 10 },
-                                callback: function(value) { return 'LKR ' + formatCurrency(value); }
+                                callback: function(value) { return FinanceUtils.formatMoney(value, displayCurrency); }
                             } 
                         }
                     }
@@ -997,41 +1014,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                     },
                     cutout: '78%'
                 }
-            });
-        }
-
-        // --- YOUR DESIGN: FORM TOGGLE ---
-        function toggleFormDrawer() {
-            const drawer = document.getElementById('formDrawer');
-            drawer.classList.toggle('open');
-        }
-
-        // --- YOUR DESIGN: POST ALERT ---
-        function postSystemAlert(event) {
-            event.preventDefault();
-            const textInput = document.getElementById('alertText');
-            const typeInput = document.getElementById('alertType');
-            const wrapper = document.getElementById('alertsContainer');
-
-            if(!textInput.value.trim()) return;
-
-            // Save to Firebase
-            const data = {
-                hotelId: hotelId,
-                title: textInput.value.trim().split(' ').slice(0, 5).join(' ') || 'Alert',
-                description: textInput.value.trim(),
-                priority: typeInput.value === 'emergency' ? 'urgent' : 'normal',
-                status: 'active',
-                createdAt: new Date()
-            };
-
-            db.collection('alerts').add(data).then(() => {
-                // Reload alerts
-                loadHotelData();
-                textInput.value = '';
-                toggleFormDrawer();
-            }).catch(err => {
-                alert('Error creating alert: ' + err.message);
             });
         }
 

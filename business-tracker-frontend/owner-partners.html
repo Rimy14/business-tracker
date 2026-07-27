@@ -630,6 +630,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
             <span class="nav-item" onclick="window.location.href='owner-rooms.html'">Rooms</span>
             <span class="nav-item active">Partners</span>
+            <span class="nav-item" onclick="window.location.href='owner-restaurant.html'">Restaurant</span>
             <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
             <span class="nav-item" onclick="window.location.href='owner-maintenance.html'">Maintenance</span>
             <span class="nav-item" onclick="window.location.href='owner-complaints.html'">Complaints</span>
@@ -704,11 +705,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                             <th>Contact Person</th>
                             <th>Phone</th>
                             <th>Email</th>
+                            <th>Tax</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="supplierTableBody">
-                        <tr><td colspan="7" class="loading-text">Loading suppliers...</td></tr>
+                        <tr><td colspan="8" class="loading-text">Loading suppliers...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -794,6 +796,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         let allBookings = [];
         let customers = [];
         let suppliers = [];
+        const escapeHtml = value => String(value == null ? '' : value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 
         // --- AUTH CHECK ---
         auth.onAuthStateChanged(async (user) => {
@@ -988,7 +991,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             document.getElementById('supplierCount').textContent = '(' + filtered.length + ')';
 
             if (!filtered.length) {
-                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No suppliers found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No suppliers found.</td></tr>`;
                 return;
             }
 
@@ -1002,6 +1005,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                         <td>${s.contactPerson || '—'}</td>
                         <td>${s.phone || '—'}</td>
                         <td>${s.email || '—'}</td>
+                        <td>${escapeHtml(s.tax || '—')}</td>
                         <td><span class="status-badge ${statusClass}">${statusClass}</span></td>
                     </tr>
                 `;
@@ -1169,7 +1173,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             doc.text(`Status Filter: ${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}`, margin, 42);
             doc.text(`Total Suppliers: ${filtered.length}`, margin, 48);
 
-            const headers = ['#', 'Name', 'Category', 'Contact Person', 'Phone', 'Email', 'Status'];
+            const headers = ['#', 'Name', 'Category', 'Contact Person', 'Phone', 'Email', 'Tax', 'Status'];
             const rows = filtered.map((s, i) => [
                 i + 1,
                 s.supplierName || '—',
@@ -1177,6 +1181,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                 s.contactPerson || '—',
                 s.phone || '—',
                 s.email || '—',
+                s.tax || '—',
                 (s.status || 'active').toUpperCase()
             ]);
 

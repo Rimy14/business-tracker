@@ -1,0 +1,8 @@
+{
+  "name": "business-tracker-workspace",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check business-tracker-frontend/js/finance-utils.js && node --check business-tracker-frontend/js/exchange-rate.js && node --check business-tracker-frontend/js/restaurant-page.js"
+  }
+}

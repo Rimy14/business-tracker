@@ -1023,6 +1023,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             <a href="expenses.html" >Expenses</a>
             <a href="rooms.html" >Rooms &amp; Bookings</a>
             <a href="meals.html" >Packages &amp; Buffet</a>
+            <a href="restaurant.html">Restaurant</a>
             <a href="suppliers.html" >Suppliers</a>
             <a href="inventory.html" class="active">Inventory</a>
             <a href="maintenance.html" >Maintenance</a>
@@ -1629,6 +1630,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const catSelect = document.getElementById('itemCategory').value;
                 const catCustom = document.getElementById('itemCategoryCustom').value.trim();
                 const finalCategory = catSelect === 'Custom' ? catCustom : catSelect;
+                if (!finalCategory) { alert('Select or enter an inventory category.'); return; }
 
                 const supplierSelectVal = document.getElementById('supplierId').value;
                 let finalSupplierId = '';
@@ -1754,6 +1756,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const catSelect = document.getElementById('editItemCategory').value;
                 const catCustom = document.getElementById('editItemCategoryCustom').value.trim();
                 const finalCategory = catSelect === 'Custom' ? catCustom : catSelect;
+                if (!finalCategory) { alert('Select or enter an inventory category.'); return; }
 
                 const supSelectVal = document.getElementById('editSupplierId').value;
                 let finalSupplierId = '';
