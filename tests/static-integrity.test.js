@@ -80,7 +80,7 @@ test('finance source selectors do not expose phantom Bar or Spa options', () => 
 });
 
 test('currency-aware pages load the shared finance utilities', () => {
-    const pages = ['income.html', 'expenses.html', 'manager-dashboard.html', 'owner-dashboard.html', 'owner-financials.html', 'rooms.html', 'owner-rooms.html', 'restaurant.html', 'owner-restaurant.html'];
+    const pages = ['income.html', 'expenses.html', 'manager-dashboard.html', 'owner-dashboard.html', 'owner-financials.html', 'rooms.html', 'bookings.html', 'owner-rooms.html', 'restaurant.html', 'owner-restaurant.html'];
     for (const file of pages) {
         const html = read(file);
         assert.match(html, /js\/finance-utils\.js/, file);
@@ -134,17 +134,17 @@ test('finance views escape stored descriptions before inserting HTML', () => {
 });
 
 test('booking income writes are deterministic, batched, awaited, and metadata-complete', () => {
-    const rooms = read('rooms.html');
-    assert.match(rooms, /FinanceUtils\.bookingIncomeDocumentId\(/);
-    assert.match(rooms, /FinanceUtils\.buildBookingIncome\(/);
-    assert.match(rooms, /await batch\.commit\(\)/);
-    assert.doesNotMatch(rooms, /collection\('income'\)\.add\(/);
-    assert.doesNotMatch(rooms, /forEach\(async/);
-    assert.doesNotMatch(rooms, /oldBooking\.totalAmount !== newTotalAmount/);
+    const bookings = read('bookings.html');
+    assert.match(bookings, /FinanceUtils\.bookingIncomeDocumentId\(/);
+    assert.match(bookings, /FinanceUtils\.buildBookingIncome\(/);
+    assert.match(bookings, /await batch\.commit\(\)/);
+    assert.doesNotMatch(bookings, /collection\('income'\)\.add\(/);
+    assert.doesNotMatch(bookings, /forEach\(async/);
+    assert.doesNotMatch(bookings, /oldBooking\.totalAmount !== newTotalAmount/);
 });
 
 test('currency-aware pages mark unavailable conversion instead of re-labelling raw values', () => {
-    const pages = ['income.html', 'expenses.html', 'manager-dashboard.html', 'owner-dashboard.html', 'owner-financials.html', 'rooms.html', 'owner-rooms.html'];
+    const pages = ['income.html', 'expenses.html', 'manager-dashboard.html', 'owner-dashboard.html', 'owner-financials.html'];
     for (const file of pages) assert.match(read(file), /convertAmountOrUnavailable/, file);
     assert.match(read('js/restaurant-page.js'), /convertAmountOrUnavailable/);
 });

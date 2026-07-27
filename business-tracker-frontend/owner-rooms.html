@@ -679,7 +679,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         <!-- ============================================================ -->
         <div class="table-section animated-element delay-4">
             <div class="table-header">
-                <div><h3>Bookings</h3><small id="bookingExchangeRateLabel" style="color:#557373;font-weight:600;">Loading USD/LKR rate...</small></div>
+                <h3>Bookings</h3>
                 <div class="table-filters">
                     <select id="bookingDateFilter">
                         <option value="all" selected>All</option>
@@ -699,8 +699,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                         <option value="checked_out_early">Checked-out Early</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
-                    <select id="bookingCurrencyFilter"><option value="all">All Paid Currencies</option><option value="LKR">LKR</option><option value="USD">USD</option></select>
-                    <select id="bookingDisplayCurrency"><option value="LKR">Display LKR</option><option value="USD">Display USD</option></select>
                     <button class="download-btn" id="downloadBookingBtn">Download PDF</button>
                 </div>
             </div>
@@ -713,7 +711,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                             <th>Room</th>
                             <th>Check-In</th>
                             <th>Check-Out</th>
-                            <th id="bookingAmountHeading">Total (LKR)</th>
+                            <th>Total (LKR)</th>
                             <th>Payment</th>
                             <th>Status</th>
                         </tr>
@@ -755,8 +753,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         let allRooms = [];
         let allBookings = [];
         let occupancyChartInstance = null;
-        let bookingDisplayCurrency = 'LKR';
-        let bookingExchangeRate = null;
 
         // --- AUTH CHECK ---
         auth.onAuthStateChanged(async (user) => {
@@ -796,35 +792,13 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                     document.getElementById('hotel-location').textContent = '📍 ' + hotelCity;
                 }
 
-                await Promise.all([loadData(), loadBookingExchangeRate()]);
+                await loadData();
 
             } catch (error) {
                 console.error('Error loading page:', error);
                 alert('Error loading page. Please refresh.');
             }
         });
-
-        async function loadBookingExchangeRate() {
-            const label = document.getElementById('bookingExchangeRateLabel');
-            try {
-                bookingExchangeRate = await ExchangeRateService.loadUsdToLkrRate(db);
-                if (label) label.textContent = ExchangeRateService.describeRate(bookingExchangeRate);
-            } catch (error) {
-                bookingExchangeRate = null;
-                if (label) label.textContent = 'Exchange rate unavailable: ' + error.message;
-            }
-            renderBookingsTable();
-        }
-
-        function bookingAmount(booking) {
-            const original = FinanceUtils.normalizeCurrency(booking.currency);
-            return FinanceUtils.convertAmountOrUnavailable(
-                booking.totalAmount,
-                original,
-                bookingDisplayCurrency,
-                bookingExchangeRate && bookingExchangeRate.rate
-            );
-        }
 
         // --- LOAD DATA ---
         async function loadData() {
@@ -945,7 +919,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         function renderBookingsTable() {
             const tbody = document.getElementById('bookingTableBody');
             if (!tbody) return;
-            document.getElementById('bookingAmountHeading').textContent = `Total (${bookingDisplayCurrency})`;
 
             const { start, end } = getFilterDates(
                 document.getElementById('bookingDateFilter'),
@@ -960,8 +933,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             if (statusFilter !== 'all') {
                 filtered = filtered.filter(b => b.status === statusFilter);
             }
-            const currencyFilter = document.getElementById('bookingCurrencyFilter').value;
-            if (currencyFilter !== 'all') filtered = filtered.filter(b => FinanceUtils.matchesOriginalCurrency(b, currencyFilter));
 
             if (!filtered.length) {
                 tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No bookings found.</td></tr>`;
@@ -980,7 +951,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                         <td>${b.roomNumber || 'N/A'}</td>
                         <td>${checkInDisplay}</td>
                         <td>${checkOutDisplay}</td>
-                        <td>${FinanceUtils.formatMoney(bookingAmount(b), bookingDisplayCurrency)} <small>(${FinanceUtils.normalizeCurrency(b.currency)} paid)</small></td>
+                        <td>${Number(b.totalAmount || 0).toLocaleString()}</td>
                         <td><span class="payment-badge ${paymentClass}">${paymentClass.charAt(0).toUpperCase() + paymentClass.slice(1)}</span></td>
                         <td><span class="booking-badge ${statusClass}">${statusClass === 'checked_out_early' ? 'Early' : statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span></td>
                     </tr>
@@ -1048,11 +1019,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
         });
 
         document.getElementById('bookingStatusFilter').addEventListener('change', renderBookingsTable);
-        document.getElementById('bookingCurrencyFilter').addEventListener('change', renderBookingsTable);
-        document.getElementById('bookingDisplayCurrency').addEventListener('change', function() {
-            bookingDisplayCurrency = FinanceUtils.normalizeCurrency(this.value);
-            renderBookingsTable();
-        });
 
         // --- DOWNLOAD ROOM REPORT ---
         document.getElementById('downloadRoomBtn').addEventListener('click', function() {
@@ -1122,8 +1088,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             if (statusFilter !== 'all') {
                 filtered = filtered.filter(b => b.status === statusFilter);
             }
-            const currencyFilter = document.getElementById('bookingCurrencyFilter').value;
-            if (currencyFilter !== 'all') filtered = filtered.filter(b => FinanceUtils.matchesOriginalCurrency(b, currencyFilter));
 
             if (!filtered.length) {
                 alert('No booking data to export.');
@@ -1145,25 +1109,23 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             doc.text(`Period: ${periodLabel}`, margin, 36);
             doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 42);
 
-            const totalRevenue = filtered.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + bookingAmount(b), 0);
-            doc.text(`Total Revenue: ${FinanceUtils.formatMoney(totalRevenue, bookingDisplayCurrency)} (${filtered.length} bookings)`, margin, 48);
-            doc.text(ExchangeRateService.describeRate(bookingExchangeRate), margin, 53);
+            const totalRevenue = filtered.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+            doc.text(`Total Revenue: LKR ${totalRevenue.toLocaleString()} (${filtered.length} bookings)`, margin, 48);
 
-            const headers = ['#', 'Guest', 'Room', 'Check-In', 'Check-Out', 'Paid Currency', `Total (${bookingDisplayCurrency})`, 'Payment', 'Status'];
+            const headers = ['#', 'Guest', 'Room', 'Check-In', 'Check-Out', 'Total (LKR)', 'Payment', 'Status'];
             const rows = filtered.map((b, i) => [
                 i + 1,
                 b.guestName || 'N/A',
                 b.roomNumber || 'N/A',
                 b.checkIn + (b.checkInTime ? ' ' + b.checkInTime : ''),
                 b.checkOut + (b.checkOutTime ? ' ' + b.checkOutTime : ''),
-                FinanceUtils.normalizeCurrency(b.currency),
-                FinanceUtils.formatAmountNumber(bookingAmount(b), bookingDisplayCurrency),
+                Number(b.totalAmount || 0).toLocaleString(),
                 b.paymentStatus || 'N/A',
                 b.status || 'N/A'
             ]);
 
             doc.autoTable({
-                startY: 58,
+                startY: 54,
                 head: [headers],
                 body: rows,
                 theme: 'striped',
