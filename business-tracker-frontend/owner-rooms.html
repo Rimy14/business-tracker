@@ -587,6 +587,7 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             <span class="nav-item" onclick="window.location.href='owner-staff.html'">Staff</span>
             <span class="nav-item" onclick="window.location.href='owner-financials.html'">Financials</span>
             <span class="nav-item active">Rooms</span>
+            <span class="nav-item" onclick="window.location.href='owner-packages.html'">Packages</span>
             <span class="nav-item" onclick="window.location.href='owner-partners.html'">Partners</span>
             <span class="nav-item" onclick="window.location.href='owner-restaurant.html'">Restaurant</span>
             <span class="nav-item" onclick="window.location.href='owner-inventory.html'">Inventory</span>
@@ -651,12 +652,11 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                             <th>Room</th>
                             <th>Type</th>
                             <th>Beds</th>
-                            <th>Rate (LKR)</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="roomTableBody">
-                        <tr><td colspan="6" class="loading-text">Loading rooms...</td></tr>
+                        <tr><td colspan="5" class="loading-text">Loading rooms...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -935,7 +935,6 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
                         <td><strong>${r.roomNumber || 'N/A'}</strong></td>
                         <td>${r.roomType || 'N/A'}</td>
                         <td>${r.bedCount || '0'}</td>
-                        <td>${Number(r.rate || 0).toLocaleString()}</td>
                         <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
                     </tr>
                 `;
@@ -1087,13 +1086,12 @@ body { padding-left: var(--sb-w) !important; box-sizing: border-box !important; 
             const available = filtered.filter(r => r.status === 'Available' || r.status === 'Cleaning').length;
             doc.text(`Total: ${total} | Occupied: ${occupied} | Available: ${available}`, margin, 42);
 
-            const headers = ['#', 'Room', 'Type', 'Beds', 'Rate (LKR)', 'Status'];
+            const headers = ['#', 'Room', 'Type', 'Beds', 'Status'];
             const rows = filtered.map((r, i) => [
                 i + 1,
                 r.roomNumber || 'N/A',
                 r.roomType || 'N/A',
                 r.bedCount || '0',
-                Number(r.rate || 0).toLocaleString(),
                 r.status || 'N/A'
             ]);
 
