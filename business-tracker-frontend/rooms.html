@@ -1487,7 +1487,6 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 }
                 
                 await loadRooms();
-                await loadBookings();
                 updateStats();
             } catch (e) { console.error(e); }
         });
@@ -1501,31 +1500,14 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 snap.forEach(d => rooms.push({ id: d.id, ...d.data() }));
                 rooms.sort((a, b) => (a.roomNumber || '').localeCompare(b.roomNumber || ''));
                 renderRooms();
-                populateRoomSelects();
-                populateEditRoomSelects();
                 updateStats();
-                checkAutoCheckout();
             } catch (e) {
                 const tbody = document.getElementById('roomTableBody');
                 if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error loading rooms.</td></tr>`;
             }
         }
 
-        async function loadBookings() {
-            try {
-                const snap = await db.collection('bookings').where('hotelId', '==', hotelId).get();
-                bookings = [];
-                snap.forEach(d => bookings.push({ id: d.id, ...d.data() }));
-                bookings.sort((a, b) => (a.checkIn || '').localeCompare(b.checkIn || ''));
-                renderBookings();
-                renderCalendar();
-                updateStats();
-                checkAutoCheckout();
-            } catch (e) {
-                const tbody = document.getElementById('bookingTableBody');
-                if (tbody) tbody.innerHTML = `<tr><td colspan="11" class="empty-state">Error loading bookings.</td></tr>`;
-            }
-        }
+
 
 
 
@@ -1570,195 +1552,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             if (occupiedPercentEl) occupiedPercentEl.textContent = rate + '%';
         }
 
-        // --- UPDATE ROOM STATUS BASED ON BOOKING STATUS ---
-        async function updateRoomStatusForBooking(booking) {
-            if (!booking || !booking.roomNumber) return;
 
-            const room = rooms.find(r => r.roomNumber === booking.roomNumber);
-            if (!room) return;
-
-            let newRoomStatus = room.status;
-
-            switch (booking.status) {
-                case 'upcoming':
-                    newRoomStatus = 'Reserved';
-                    break;
-                case 'active':
-                    newRoomStatus = 'Occupied';
-                    break;
-                case 'past':
-                case 'checked_out_early':
-                case 'cancelled':
-                    newRoomStatus = 'Available';
-                    break;
-                default:
-                    return;
-            }
-
-            if (room.status !== newRoomStatus) {
-                await db.collection('rooms').doc(room.id).update({ status: newRoomStatus });
-                const roomIndex = rooms.findIndex(r => r.id === room.id);
-                if (roomIndex !== -1) {
-                    rooms[roomIndex].status = newRoomStatus;
-                }
-            }
-        }
-
-        // --- AUTO CHECKOUT ---
-        async function checkAutoCheckout() {
-            const today = new Date().toISOString().split('T')[0];
-            const activeBookings = bookings.filter(b => b.status === 'active' && b.checkOut && b.checkOut < today);
-            for (const b of activeBookings) {
-                try {
-                    await db.collection('bookings').doc(b.id).update({ status: 'past' });
-                    b.status = 'past';
-                    await updateRoomStatusForBooking(b);
-                    console.log(`✅ Auto-checked out booking ${b.id} (${b.guestName})`);
-                } catch (e) { console.error('Auto-checkout error:', e); }
-            }
-            if (activeBookings.length > 0) {
-                await loadBookings();
-                await loadRooms();
-                updateStats();
-                renderCalendar();
-            }
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            if (!grid) return;
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth();
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            const label = document.getElementById('calendarMonthLabel');
-            if (label) label.textContent = monthNames[month] + ' ' + year;
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const today = new Date();
-            let html = '';
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            days.forEach(d => { html += `<div class="calendar-day-header">${d}</div>`; });
-            for (let i = 0; i < firstDay; i++) {
-                html += `<div class="calendar-day other-month"></div>`;
-            }
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
-                const dayBookings = bookings.filter(b => {
-                    if (!b.checkIn || !b.checkOut || b.status === 'cancelled') return false;
-                    return b.checkIn <= dateStr && b.checkOut >= dateStr;
-                });
-                html += `<div class="calendar-day ${isToday ? 'today' : ''}">`;
-                html += `<div class="day-number">${day}</div>`;
-                if (dayBookings.length > 0) {
-                    dayBookings.slice(0, 2).forEach(b => {
-                        const statusClass = b.status || 'upcoming';
-                        html += `<span class="booking-dot ${statusClass}">• ${b.guestName || 'Guest'}</span>`;
-                    });
-                    if (dayBookings.length > 2) {
-                        html += `<span class="booking-dot">+${dayBookings.length - 2} more</span>`;
-                    }
-                }
-                html += `</div>`;
-            }
-            grid.innerHTML = html;
-        }
-
-        function changeMonth(delta) {
-            if (delta === 0) { currentMonth = new Date(); }
-            else { currentMonth.setMonth(currentMonth.getMonth() + delta); }
-            renderCalendar();
-        }
-
-        // --- BOOKING DATE FILTER ---
-        function applyBookingFilter(period) {
-            const now = new Date();
-            let start, end;
-
-            if (period === 'today') {
-                start = now.toISOString().split('T')[0];
-                end = start;
-            } else if (period === 'week') {
-                const s = new Date(now);
-                s.setDate(now.getDate() - now.getDay());
-                start = s.toISOString().split('T')[0];
-                const e = new Date(s);
-                e.setDate(s.getDate() + 6);
-                end = e.toISOString().split('T')[0];
-            } else if (period === 'month') {
-                start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-                end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-            } else if (period === 'year') {
-                start = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
-                end = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
-            } else {
-                start = document.getElementById('bookingFilterStart').value;
-                end = document.getElementById('bookingFilterEnd').value;
-                if (!start || !end) { return; }
-            }
-
-            bookingFilterStart = start;
-            bookingFilterEnd = end;
-            renderBookings();
-        }
-
-        // --- BOOKING FILTER EVENT LISTENERS ---
-        const periodFilter = document.getElementById('bookingPeriodFilter');
-        if (periodFilter) {
-            periodFilter.addEventListener('change', function() {
-                const customInputs = document.querySelectorAll('#bookingFilterStart, #bookingFilterEnd');
-                if (this.value === 'custom') {
-                    customInputs.forEach(inp => { if (inp) inp.style.display = 'inline-block'; });
-                    const val = document.getElementById('bookingFilterStart').value;
-                    const val2 = document.getElementById('bookingFilterEnd').value;
-                    if (val && val2) applyBookingFilter('custom');
-                } else {
-                    customInputs.forEach(inp => { if (inp) inp.style.display = 'none'; });
-                    applyBookingFilter(this.value);
-                }
-            });
-        }
-
-        const filterStart = document.getElementById('bookingFilterStart');
-        const filterEnd = document.getElementById('bookingFilterEnd');
-        if (filterStart) {
-            filterStart.addEventListener('change', function() {
-                if (document.getElementById('bookingFilterEnd').value) {
-                    applyBookingFilter('custom');
-                }
-            });
-        }
-        if (filterEnd) {
-            filterEnd.addEventListener('change', function() {
-                if (document.getElementById('bookingFilterStart').value) {
-                    applyBookingFilter('custom');
-                }
-            });
-        }
-
-        // --- CALCULATE PRICE ---
-        function calculatePrice() {
-            const roomSelect = document.getElementById('bookingRoom');
-            const mealSelect = document.getElementById('bookingMeals');
-            const guestCount = parseInt(document.getElementById('bookingGuestCount').value) || 1;
-            const checkIn = document.getElementById('bookingCheckIn').value;
-            const checkOut = document.getElementById('bookingCheckOut').value;
-            const room = rooms.find(r => r.roomNumber === roomSelect.value);
-            const mealName = mealSelect.value;
-
-            const selectedPackage = packages.find(p => p.name === mealName);
-            const mealPrice = selectedPackage ? (selectedPackage.price || 0) : 0;
-
-            let nights = 0;
-            if (checkIn && checkOut) {
-                const d1 = new Date(checkIn);
-                const d2 = new Date(checkOut);
-                const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-                nights = diff > 0 ? diff : 1;
-            }
-            const roomRate = room ? (room.rate || 0) : 0;
-            const roomTotal = roomRate * nights;
-            const mealTotal = mealPrice * guestCount * nights;
 
 
         const roomForm = document.getElementById('roomForm');
@@ -1911,8 +1705,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             });
         });
 
-        // Run auto-checkout every minute
-        setInterval(checkAutoCheckout, 60000);
+
     </script>
 
     <!-- --- EDIT PROFILE MODAL --- -->
