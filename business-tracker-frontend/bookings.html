@@ -2312,8 +2312,13 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 const { grandTotal, discountAmount } = calculatePrice();
                 if (grandTotal < 0) {
                     alert('Please check your dates and room selection.');
+                    return;
+                }
+
                 const btn = document.getElementById('submitBookingBtn');
                 btn.textContent = 'Creating...';
+                btn.disabled = true;
+                try {
                 const bookingRef = db.collection('bookings').doc();
                 const bookingData = {
                     hotelId, guestName, nic: nic || '', phone: phone || '', guestCount, roomNumber,
@@ -2463,31 +2468,124 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             const mealPackage = document.getElementById('editMealPackage').value;
             const manualAmount = parseFloat(document.getElementById('editManualAmount').value) || 0;
 
+            if (!guestName || !roomNumber || !checkIn || !checkOut) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
             const oldBooking = bookings.find(b => b.id === id);
+            const oldPaymentStatus = oldBooking ? oldBooking.paymentStatus : null;
+
+            const btn = document.querySelector('#editBookingModal .btn-submit') || document.getElementById('submitEditBookingBtn');
+            if (btn) { btn.textContent = 'Updating...'; btn.disabled = true; }
 
             try {
-                            await db.collection('rooms').doc(newRoom.id).update({ status: newRoomStatus });
-                            newRoom.status = newRoomStatus;
-                        }
-                    }
+                // Calculate total amount based on status
+                let newTotalAmount = 0;
+                if (status === 'checked_out_early') {
+                    newTotalAmount = manualAmount;
+                } else {
+                    const room = rooms.find(r => r.roomNumber === roomNumber);
+                    const roomRate = room ? (room.rate || 0) : 0;
+                    const d1 = new Date(checkIn);
+                    const d2 = new Date(checkOut);
+                    const nights = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
 
-                    alert('✅ Booking updated!');
-                    closeEditBookingModal();
-                    await loadBookings();
-                    await loadRooms();
-                    updateStats();
-                    renderCalendar();
-                    populateRoomSelects();
-                    populateEditRoomSelects();
-                    populatePackageSelect();
-                } catch (error) {
-                    alert('Error: ' + error.message);
+                    let mealPrice = 0;
+                    if (mealPackage) {
+                        const selectedPackage = packages.find(p => p.name === mealPackage);
+                        if (selectedPackage) mealPrice = selectedPackage.price || 0;
+                    }
+                    const roomTotal = roomRate * nights;
+                    const mealTotal = mealPrice * guestCount * nights;
+                    const baseTotal = roomTotal + mealTotal;
+
+                    let discountAmount = 0;
+                    if (discountType === 'percentage') {
+                        discountAmount = (baseTotal * discountValue) / 100;
+                    } else if (discountType === 'fixed') {
+                        discountAmount = discountValue;
+                    }
+                    newTotalAmount = Math.max(0, baseTotal - discountAmount);
                 }
 
-                btn.textContent = 'Update Booking';
-                btn.disabled = false;
-            });
-        }
+                const batch = db.batch();
+                const bookingRef = db.collection('bookings').doc(id);
+                batch.update(bookingRef, {
+                    guestName, nic: nic || '', phone: phone || '', roomNumber,
+                    checkIn, checkInTime, checkOut, checkOutTime,
+                    status, paymentStatus,
+                    guestCount,
+                    mealPackage: mealPackage || '',
+                    totalAmount: newTotalAmount,
+                    manualAmount: status === 'checked_out_early' ? manualAmount : 0,
+                    notes: notes || '',
+                    currency,
+                    bookingChannel,
+                    discountType,
+                    discountValue,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Handle income sync using FinanceUtils
+                const incomeDocId = FinanceUtils.bookingIncomeDocumentId(id);
+                const incomeRef = db.collection('income').doc(incomeDocId);
+                const updatedBookingData = {
+                    hotelId, guestName, roomNumber, checkIn, checkOut,
+                    guestCount, mealPackage: mealPackage || '',
+                    totalAmount: newTotalAmount, paymentStatus,
+                    currency, bookingChannel, discountType, discountValue, status
+                };
+                const incomeRecord = FinanceUtils.buildBookingIncome(id, updatedBookingData);
+                if (incomeRecord) {
+                    batch.set(incomeRef, {
+                        ...incomeRecord,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } else {
+                    // Payment status changed to non-paid — remove income record
+                    batch.delete(incomeRef);
+                }
+
+                // Update room status based on booking status
+                await updateRoomStatusForBooking({ roomNumber, status });
+
+                // If room changed, free the old room
+                if (oldBooking && oldBooking.roomNumber !== roomNumber) {
+                    const oldRoom = rooms.find(r => r.roomNumber === oldBooking.roomNumber);
+                    if (oldRoom) {
+                        batch.update(db.collection('rooms').doc(oldRoom.id), { status: 'Available' });
+                        oldRoom.status = 'Available';
+                    }
+                    const newRoom = rooms.find(r => r.roomNumber === roomNumber);
+                    if (newRoom) {
+                        let newRoomStatus = 'Available';
+                        if (status === 'upcoming') newRoomStatus = 'Reserved';
+                        else if (status === 'active') newRoomStatus = 'Occupied';
+                        batch.update(db.collection('rooms').doc(newRoom.id), { status: newRoomStatus });
+                        newRoom.status = newRoomStatus;
+                    }
+                }
+
+                await batch.commit();
+
+                alert('✅ Booking updated!');
+                closeEditBookingModal();
+                await loadBookings();
+                await loadRooms();
+                updateStats();
+                renderCalendar();
+                populateRoomSelects();
+                populateEditRoomSelects();
+                populatePackageSelect();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+
+            if (btn) { btn.textContent = 'Update Booking'; btn.disabled = false; }
+        });
+    }
+
 
         const editBookingModal = document.getElementById('editBookingModal');
         if (editBookingModal) {
