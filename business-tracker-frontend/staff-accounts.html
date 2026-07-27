@@ -904,9 +904,8 @@
 
         const API_BASE_URL =
             localDevelopmentHosts.has(window.location.hostname) &&
-            window.location.port &&
-            window.location.port !== "5000"
-                ? "http://localhost:5000"
+            window.location.port === "3000"
+                ? "http://localhost:5050"
                 : "";
 
         const staffAccountForm = document.getElementById("staff-account-form");
