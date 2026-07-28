@@ -1448,26 +1448,7 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
             return false;
         }
 
-        let buffetItems = [];
         let packages = [];
-        let currentFilter = 'month';
-        let startDate, endDate;
-
-        // --- DROPDOWN + CUSTOM TOGGLES ---
-        const mealTypeSelect = document.getElementById('buffetMealTypeSelect');
-        if (mealTypeSelect) {
-            mealTypeSelect.addEventListener('change', function() {
-                const custom = document.getElementById('buffetMealTypeCustom');
-                if (this.value === 'Custom') {
-                    if (custom) custom.classList.add('show');
-                    if (custom) custom.required = true;
-                } else {
-                    if (custom) custom.classList.remove('show');
-                    if (custom) custom.required = false;
-                    if (custom) custom.value = '';
-                }
-            });
-        }
 
         const packageNameSelect = document.getElementById('packageNameSelect');
         if (packageNameSelect) {
@@ -1483,54 +1464,6 @@ select.screenshot-input, .luxury-select { color: #1c1b16 !important; }
                 }
             });
         }
-
-        // --- BUFFET ITEM ROWS (Add Form) ---
-        let buffetItemIndex = 1;
-
-        function addBuffetItemRow() {
-            const container = document.getElementById('buffetItemsContainer');
-            if (!container) return;
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.dataset.index = buffetItemIndex++;
-            row.innerHTML = `
-                <input type="text" class="buffet-item-name" placeholder="Item name" required>
-                <input type="number" class="buffet-item-qty" placeholder="Qty" value="1" min="1" required>
-                <button type="button" class="remove-item-btn" onclick="removeBuffetItem(this)">✕</button>
-            `;
-            container.appendChild(row);
-        }
-
-        function removeBuffetItem(btn) {
-            const row = btn.closest('.item-row');
-            const container = document.getElementById('buffetItemsContainer');
-            if (!container) return;
-            if (container.children.length <= 1) {
-                alert('You need at least one item.');
-                return;
-            }
-            row.remove();
-        }
-
-        // --- EDIT BUFFET ITEM ROWS ---
-        let editBuffetItemIndex = 0;
-
-        function addEditBuffetItemRow() {
-            const container = document.getElementById('editBuffetItemsContainer');
-            if (!container) return;
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.dataset.index = editBuffetItemIndex++;
-            row.innerHTML = `
-                <input type="text" class="edit-buffet-item-name" placeholder="Item name" required>
-                <input type="number" class="edit-buffet-item-qty" placeholder="Qty" value="1" min="1" required>
-                <button type="button" class="remove-item-btn" onclick="removeEditBuffetItem(this)">✕</button>
-            `;
-            container.appendChild(row);
-        }
-
-        function removeEditBuffetItem(btn) {
-            const row = btn.closest('.item-row');
         // --- AUTH ---
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = '/'; return; }
