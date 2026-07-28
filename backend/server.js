@@ -597,31 +597,7 @@ app.get(
     }
 );
 
-app.get(
-    "/api/test-firebase",
-    asyncRoute(
-        async (
-            request,
-            response
-        ) => {
-            await db
-                .collection("test")
-                .add({
-                    message:
-                        "Hello from backend!",
-                    timestamp:
-                        FieldValue
-                            .serverTimestamp()
-                });
 
-            response.json({
-                success: true,
-                message:
-                    "Firebase is connected! ✅"
-            });
-        }
-    )
-);
 
 /**
  * List staff login accounts for the authenticated
