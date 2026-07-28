@@ -37,19 +37,20 @@ if (PASSWORD_LOOKUP_SECRET.length < 32) {
 // FIREBASE ADMIN
 // --------------------------------------------------
 
-if (admin.apps.length === 0) {
+try {
+    admin.app();
+} catch (e) {
     admin.initializeApp({
         credential:
-            admin.credential.cert(serviceAccount)
+            admin.cert(serviceAccount)
     });
 }
 
-const db = admin.firestore();
-const firebaseAuth = admin.auth();
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getAuth } = require("firebase-admin/auth");
 
-const {
-    FieldValue
-} = admin.firestore;
+const db = getFirestore();
+const firebaseAuth = getAuth();
 
 // --------------------------------------------------
 // EXPRESS
